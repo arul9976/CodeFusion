@@ -1,74 +1,74 @@
-import { useEffect, useRef } from 'react';
-import { Terminal } from 'xterm';
-import 'xterm/css/xterm.css';
-import { io } from 'socket.io-client';
+import { useEffect, useRef } from 'react'
+import { useXTerm } from 'react-xtermjs'
+import { FitAddon } from '@xterm/addon-fit'
 
-function Term() {
-  const termRef = useRef(null);
-  const socket = useRef(null);
+const Term = ({ socket }) => {
+  const { instance, ref } = useXTerm()
+  const fitAddon = new FitAddon()
+  const terminalDataRef = useRef('') // Use ref to track terminal input data
 
   useEffect(() => {
-    // Initialize socket connection to the backend
-    socket.current = io('http://localhost:3000');
+    instance?.loadAddon(fitAddon)
+    const handleResize = () => fitAddon.fit()
 
-    // Initialize xterm.js terminal
-    const term = new Terminal({
-      cursorBlink: true,
-      scrollback: 1000,
-      rows: 20,
-      cols: 80,
-    });
+    instance?.writeln('Type something and press Enter to send.')
 
-    term.open(termRef.current);
+    window.addEventListener('resize', handleResize)
+    instance?.write('$ ')
 
-    // Handle output from the Python process
-    socket.current.on('output', (data) => {
-      console.log(data);
-      term.write(data);
-    });
+    const handleData = (data) => {
 
-    // Store the input line to be sent to Python
-    let inputLine = '';
-
-    // Send input to Python on Enter press
-    term.onKey((event) => {
-      const char = event.key;
-
-      // If user presses Enter (carriage return), send the input line to Python
-      if (char === '\r') {
-        // Emit the input line to the backend (Python process)
-        socket.current.emit('input', inputLine);
-
-        // Write a new line to simulate "Enter"
-        term.write('\r\n');
-
-        // Clear the current input line in the terminal
-        inputLine = '';
-
-      } else if (char === '\u0008') { // Handle backspace
-        // If backspace is pressed, remove the last character from inputLine
-        if (inputLine.length > 0) {
-          inputLine = inputLine.slice(0, -1);
-          term.write('\b \b'); // Properly erase the character by writing backspace
+      if (data === '\r') {
+        const inputData = terminalDataRef.current.trim()
+        if (inputData) {
+          if (inputData == "clear") {
+            terminalDataRef.current = '';
+            instance.reset();
+            instance?.writeln('Type something and press Enter to send.')
+            instance?.write('$ ')
+            return;
+          }
+          console.log("Sending data to server:", inputData)
+          socket.emit('input', inputData)
+          terminalDataRef.current = '';
         }
-      } else {
-        // Append the typed character to the input line
-        inputLine += char;
-        term.write(char); // Display the typed character
-      }
-    });
-    return () => {
-      socket.current.disconnect();
-      term.dispose();
-    };
-  }, []);
+        instance?.writeln("")
+        instance?.write('$ ')
 
-  return (
-    <div className="App">
-      <h1>Python Terminal with xterm.js</h1>
-      <div ref={termRef} style={{ height: '400px', width: '100%' }}></div>
-    </div>
-  );
+      } else if (data === '\u007f') {
+        terminalDataRef.current = terminalDataRef.current.slice(0, -1)
+        instance?.write('\b \b')
+      } else {
+        terminalDataRef.current += data
+        instance?.write(data)
+      }
+    }
+
+    instance?.onData(handleData)
+
+    socket.on('output', (data) => {
+      let lines = data.split("\n").filter(v => v.length > 0);
+      console.log(lines);
+
+
+      lines.forEach(v => {
+        console.log(v);        
+        instance?.writeln(v);
+      })
+      // if (data && socket) {
+      //   socket.off('output');
+      // }
+
+      instance?.write('$ ')
+    })
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      instance?.offData(handleData)
+    }
+  }, [instance])
+
+  return <div ref={ref} style={{ maxWidth: '1200px', width: '100%', height: '100%', display: 'block', textAlign: 'start' }} />
 }
 
-export default Term;
+export default Term

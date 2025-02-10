@@ -1,41 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
-import CodeMirror from '@uiw/react-codemirror'; 
+import "./App.css";
+import CodeMirror from '@uiw/react-codemirror';
+
 import { python } from '@codemirror/lang-python';
+import { javascript } from '@codemirror/lang-javascript';
+import { java } from '@codemirror/lang-java';
+import { go } from '@codemirror/lang-go';
+// import { ruby } from '@codemirror/lang-ruby';
+
 import { basicSetup } from 'codemirror';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { io } from 'socket.io-client';
-import { Output } from './Output';
-import axios from 'axios';
 import Term from './Terminal';
 
 const socket = io('http://localhost:3000');  // Connect to the WebSocket server
 
 const CodeEditor = () => {
   const [code, setCode] = useState('');
-  const [out, setOut] = useState('');
   const [cursor, setCursor] = useState({ line: 0, ch: 0 });  // Track cursor position
   const editorRef = useRef(null);
 
-  useEffect(() => {
-    socket.on('code-update', (newCode) => {
-      console.log("--> " + newCode);
-      if (newCode != null)
-        setCode(newCode);
-    });
+  const [language, setLanguage] = useState('python'); // Default language is JavaScript
 
-    socket.on('cursor-position', (position) => {
-      setCursor(position);
-    });
+  const handleLanguageChange = (event) => {
+    setLanguage(event.target.value);
+    console.log(language);
+    
+  };
 
-    socket.on('output', (output) => {
-      setOut(output);
-    });
-
-    return () => {
-      socket.off('code-update');
-      socket.off('cursor-position');
-    };
-  }, []);
 
   const handleCodeChange = (editor, data, value) => {
     console.log('handleCodeChange called, value:', editor, data);
@@ -54,33 +46,80 @@ const CodeEditor = () => {
     socket.emit('cursor-position', cursorPosition);
   };
 
+  const languageModes = {
+    python,
+    javascript,
+    java,
+    go,
+    // ruby,
+  };
+
+  const extensions = [
+    basicSetup,
+    languageModes[language]() // Dynamically set the language mode
+  ];
+
+
   const runCode = () => {
     if (code.length > 0) {
-      socket.emit('output', code);
+      socket.emit('output', { code, language });
     }
   };
+
+  useEffect(() => {
+    socket.on('code-update', (newCode) => {
+      console.log("--> " + newCode);
+      if (newCode != null)
+        setCode(newCode);
+    });
+
+    socket.on('cursor-position', (position) => {
+      setCursor(position);
+    });
+
+
+    return () => {
+      socket.off('code-update');
+      socket.off('cursor-position');
+    };
+  }, []);
 
   return (
 
     <>
-      <div style={{ width: '1200px', margin: '0 auto' }}>
+      <div style={{ width: '1200px', margin: '20px auto', display: 'grid', gap: '1em' }}>
         <h2>Live Python Code Editor</h2>
+
+        <div style={{ width: '200px', height: '60px' }}>
+          <label htmlFor="language-select">Select Language: </label>
+          <select
+            id="language-select"
+            value={language}
+            onChange={handleLanguageChange}>
+
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="go">Go</option>
+            {/* <option value="ruby">Ruby</option> */}
+          </select>
+        </div>
+
         <CodeMirror
           ref={editorRef}
           value={code}
           onChange={handleCodeChange}
           onCursorActivity={(editor) => handleCursorChange(editor)}
-          extensions={[python(), basicSetup]}
+          extensions={extensions}
           height="400px"
           theme={oneDark}
-          style={{ width: '100%' }}
+          style={{ width: '100%', display: 'block', textAlign: 'start' }}
         />
         <button onClick={runCode}>Run Code</button>
       </div>
 
-      <Output output={out} />
 
-      <Term />
+      <Term socket={socket} />
     </>
 
   );

@@ -4,7 +4,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { spawn } = require('child_process');
-
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -24,8 +24,8 @@ const io = socketIo(server, {
   },
 });
 
-// app.use(express.static('public'));
-// app.use(bodyParser.text());
+app.use(express.static('public'));
+app.use(bodyParser.text());
 
 // // app.use(cors());
 // // app.options('*', cors());
@@ -48,87 +48,182 @@ const io = socketIo(server, {
 
 
 
-// io.on('connection', (socket) => {
-//   console.log('User Connected');
-
-//   socket.on('code-update', (newCode) => {
-
-
-//     console.log("--> " + newCode);
-
-//     socket.broadcast.emit('code-update', newCode);
-//   });
-
-//   socket.on('cursor-position', (position) => {
-//     socket.broadcast.emit('cursor-position', position);
-//   });
-
-//   socket.on('output', (data) => {
-//     console.log(`Command received: ${data}`);
-//     const escapedCode = data.replace(/"/g, '\\"');
-
-//     // Execute the terminal command (e.g., shell command) on the server
-//     exec(`python3 -c "${escapedCode}"`, (error, stdout, stderr) => {
-//       if (error) {
-//         console.log("message ---> " + error.message);
-//         socket.emit('output', `Error: ${error.message}\n`);
-//         return;
-//       }
-//       if (stderr) {
-//         console.log("stderr ---> " + stderr);
-
-//         socket.emit('output', `stderr: ${stderr}\n`);
-//         return;
-//       }
-//       console.log("Output ---> " + stdout);
-
-//       socket.emit('output', stdout);
-//     });
-//   });
-
-//   socket.on('disconnect', () => {
-//     console.log('A user disconnected');
-//   });
-// });
-
-
-
-// Python code to execute
 io.on('connection', (socket) => {
-  console.log('Client connected');
+  console.log('User Connected');
 
-  // Start the Python process with xterm
-  pythonProcess = spawn('python3', ['-c', `
-import sys
-while True:
-    user_input = input("Enter something: ")
-    if user_input.lower() == "exit":
-        print("Exiting...")
-        sys.exit()
-    print(f"Received: {user_input}")
-  `]);
-
-  // Read Python's output (stdout) and send to client
-  pythonProcess.stdout.on('data', (data) => {
-    socket.emit('output', data.toString());
+  socket.on('code-update', (newCode) => {
+    console.log("--> " + newCode);
+    socket.broadcast.emit('code-update', newCode);
   });
 
-  // Handle Python's stderr
-  pythonProcess.stderr.on('data', (data) => {
-    socket.emit('output', `Error: ${data.toString()}`);
+  socket.on('cursor-position', (position) => {
+    socket.broadcast.emit('cursor-position', position);
   });
 
-  // Handle input from React frontend and send to Python
-  socket.on('input', (input) => {
-    pythonProcess.stdin.write(input + '\n');
+  socket.on('output', (data) => {
+    const { language, code } = data;
+    console.log("Code : " + code + "\nLanguage : " + language);
+
+    let command = '';
+    let args = [];
+    let process;
+    let tempFileName;
+
+    switch (language) {
+      case 'python':
+        command = 'python3';
+        args = ['-c', code];
+        process = spawn(command, args);
+        break;
+      case 'javascript':
+        command = 'node';
+        args = ['-e', code];
+        process = spawn(command, args);
+        break;
+      case 'java':
+        tempFileName = 'TempCode';
+        let fileNameWithPath = `./${tempFileName}.java`;
+        fs.writeFileSync(fileNameWithPath, code);
+        command = 'javac';
+        args = [fileNameWithPath];
+        process = spawn(command, args);
+        break;
+      case 'go':
+        command = 'go';
+        args = ['run', '-'];
+        process = spawn(command, args);
+        break;
+      case 'ruby':
+        command = 'ruby';
+        args = ['-e', code];
+        process = spawn(command, args);
+        break;
+      case 'c':
+        command = 'gcc';
+        args = ['-x', 'c', '-o', 'a.out', '-'];
+        process = spawn(command, args);
+        break;
+      case 'cpp':
+        command = 'g++';
+        args = ['-x', 'c++', '-o', 'a.out', '-'];
+        process = spawn(command, args);
+        break;
+      default:
+        socket.emit('codeResult', 'Unsupported language');
+        return;
+    }
+
+    // console.log(process);
+
+
+    // process.stdin.write(code);
+    // process.stdin.end();
+
+
+    processHeader(process, language, tempFileName);
+
+
   });
 
-  // Handle Python process exit
+
+  const processHeader = (pss, lang, fn) => {
+    let output = '';
+    let errorOutput = '';
+
+    pss.stdout.on('data', (data) => {
+
+      const strData = data.toString();
+      console.log("Output --> " + strData);
+
+      const lines = strData.split('\n').filter(line => line.trim() !== "");
+
+      lines.forEach(line => {
+        output = line + '\n'
+        socket.emit('output', output);
+
+      });
+
+    });
+
+    pss.stderr.on('data', (data) => {
+      socket.emit('output', data.toString());
+    });
+
+
+
+    pss.on('exit', (code) => {
+      if (code !== 0) {
+        socket.emit('output', `Error: ${errorOutput || 'Unknown error occurred'}`);
+        return;
+      }
+      // socket.emit("output", output);
+      if (lang == 'java') {
+        console.log("=== Compilation Success ===");
+        socket.emit('output', "=== Compilation Success ===");
+
+        if (fn != null && fn) {
+          pss = spawn('java', [fn], {
+            cwd: './'
+          });
+
+        }
+        processHeader(pss, '', fn);
+        return;
+
+      }
+      socket.emit('output', "=== Code Execution Completed ===");
+    });
+
+    socket.on('input', (input) => {
+      pss.stdin.write(input + '\n');
+    });
+
+    return;
+  }
+
   socket.on('disconnect', () => {
-    pythonProcess.kill();
-    console.log('Client disconnected');
+    console.log('User disconnected');
   });
 });
+
+
+
+
+// io.on('connection', (socket) => {
+//   console.log('Client connected');
+
+//   // Start the Python process with xterm
+//   pythonProcess = spawn('python3', ['-c', `
+// while True:
+//     user_input = input("Enter something: ")
+//     print("Thank you...\\nhi bro")
+//     if user_input.lower() == "exit":
+//         print("Exiting...")
+//         break
+//     print(f"Received: {user_input}")
+//   `]);
+
+//   // Read Python's output (stdout) and send to client
+//   pythonProcess.stdout.on('data', (data) => {
+//     socket.emit('output', data.toString());
+//   });
+
+//   // Handle Python's stderr
+//   pythonProcess.stderr.on('data', (data) => {
+//     socket.emit('output', `Error: ${data.toString()}`);
+//   });
+
+//   // Handle input from React frontend and send to Python
+//   socket.on('input', (input) => {
+//     pythonProcess.stdin.write(input + '\n');
+//   });
+
+//   // Handle Python process exit
+//   socket.on('disconnect', () => {
+//     pythonProcess.kill();
+//     console.log('Client disconnected');
+//   });
+// });
 
 server.listen(3000, () => {
   console.log('Server is running on port 3000');
