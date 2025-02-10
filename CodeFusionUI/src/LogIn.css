@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+    /* background: linear-gradient(135deg, #005f5f, #2a9d8f); */
+    background-image: url("");
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    overflow: hidden;
+}
+
+
+.login-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    width: 420px;
+    text-align: center;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    animation: fadeIn 1s ease-in-out;
+}
+
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Login Title */
+.login-container h2 {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
+    animation: textGlow 2s infinite alternate;
+}
+
+/* Input Fields */
+.login-container input {
+    width: 94%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 16px;
+    outline: none;
+    transition: 0.3s ease-in-out;
+}
+
+/* Input Hover Effect */
+.login-container input:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Input Focus Effect */
+.login-container input:focus {
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Labels */
+.login-container label {
+    display: block;
+    text-align: left;
+    color: white;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+/* Primary Buttons (Log In, Sign Up) */
+.login-container button {
+    width: 100%;
+    padding: 14px 0;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(45deg, #27445D, #1e3545);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease, transform 0.2s ease-in-out;
+    margin-top: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Button Hover Effect */
+.login-container button:hover {
+    background: linear-gradient(45deg, #1e3545, #27445D);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Button Click (Pressed) Effect */
+.login-container button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Button Ripple Effect */
+.login-container button::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: transform 0.5s, opacity 0.3s;
+    transform: translate(-50%, -50%) scale(0);
+    border-radius: 50%;
+    opacity: 0;
+}
+
+/* Activate ripple effect on click */
+.login-container button:active::after {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+/* Error Messages */
+.error-message {
+    color: #e74c3c;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    text-align: left;
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Shake Animation for Error Messages */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+}
+
+/* Paragraph Text */
+.login-container p {
+    color: white;
+    font-size: 14px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Login Redirect Button */
+.login-container p button {
+    background: none;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+/* Login Redirect Button Hover */
+.login-container p button:hover {
+    color: #e9c46a;
+}
+
+
