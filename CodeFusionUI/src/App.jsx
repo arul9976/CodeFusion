@@ -115,6 +115,7 @@ const App = () => {
       socket.off("cursor-update");
     };
   }, []);
+
   const handleCursorChange = (selection) => {
     if (!editorRef.current) return;
     const cursorPos = selection.getCursor();
@@ -168,54 +169,7 @@ const App = () => {
 
 
 
-  // useEffect(() => {
-  //   socket.on("cursor-update", ({ userId, position }) => {
-  //     setRemoteCursors((prev) => ({ ...prev, [userId]: position }));
-  //     highlightCursor(userId, position);
-  //   });
-
-  //   return () => {
-  //     socket.off("cursor-update");
-  //   };
-  // }, []);
-
-  // const handleCursorChange = (selection) => {
-  //   if (editorRef.current) {
-  //     const cursor = editorRef.current.editor.getCursorPosition();
-  //     // console.log(cursor);
-  //     // socket.emit('cursor-update', cursor);
-  //   }
-  //   const cursorPos = selection.getCursor();
-  //   socket.emit("cursor-update", { userId: socket.id, position: cursorPos });
-  // };
-
-  // const highlightCursor = (userId, position) => {
-  //   if (!editorRef.current) return;
-  //   const editor = editorRef.current.editor;
-
-  //   // Remove existing marker if exists
-  //   editor.session.getMarkers(true) &&
-  //     Object.values(editor.session.getMarkers()).forEach((marker) => {
-  //       if (marker.className === `cursor-marker-${userId}`) {
-  //         editor.session.removeMarker(marker.id);
-  //       }
-  //     });
-
-  //   // Add new cursor marker
-  //   const range = new window.ace.require("ace/range").Range(
-  //     position.row,
-  //     position.column,
-  //     position.row,
-  //     position.column + 1
-  //   );
-
-  //   editor.session.addMarker(
-  //     range,
-  //     `cursor-marker-${userId}`,
-  //     "text",
-  //     true
-  //   );
-  // }
+  
 
 
 
