@@ -15,6 +15,13 @@
   opacity: 0.8;
 }
 
+
+.remote-cursor {
+  position: absolute;
+  background: rgba(255, 0, 0, 0.5);
+  width: 2px;
+}
+
 .cursor-label {
   position: absolute;
   background-color: rgba(0, 0, 0, 0.7);
