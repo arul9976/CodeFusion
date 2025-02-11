@@ -9,6 +9,26 @@
   place-items: center;
 }
 
+.cursor-marker {
+  position: absolute;
+  width: 2px;
+  background-color: red; /* Change color per user if needed */
+  opacity: 0.8;
+}
+
+.cursor-label {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -20px);
+}
+
+
 .logo {
   height: 6em;
   padding: 1.5em;

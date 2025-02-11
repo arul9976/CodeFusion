@@ -1,244 +1,10 @@
-// import React, { useState, useEffect, useRef } from 'react';
-// import "./App.css";
-// // import CodeMirror from '@uiw/react-codemirror';
-
-// import AceEditor from "react-ace";
-// import * as ace from 'ace-builds';
-
-
-
-
-// import "ace-builds/webpack-resolver"; // To resolve Ace dependency
-// import 'ace-builds/src-noconflict/ext-language_tools';
-
-// // import "ace-builds/src-noconflict/theme-monokai"; // Monokai is a popular dark theme
-// // import "ace-builds/src-noconflict/mode-javascript"; // You can replace it with the language of your choice (like "mode-python")
-// import "ace-builds/src-noconflict/keybinding-vim";
-// import 'ace-builds/src-noconflict/ext-emmet';
-// import 'ace-builds/src-noconflict/ext-beautify';
-// import 'ace-builds/src-noconflict/ext-code_lens';
-// import 'ace-builds/src-noconflict/ext-command_bar';
-// import 'ace-builds/src-noconflict/ext-elastic_tabstops_lite';
-
-// import 'brace/mode/javascript';
-// import 'brace/theme/github';
-// import 'brace/theme/monokai';
-// import 'brace/ext/language_tools';
-
-// import { useDispatch, useSelector } from 'react-redux';
-
-// import { io } from 'socket.io-client';
-// import { setCode } from './Redux/editorSlice';
-
-// const socket = io('http://localhost:3000');
-
-// const App = () => {
-//   // const [code, setCode] = useState('');
-//   const [cursor, setCursor] = useState({ line: 0, ch: 0 });
-//   const [otherCursors, setOtherCursors] = useState({});
-//   const [theme, setTheme] = useState('vs-light');
-
-//   const editorRef = useRef(null);
-
-//   const dispatch = useDispatch();
-//   const code = useSelector((state) => state.editor.code);
-
-
-
-//   const [language, setLanguage] = useState('javascript');
-
-//   // const handleLanguageChange = (event) => {
-//   //   setLanguage(event.target.value);
-//   //   console.log(language);
-
-//   // };
-
-
-//   const handleCodeChange = (value, event) => {
-//     console.log(value, cursor);
-
-//     if (value !== undefined) {
-//       dispatch(setCode(value));
-//       socket.emit('code-update', { code: value, cursor: cursor });
-//     }
-
-//   };
-
-
-
-//   const handleCursorChange = (selection) => {
-//     const { row, column } = selection.getCursor();
-//     console.log(row, column);
-
-//     setCursor({ row, column });
-//     // socket.emit('cursor-update', { row, column });
-//   };
-
-//   // const languageModes = {
-//   //   python,
-//   //   javascript,
-//   //   java,
-//   //   go,
-//   //   // ruby,
-//   // };
-
-//   // const extensions = [
-//   //   basicSetup,
-//   //   languageModes[language]() // Dynamically set the language mode
-//   // ];
-
-
-//   const runCode = () => {
-//     if (code.length > 0) {
-//       socket.emit('output', { code, language });
-//     }
-//   };
-
-
-//   useEffect(() => {
-//     // const editor = editorRef.current;
-//     // if (editor) {
-//     //   // Listen for cursor activity using the CodeMirror API directly
-//     //   const editorInstance = editor.view;
-//     //   const cursorActivityHandler = () => {
-//     //     const cursor = editorInstance.state.selection.main.head; // Get the cursor position
-//     //     console.log('Cursor position:', cursor);
-//     //     setCursor(cursor); // Update the cursor state in your React component
-//     //   };
-
-//     //   // Bind the cursor activity event
-//     //   editorInstance.setProps({
-//     //     handleDOMEvents: {
-//     //       cursorActivity: cursorActivityHandler, // Trigger when cursor activity happens
-//     //     }
-//     //   });
-//     // }
-
-//     if (typeof ace !== 'undefined') {
-//       ace.config.set('workerPath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/workers');
-//     }
-
-//     // ace.config.set('workerPath', '/path/to/ace-builds/src-min-noconflict');
-//     // const edi = ace.edit('code-editor');
-//     // edi.setTheme('ace/theme/github');
-//     // edi.session.setMode('ace/mode/python');
-
-//     socket.on('code-update', (newCode) => {
-//       // console.log("--> " + newCode);
-//       if (newCode != null) {
-//         dispatch(setCode(newCode.code));
-//         setCursor(newCode.cursor)
-//       }
-//     });
-
-
-//     const editor = editorRef.current.editor;
-//     editor.setOptions({
-//       enableSnippets: true,
-//       enableBasicAutocompletion: true,
-//       enableLiveAutocompletion: true,
-//     });
-
-
-
-//     // socket.on('cursor-position', (position) => {
-//     //   setCursor(position);
-//     // });
-
-//     // return () => {
-//     //   const editor = editorRef.current;
-//     //   if (editor) {
-//     //     const editorInstance = editor.view;
-//     //     editorInstance.setProps({
-//     //       handleDOMEvents: {} // Remove the event listener during cleanup
-//     //     });
-//     //   }
-//     // };
-
-//   }, []);
-
-
-//   return (
-
-//     <>
-//       <div style={{ width: '1200px', margin: '20px auto', display: 'grid', gap: '1em' }}>
-//         <h2>Live Python Code Editor</h2>
-
-//         <div style={{ width: '200px', height: '60px' }}>
-//           <label>Select Language: </label>
-//           <select onChange={(e) => setLanguage(e.target.value)} value={language}>
-//             <option value="javascript">JavaScript</option>
-//             <option value="python">Python</option>
-//             <option value="java">Java</option>
-//             <option value="go">Go</option>
-//             <option value="c">C</option>
-//             <option value="cpp">C++</option>
-//             <option value="ruby">Ruby</option>
-//           </select>
-
-//           <br />
-
-//           <label>Select Theme: </label>
-//           <select onChange={(e) => setTheme(e.target.value)}>
-//             <option value="vs-light">Light</option>
-//             <option value="vs-dark">Dark</option>
-//           </select>
-//         </div>
-
-//         {/* <CodeMirror
-//           ref={editorRef}
-//           value={code}
-//           onChange={handleCodeChange}
-//           onEditorViewUpdate={handleEditorChange}
-//           extensions={extensions}
-//           height="400px"
-//           theme={oneDark}
-//           style={{ width: '100%', display: 'block', textAlign: 'start' }}
-//         />  */}
-
-//         <AceEditor
-//         ref={editorRef}
-//           placeholder="Placeholder Text"
-//           mode="javascript"
-//           theme="terminal"
-//           name="blah2"
-//           // onLoad={handleCodeChange}
-//           onChange={handleCodeChange}
-//           fontSize={14}
-//           width='100%'
-//           lineHeight={19}
-//           showPrintMargin={true}
-//           showGutter={true}
-//           highlightActiveLine={true}
-//           value={code}
-//           setOptions={{
-//             enableBasicAutocompletion: true,
-//             enableLiveAutocompletion: true,
-//             enableSnippets: true,
-//             enableMobileMenu: true,
-//             showLineNumbers: true,
-//             tabSize: 2,
-//           }} />
-
-//         <button onClick={runCode}>Run Code</button>
-//       </div>
-
-
-// <Term socket={socket} />
-//     </>
-
-//   );
-// };
-
-// export default App;
-
-
 
 import React, { useEffect, useRef, useState } from 'react';
 import AceEditor from 'react-ace';
 import Term from './Terminal';
 import ace from 'ace-builds';
 import './App.css';
+
 // Import ace builds and configure worker path
 ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/');
 ace.config.set('modePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/');
@@ -273,9 +39,12 @@ import 'ace-builds/src-noconflict/snippets/java';
 import 'ace-builds/src-noconflict/snippets/golang';
 import 'ace-builds/src-noconflict/snippets/c_cpp';
 import 'ace-builds/src-noconflict/snippets/ruby';
+import "ace-builds/src-noconflict/ext-language_tools";
 
 import { io } from 'socket.io-client';
-const socket = io('http://172.17.22.225:3000');
+const socket = io('http://172.17.21.18:3000');
+const userId = Math.ceil(Math.random()*100);
+console.log(userId);
 
 const styles = {
   container: {
@@ -314,7 +83,141 @@ const App = () => {
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('javascript');
   const [theme, setTheme] = useState('github');
+  const [remoteCursors, setRemoteCursors] = useState({});
+  const [username, setUsername] = useState("");
+  const [userId, setUserId] = useState(null);
   const editorRef = useRef(null);
+
+
+
+
+
+
+
+  useEffect(() => {
+    const randomUsername = `User_${Math.floor(Math.random() * 1000)}`;
+    setUsername(randomUsername);
+    setUserId(socket.id);
+
+    socket.emit("new-user", { userId: socket.id, username: randomUsername });
+
+    socket.on("cursor-update", ({ userId, position, username }) => {
+      console.log(username);
+      setRemoteCursors((prev) => ({
+        ...prev,
+        [userId]: { position, username },
+      }));
+      highlightCursor(userId, position, username);
+
+    });
+
+    return () => {
+      socket.off("cursor-update");
+    };
+  }, []);
+  const handleCursorChange = (selection) => {
+    if (!editorRef.current) return;
+    const cursorPos = selection.getCursor();
+    socket.emit("cursor-update", { userId: socket.id, position: cursorPos, username });
+  };
+
+  const highlightCursor = (userId, position, username) => {
+    if (!editorRef.current) return;
+    const editor = editorRef.current.editor;
+    const session = editor.getSession();
+
+    // Remove previous marker for this user
+    const markers = session.getMarkers(false);
+    Object.keys(markers).forEach((markerId) => {
+      if (markers[markerId].clazz === `cursor-marker-${userId}`) {
+        session.removeMarker(markerId);
+      }
+    });
+
+    // Create cursor marker
+    const Range = window.ace.require("ace/range").Range;
+    const range = new Range(position.row, position.column, position.row, position.column + 1);
+    
+    const markerId = session.addMarker(range, `cursor-marker-${userId}`, "text", true);
+    
+    // Display username above cursor
+    const scroller = document.querySelector(".ace_scroller");
+    if (!scroller) return;
+
+    let cursorLabel = document.querySelector(`.cursor-label-${userId}`);
+    if (!cursorLabel) {
+      cursorLabel = document.createElement("div");
+      cursorLabel.className = `cursor-label cursor-label-${userId}`;
+      scroller.appendChild(cursorLabel);
+    }
+
+    cursorLabel.innerText = username;
+    cursorLabel.style.position = "absolute";
+    cursorLabel.style.left = `${position.column * 7.5}px`; // Adjust for font size
+    cursorLabel.style.top = `${position.row * 16 - 10}px`; // Adjust height
+
+    // Remove username label after a few seconds
+    setTimeout(() => {
+      if (cursorLabel) cursorLabel.remove();
+    }, 3000);
+  };
+
+
+
+
+
+
+
+  // useEffect(() => {
+  //   socket.on("cursor-update", ({ userId, position }) => {
+  //     setRemoteCursors((prev) => ({ ...prev, [userId]: position }));
+  //     highlightCursor(userId, position);
+  //   });
+
+  //   return () => {
+  //     socket.off("cursor-update");
+  //   };
+  // }, []);
+
+  // const handleCursorChange = (selection) => {
+  //   if (editorRef.current) {
+  //     const cursor = editorRef.current.editor.getCursorPosition();
+  //     // console.log(cursor);
+  //     // socket.emit('cursor-update', cursor);
+  //   }
+  //   const cursorPos = selection.getCursor();
+  //   socket.emit("cursor-update", { userId: socket.id, position: cursorPos });
+  // };
+
+  // const highlightCursor = (userId, position) => {
+  //   if (!editorRef.current) return;
+  //   const editor = editorRef.current.editor;
+
+  //   // Remove existing marker if exists
+  //   editor.session.getMarkers(true) &&
+  //     Object.values(editor.session.getMarkers()).forEach((marker) => {
+  //       if (marker.className === `cursor-marker-${userId}`) {
+  //         editor.session.removeMarker(marker.id);
+  //       }
+  //     });
+
+  //   // Add new cursor marker
+  //   const range = new window.ace.require("ace/range").Range(
+  //     position.row,
+  //     position.column,
+  //     position.row,
+  //     position.column + 1
+  //   );
+
+  //   editor.session.addMarker(
+  //     range,
+  //     `cursor-marker-${userId}`,
+  //     "text",
+  //     true
+  //   );
+  // }
+
+
 
   const languageOptions = [
     { value: 'javascript', label: 'JavaScript', mode: 'javascript' },
@@ -379,12 +282,9 @@ const App = () => {
     setCode(getDefaultCode(newLang));
   };
 
-  const handleCursorChange = (selection) => {
-    if (editorRef.current) {
-      const cursor = editorRef.current.editor.getCursorPosition();
-      // socket.emit('cursor-update', cursor);
-    }
-  };
+  // const handleCursorChange = (selection) => {
+    
+  // };
 
   const handleCodeChange = (newCode) => {
     setCode(newCode);
@@ -394,7 +294,7 @@ const App = () => {
       const cursor = editor.getCursorPosition();
       console.log(cursor);
       
-      socket.emit('code-update', { code: newCode, cursor:cursor });
+      socket.emit('code-update', { code: newCode, cursor:cursor ,userId});
     }
   };
 

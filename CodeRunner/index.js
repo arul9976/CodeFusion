@@ -53,14 +53,23 @@ io.on('connection', (socket) => {
 
   // socket.emit('code-update', { code, cursor: { line: 0, ch: 0 } });
 
-
   socket.on('code-update', (newCode) => {
-    const { code, cursor } = newCode;
-    console.log("Cursor Row --> " + cursor.row + "\nCursor Column --> " + cursor.column);
+    const { code, cursor ,userId} = newCode;
+    if(cursor!=undefined){
+    console.log("Cursor Row --> " + cursor.row + "\nCursor Column --> " + cursor.column+userId);
+    console.log(cursor);
 
+    }
     socket.broadcast.emit('code-update', { code: code, cursor: cursor });
   });
+  socket.on("cursor-update", (data) => {
+    socket.broadcast.emit("cursor-update", data);
+  });
 
+  socket.on("new-user", ({ userId, username }) => {
+    users[userId] = username;
+    console.log(`User ${userId} set name: ${username}`);
+  });
 
   // socket.on('cursor-position', (position) => {
   //   socket.broadcast.emit('cursor-position', position);
