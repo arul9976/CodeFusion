@@ -20,5 +20,22 @@ export default defineConfig({
       },
     }
   },
+  resolve: {
+    alias: {
+      'ace-builds': 'ace-builds',
+    },
+  },
+  optimizeDeps: {
+    include: ['ace-builds'],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'ace-builds': ['ace-builds'],
+        },
+      },
+    },
+  },
 
 })

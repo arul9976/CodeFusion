@@ -51,14 +51,20 @@ app.use(bodyParser.text());
 io.on('connection', (socket) => {
   console.log('User Connected');
 
+  // socket.emit('code-update', { code, cursor: { line: 0, ch: 0 } });
+
+
   socket.on('code-update', (newCode) => {
-    console.log("--> " + newCode);
-    socket.broadcast.emit('code-update', newCode);
+    const { code, cursor } = newCode;
+    console.log("Cursor Row --> " + cursor.row + "\nCursor Column --> " + cursor.column);
+
+    socket.broadcast.emit('code-update', { code: code, cursor: cursor });
   });
 
-  socket.on('cursor-position', (position) => {
-    socket.broadcast.emit('cursor-position', position);
-  });
+
+  // socket.on('cursor-position', (position) => {
+  //   socket.broadcast.emit('cursor-position', position);
+  // });
 
   socket.on('output', (data) => {
     const { language, code } = data;
