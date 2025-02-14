@@ -1,0 +1,336 @@
+a{
+    text-decoration: none;
+    padding: 2px;
+}
+h1{
+    margin-bottom: 20px;
+}
+/* Expanding Circle */
+.half-circle {
+    position: absolute;
+    top: 50%;
+    left: -400px;
+    width: 900px;
+    height: 750px;
+    background: #497D7D;
+    border-radius: 48%;
+    transform: translateY(-50%) scale(0.3);
+    z-index: 0;
+    opacity: 0;
+    animation: expandCircle 6s ease-in-out infinite;
+}
+.styleh1{
+    padding: 15px;
+}
+
+/* Expanding and fading circle */
+@keyframes expandCircle {
+    0% {
+        transform: translate(-300px, -50%) scale(0.3);
+        opacity: 0;
+    }
+    30% {
+        transform: translate(-100px, -50%) scale(0.6);
+        opacity: 1;
+    }
+    70% {
+        transform: translate(50px, -50%) scale(1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(100px, -50%) scale(1.4);
+        opacity: 0;
+    }
+}
+*{
+    padding: 0%;
+    margin: 0%;
+    box-sizing: border-box;
+}
+.body-container{
+    background: linear-gradient(120deg, #27445D, #497D7D, #71BBB2);
+    /* background-size: 200% 200%; */
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    animation: bgShift 10s infinite alternate ease-in-out;
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* Main Container */
+.container {
+    position: relative;
+    width: 850px;
+    height: 50%;
+    max-width: 100%;
+    min-height: 480px;
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    z-index: 100;
+    
+}
+
+/* Form Containers */
+.form-container {
+    position: absolute;
+
+    top: 50px;
+    height: 100%;
+    width: 48%;
+    padding: 50px;
+    transition: all 0.6s ease-in-out;
+}
+
+/* Positioning Sign Up & Sign In */
+.sign-in-container {
+    left: 0;
+    z-index: 2;
+}
+
+.sign-up-container {
+    right: 0;
+    z-index: 1;
+}
+
+/* Inputs and Buttons */
+form {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    margin-top: 10px;
+
+}
+
+.paddingStyle{
+    margin-bottom: 30px;
+}
+button {
+    background: linear-gradient(135deg, #27445D, #497D74);
+    color: white;
+    font-size: 16px;
+    padding: 12px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    width: 150px;
+    margin-top: 25px;
+    margin-left: -5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+button:hover {
+    background: linear-gradient(135deg, #497D74, #27445D);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Sliding Panel (Overlay) */
+.overlay-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    transition: transform 0.6s ease-in-out;
+    z-index: 100;
+    background: linear-gradient(135deg, #497D74, #71BBB2,#27445D);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: 20px;
+}
+
+/* Overlay Content */
+.overlay-content {
+    width: 80%;
+    text-align: center;
+    color: white;
+}
+
+/* Active State: Move Only the Overlay */
+.container.active .overlay-container {
+    transform: translateX(-100%);
+}
+
+
+
+.forgot-password-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+   
+    animation: fadeIn 1s ease-in-out;
+}
+
+/* Card styling */
+.forgot-password-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.8s ease-out;
+    width: 450px;
+    height: 380px;
+    z-index: 10;
+}
+
+/* Heading */
+.forgot-password-card h2 {
+    color: white;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+/* Text */
+.forgot-password-card p {
+    color: #FFFFFF;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+/* Input Field */
+.forgot-password-card input {
+    width: 98%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 16px;
+    outline: none;
+}
+
+/* input::placeholder {
+    color: #F; 
+    opacity: 1; 
+} */
+.stylePlaceHolder::placeholder {
+    color: #FFFFFF; /* White color */
+}
+
+.input-glowcolor::placeholder {
+    color: #FFFFFF; /* White color */
+}
+
+/* Button */
+.forgot-password-card button {
+    width: 101%;
+    padding: 10px;
+    background: linear-gradient(135deg, #3E8E7E, #27445D);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+.forgot-password-card button:hover {
+    background: linear-gradient(135deg, #27445D, #3E8E7E);
+    transform: scale(1.03);
+}
+
+/* Back button */
+.back-btn {
+    margin-top: 15px;
+    background: transparent;
+    border: 1px solid white;
+}
+
+.back-btn:hover {
+    background: white;
+    color: #27445D;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.reset-password-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.reset-password-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.8s ease-out;
+    width: 450px;
+    height: 440px;
+    z-index: 10;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.reset-btn {
+    background: linear-gradient(135deg, #3B7A94, #1E2D40);
+}
+
+.back-btn {
+    background: linear-gradient(135deg, #1E2D40, #3B7A94);
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+.styleH2{
+    color: white;
+    padding: 10px;
+}
+.stylep {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+    padding: 8px;
+}
+.input-glowcolor{
+    width: 94%;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.input-glowcolor:focus {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
