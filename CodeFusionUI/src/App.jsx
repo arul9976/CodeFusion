@@ -1,7 +1,7 @@
 
 import { Routes, Route } from "react-router-dom";
 
-import Chat from "./Chat"
+import Chat from "./ChatComponents/Chat"
 
 import LoginRegister from "./LogInPage/loginRegister";
 import ForgotPassword from "./LogInPage/ForgotPassword";
