@@ -1,0 +1,141 @@
+.sideContainer {
+    width: 430px;
+    height: 100%;
+    padding: 5px;
+    
+    /* Smooth gradient */
+    /* background: linear-gradient(135deg, #FFFFFF, #B0D7D1, #FFFFFF); */
+    background-color: #e5f3f1;
+    animation: gradientAnimation 4s infinite alternate ease-in-out;
+
+    /* Soft shadow */
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 15px;
+    transition: all 0.5s ease-in-out;
+}
+
+
+.bodyContainer{
+    /* background-size: 200% 200%; */
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    animation: bgShift 10s infinite alternate ease-in-out;
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    justify-content: space-between;
+}
+.textBox{
+    width: 100%;
+    height: 81%;
+}
+
+.chatHeader {
+    display: flex;
+    padding: 10px;
+    width: 100%;
+    height: 8%;
+    border-radius: 3px;
+    background: linear-gradient(135deg,#acece4,#5D9C97);
+    justify-content: space-between;
+}
+
+/* User Button */
+.userBtn {
+    padding: 12px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.3s;
+  border-radius: 3px;
+  margin-top: 11px;
+  background-color: #27445D;
+ transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.userBtn:hover{
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+
+.botBtn:hover{
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+
+
+/* Bot Button */
+.botBtn {
+    margin-left: 10px;
+    background: linear-gradient(135deg, #27445D);
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border: none;
+    color: #FFFFFF;
+    width: 34%;
+    margin-top: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+    border-radius: 3px;
+    height: 66%;
+}
+
+
+
+/* Dropdown */
+.dropdown {
+    position: relative;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 49px;
+    left: 0;
+    background: #398078;
+    color: #FFFFFF;
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+    min-width: 140px;
+
+}
+
+.dropdownMenu p {
+    padding: 8px;
+    margin: 0;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.dropdownMenu p:hover {
+    background: #2B5363;
+}
+
+/* Chat Box */
+.chatBox {
+    width: 100%;
+    height: 20%;
+    color: white;
+}
+.styleMessage{
+    width: 99%;
+    height: 50%;
+    border-radius: 3px;
+    background-color: #F1F4F7;
+    border: 1px solid #c3e0df;
+    text-align: left;
+    margin: 0px;
+    padding: 10px;
+}
+
+
+.styleMessage:focus {
+    box-shadow: 0 0 10px #589591;
+}
+
+
