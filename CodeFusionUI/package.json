@@ -16,24 +16,16 @@
     "@xterm/xterm": "^5.5.0",
     "ace-builds": "^1.37.5",
     "axios": "^1.7.9",
-<<<<<<< HEAD
     "brace": "^0.11.1",
     "codemirror": "^5.65.18",
     "lodash": "^4.17.21",
     "lucide-react": "^0.475.0",
     "monaco-editor": "^0.52.2",
-=======
-    "codemirror": "^6.0.1",
-    "framer-motion": "^12.4.2",
->>>>>>> origin/CodefusionV1
     "react": "^18.3.1",
     "react-ace": "^13.0.0",
     "react-dom": "^18.3.1",
-<<<<<<< HEAD
     "react-redux": "^9.2.0",
-=======
-    "react-router-dom": "^7.1.5",
->>>>>>> origin/CodefusionV1
+    "react-router-dom": "^6.29.0",
     "react-xtermjs": "^1.0.9",
     "redux": "^5.0.1",
     "socket.io-client": "^4.8.1",

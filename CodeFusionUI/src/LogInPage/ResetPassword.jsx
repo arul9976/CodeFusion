@@ -2,11 +2,9 @@
 
 
 
-
-
 import React, { useState } from "react";
 import axios from "axios";
-import "./style.css";
+import "./signUpheader.css";
 
 function ResetPassword() {
     const [email, setEmail] = useState('');
@@ -37,39 +35,41 @@ function ResetPassword() {
                     <h2 className="styleH2">Reset Password</h2>
                     <p className="stylep">Enter your registered email and OTP.</p>
                     <form onSubmit={handleSubmit}>
-                        <input 
-                            type="email" 
-                            placeholder="Enter your email" 
-                            value={email} 
-                             className="input-glowcolor"
-                            onChange={(e) => setEmail(e.target.value)} 
-                            required 
+                        <input
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            className="input-glowcolor"
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
                         />
-                        <input 
-                            type="text" 
-                            placeholder="Enter OTP" 
-                            value={otp} 
-                             className="input-glowcolor"
-                            onChange={(e) => setOtp(e.target.value)} 
-                            required 
+                        <input
+                            type="text"
+                            placeholder="Enter OTP"
+                            value={otp}
+                            className="input-glowcolor"
+                            onChange={(e) => setOtp(e.target.value)}
+                            required
                         />
-                        <input 
-                            type="password" 
-                            placeholder="New Password" 
-                            value={password} 
-                             className="input-glowcolor"
-                            onChange={(e) => setPassword(e.target.value)} 
-                            required 
+                        <input
+                            type="password"
+                            placeholder="New Password"
+                            value={password}
+                            className="input-glowcolor"
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
                         />
-                        <input 
-                            type="password" 
-                            placeholder="Confirm Password" 
-                            value={confirmPassword} 
-                             className="input-glowcolor"
-                            onChange={(e) => setConfirmPassword(e.target.value)} 
-                            required 
+                        <input
+                            type="password"
+                            placeholder="Confirm Password"
+                            value={confirmPassword}
+                            className="input-glowcolor"
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
                         />
-                        <button type="submit">Reset Password</button>
+                        <button className="logBtn" type="submit">Reset Password</button>
+                        {/* <BacktoLogin /> */}
+
                     </form>
                     {message && <p className="message">{message}</p>}
                 </div>
