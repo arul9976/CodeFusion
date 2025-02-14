@@ -8,6 +8,19 @@ a {
     font-size: 2em;
 }
 
+.eye-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: #497D74; /* Match your theme */
+}
+
+.password-container {
+    position: relative;
+}
 /* Expanding Circle */
 .half-circle {
     position: absolute;

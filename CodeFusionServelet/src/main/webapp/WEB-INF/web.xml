@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+    
+    <display-name>CodeFusionUI</display-name>
+
+
+    <filter>
+        <filter-name>CORSFilter</filter-name>
+        <filter-class>codeFusionClasses.CORSFilter</filter-class>
+    </filter>
+
+  
+  
+    <filter>
+        <filter-name>AuthenticationFilter</filter-name>
+        <filter-class>codeFusionClasses.AuthenticationFilter</filter-class>
+    </filter>
+
+
+ <filter-mapping>
+        <filter-name>CORSFilter</filter-name>
+        <url-pattern>/*</url-pattern>  
+        
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthenticationFilter</filter-name>
+        <url-pattern>/LogInServ</url-pattern>
+        <dispatcher>REQUEST</dispatcher>  
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthenticationFilter</filter-name>
+        <url-pattern>/protected/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>  
+    </filter-mapping>
+
+
+       
+    <servlet>
+        <servlet-name>SignUpServlet</servlet-name>
+        <servlet-class>codeFusionClasses.SignUpServlet</servlet-class>
+    </servlet>
+
+
+    <servlet>
+        <servlet-name>LogInServ</servlet-name>
+        <servlet-class>codeFusionClasses.LogInServ</servlet-class>
+    </servlet>
+    <servlet>
+    	<description>
+    	</description>
+    	<display-name>ForgotPasswordServ</display-name>
+    	<servlet-name>ForgotPasswordServ</servlet-name>
+    	<servlet-class>codeFusionClasses.ForgotPasswordServ</servlet-class>
+    </servlet>
+    <servlet>
+    	<description>
+    	</description>
+    	<display-name>ResetPasswordServ</display-name>
+    	<servlet-name>ResetPasswordServ</servlet-name>
+    	<servlet-class>codeFusionClasses.ResetPasswordServ</servlet-class>
+    </servlet>
+
+
+    <servlet-mapping>
+        <servlet-name>SignUpServlet</servlet-name>
+        <url-pattern>/SignUpServlet</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>LogInServ</servlet-name>
+        <url-pattern>/LogInServ</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+    	<servlet-name>ForgotPasswordServ</servlet-name>
+    	<url-pattern>/ForgotPasswordServ</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+    	<servlet-name>ResetPasswordServ</servlet-name>
+    	<url-pattern>/ResetPasswordServ</url-pattern>
+    </servlet-mapping>
+
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+        <welcome-file>index.htm</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
+        <welcome-file>default.html</welcome-file>
+        <welcome-file>default.htm</welcome-file>
+        <welcome-file>default.jsp</welcome-file>
+    </welcome-file-list>
+</web-app>
+

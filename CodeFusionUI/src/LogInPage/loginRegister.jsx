@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./signUpheader.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import eye icons
+
+
 
 import { useNavigate } from "react-router-dom";
 
@@ -11,8 +14,13 @@ function LoginRegister() {
     const [password, setPassword] = useState('');
     const [isActive, setIsActive] = useState(false);
     const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false); 
 
-    
+    const togglePassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+
     const handleInputChange = (event) => {
         const { name, value } = event.target;
         if (name === 'name') setName(value);
@@ -65,7 +73,6 @@ function LoginRegister() {
 
     useEffect(() => {
         const body = document.body;
-
         const createHalfCircle = () => {
             let halfCircle = document.createElement("div");
             halfCircle.className = "half-circle";
@@ -81,6 +88,8 @@ function LoginRegister() {
         return () => clearInterval(interval);
     }, []);
 
+
+
     return (
         <div className="body-container">
             <div className={`login-container ${isActive ? "active" : ""}`}>
@@ -90,7 +99,24 @@ function LoginRegister() {
                         <h1 className="logh1Font">Create Account</h1>
                         <input className="logInp" type="text" name="name" placeholder="Name" value={name} onChange={handleInputChange} required />
                         <input className="logInp" type="email" name="email" placeholder="Email" value={email} onChange={handleInputChange} required />
-                        <input className="logInp" type="password" name="password" placeholder="Password" value={password} onChange={handleInputChange} required />
+                        {/* <input className="logInp" type="password" name="password" placeholder="Password" value={password} onChange={handleInputChange} required /> */}
+
+
+                        <div className="password-container">
+                            <input
+                                className="logInp paddingStyle"
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <span onClick={togglePassword} className="eye-icon">
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </span>
+                        </div>
+
                         <button className="logBtn" type="submit">Register</button>
                     </form>
                 </div>
