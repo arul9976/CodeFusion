@@ -1,0 +1,25 @@
+{
+  "arul": [
+    {
+      "file": "a1.html",
+      "url": "/codefusion/arul/a1.html"
+    },
+    {
+      "project1": [
+        {
+          "MyFolder": [
+            {
+              "file": "app.css",
+              "url": "/codefusion/arul/project1/MyFolder/app.css"
+            }
+          ]
+        },
+        {
+          "file": "project1.html",
+          "url": "/codefusion/arul/project1/project1.html"
+        }
+      ]
+    }
+  ]
+}
+
