@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 // import FileExplorer from './FileExpo/FileExplorer';
 
 import AceEditor from 'react-ace';
-import Term from '../Terminal';
+import Term from '../Terminal/Terminal';
 import ace from 'ace-builds';
 import * as Y from 'yjs';
 import _ from 'lodash';

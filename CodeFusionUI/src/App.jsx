@@ -7,6 +7,7 @@ import LoginRegister from "./LogInPage/loginRegister";
 import ForgotPassword from "./LogInPage/ForgotPassword";
 import ResetPassword from "./LogInPage/ResetPassword";
 import CodeEditor from "./Editor/CodeEditor";
+import EditorACE from "./Editor/EditorACE";
 
 const App = () => {
   return (
