@@ -1,9 +1,15 @@
 import React from 'react';
 import './App.css';
+import AppOld from './AppOld';
 
 
-export const App = () => {
+const App = () => {
   return (
-    <div>App</div>
+    <>
+      <AppOld />
+    </>
   )
 }
+
+
+export default App;
