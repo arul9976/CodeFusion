@@ -17,58 +17,46 @@ public class JavaSendEmail {
 
 
     public static void sendMail(String recipient, String otp) {
-        System.out.println("Preparing to send OTP email to " + recipient);
+    	System.out.println("Preparing to send OTP email to " + recipient);
 
         Properties properties = new Properties();
-//        properties.put("mail.smtp.auth", "true");
-//        properties.put("mail.smtp.starttls.enable", "true");
-//        properties.put("mail.smtp.host", "smtp.gmail.com");
-//        properties.put("mail.smtp.port", "465");
-
-        properties.put("mail.smtp.host", "smtp.gmail.com");
-        properties.put("mail.smtp.socketFactory.port", "465");
-        properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         properties.put("mail.smtp.auth", "true");
-        properties.put("mail.smtp.port", "465");
+        properties.put("mail.smtp.starttls.enable", "true"); 
+        properties.put("mail.smtp.host", "smtp.gmail.com");
+        properties.put("mail.smtp.port", "587"); 
 
-        String userName = "manimekala227@gmail.com";  // Change this
-        String password = "zajw htjz vdwv vjvl";    // Change this (use an App Password)
-
+        String userName = "manimekala227@gmail.com";  
+        String password = "xhuk xrel ircq gsbo";  
         Session session = Session.getInstance(properties, new Authenticator() {
             @Override
-			protected PasswordAuthentication getPasswordAuthentication() {
+            protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(userName, password);
             }
         });
 
         try {
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(userName));
+            message.setFrom(new InternetAddress(userName, "Code Fusion"));  
             message.setRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
-            message.setSubject("Your OTP for Password Reset");
-            message.setText("Hello,\n\nYour OTP for password reset is: " + otp + "\n\nThis OTP is valid for 5 minutes.");
+            message.setSubject("Your Secure OTP for Password Reset");
+
+            String emailContent = "<html><body>"
+                    + "<h2>Hello,</h2>"
+                    + "<p>Your One-Time Password (OTP) is: <strong>" + otp + "</strong></p>"
+                    + "<p>This OTP is valid for 5 minutes.</p>"
+                    + "<br>"
+                    + "<p>If you did not request this, please ignore this email.</p>"
+                    + "<p>Best Regards,<br><strong>Code Fusion Support Team</strong></p>"
+                    + "</body></html>";
+
+            message.setContent(emailContent, "text/html; charset=utf-8"); 
 
             Transport.send(message);
             System.out.println("OTP email sent successfully to " + recipient);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
-
-
-	private static Message prepareMessage(Session session,String username,String recepient) {
-		Message message = new MimeMessage(session);
-		try {
-			message.setFrom(new InternetAddress(username));
-			message.setRecipient(Message.RecipientType.TO, new InternetAddress(recepient));
-			message.setSubject("[---Test Email---]");
-			message.setText("Hello,\n [---------- Mail body---------]");
-
-		}
-		catch(Exception e){
-        	e.printStackTrace();
-        }
-		return message;
-
-	}
 }
+

@@ -29,7 +29,12 @@ public class DBConnection {
 	                System.out.println("Database connection failed.");
 	                e.printStackTrace();
 	            }
+	            finally {
+		        	 try { if (connection != null) connection.close(); } catch (SQLException ignored) {}
+				}
 	        }
+	       
+	       
 	        return connection;
 	    }
 	    }

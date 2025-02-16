@@ -4,15 +4,12 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
     
     <display-name>CodeFusionUI</display-name>
-
-
     <filter>
         <filter-name>CORSFilter</filter-name>
         <filter-class>codeFusionClasses.CORSFilter</filter-class>
     </filter>
 
-  
-  
+
     <filter>
         <filter-name>AuthenticationFilter</filter-name>
         <filter-class>codeFusionClasses.AuthenticationFilter</filter-class>
@@ -21,8 +18,7 @@
 
  <filter-mapping>
         <filter-name>CORSFilter</filter-name>
-        <url-pattern>/*</url-pattern>  
-        
+        <url-pattern>/*</url-pattern>         
     </filter-mapping>
 
     <filter-mapping>
@@ -36,14 +32,11 @@
         <url-pattern>/protected/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>  
     </filter-mapping>
-
-
-       
+      
     <servlet>
         <servlet-name>SignUpServlet</servlet-name>
         <servlet-class>codeFusionClasses.SignUpServlet</servlet-class>
     </servlet>
-
 
     <servlet>
         <servlet-name>LogInServ</servlet-name>
@@ -63,6 +56,13 @@
     	<servlet-name>ResetPasswordServ</servlet-name>
     	<servlet-class>codeFusionClasses.ResetPasswordServ</servlet-class>
     </servlet>
+    <servlet>
+    	<description>
+    	</description>
+    	<display-name>Test</display-name>
+    	<servlet-name>Test</servlet-name>
+    	<servlet-class>codeFusionClasses.Test</servlet-class>
+    </servlet>
 
 
     <servlet-mapping>
@@ -81,6 +81,10 @@
     <servlet-mapping>
     	<servlet-name>ResetPasswordServ</servlet-name>
     	<url-pattern>/ResetPasswordServ</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+    	<servlet-name>Test</servlet-name>
+    	<url-pattern>/Test</url-pattern>
     </servlet-mapping>
 
 

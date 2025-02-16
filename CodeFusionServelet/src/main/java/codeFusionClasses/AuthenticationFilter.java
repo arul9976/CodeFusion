@@ -40,27 +40,49 @@ public class AuthenticationFilter implements Filter {
 	 */
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		 HttpServletRequest request1=(HttpServletRequest)request;
-		  Cookie[] cookies=request1.getCookies();
-		  int userID=0;
-		  String sessionID="";
-		  for (Cookie element : cookies) {
-		   if(element.getName().equals("userID")){
-		    userID=Integer.parseInt(element.getValue());
+//		 HttpServletRequest request1=(HttpServletRequest)request;
+//		  Cookie[] cookies=request1.getCookies();
+//		  int userID=0;
+//		  String sessionID="";
+//		  for (Cookie element : cookies) {
+//		   if(element.getName().equals("userID")){
+//		    userID=Integer.parseInt(element.getValue());
+//
+//		   }
+//		   else if(element.getName().equals("SessionID"))
+//		   {
+//		   sessionID=element.getValue();
+//		   }
+//
+//		  }
+//
+//		  if(SignUpDAO.checkSession(userID, sessionID)) {
+//
+//		   chain.doFilter(request1, response);
+//
+//		  }
+		
+		   HttpServletRequest request1 = (HttpServletRequest) request;
+		    Cookie[] cookies = request1.getCookies();  
 
-		   }
-		   else if(element.getName().equals("SessionID"))
-		   {
-		   sessionID=element.getValue();
-		   }
+		    int userID = 0;
+		    String sessionID = "";
 
-		  }
+		    if (cookies != null) {
+		        for (Cookie element : cookies) {
+		            if (element.getName().equals("userID")) {
+		                userID = Integer.parseInt(element.getValue());
+		            } else if (element.getName().equals("SessionID")) {
+		                sessionID = element.getValue();
+		            }
+		        }
+		    }
 
-		  if(SignUpDAO.checkSession(userID, sessionID)) {
-
-		   chain.doFilter(request1, response);
-
-		  }
+		    if (SignUpDAO.checkSession(userID, sessionID)) {
+		        chain.doFilter(request1, response);
+		    } else {
+		       
+		    }
 	}	/**
 	 * @see Filter#init(FilterConfig)
 	 */

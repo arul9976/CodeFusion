@@ -1,35 +1,48 @@
 package codeFusionClasses;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Random;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import dAO.ForgotDAO;
-
 /**
- * Servlet implementation class ForgotPasswordServ
+ * Servlet implementation class Test
  */
-//@WebServlet("/ForgotPasswordServ")
-public class ForgotPasswordServ extends HttpServlet {
+//@WebServlet("/Test")
+public class Test extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-
+       
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public ForgotPasswordServ() {
+    public Test() {
         super();
         // TODO Auto-generated constructor stub
     }
 
 	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#doGet(HttpServleHttpServletRequest request1=(HttpServletRequest)request;
+		  Cookie[] cookies=request1.getCookies();
+		  int userID=0;
+		  String sessionID="";
+		  for (Cookie element : cookies) {
+		   if(element.getName().equals("userID")){
+		    userID=Integer.parseInt(element.getValue());
+
+		   }
+		   else if(element.getName().equals("SessionID"))
+		   {
+		   sessionID=element.getValue();
+		   }
+
+		  }
+
+		  if(SignUpDAO.checkSession(userID, sessionID)) {
+
+		   chain.doFilter(request1, response);
+tRequest request, HttpServletResponse response)
 	 */
-	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		response.getWriter().append("Served at: ").append(request.getContextPath());
@@ -38,20 +51,11 @@ public class ForgotPasswordServ extends HttpServlet {
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
-	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		response.setContentType("application/json");
-	    PrintWriter out = response.getWriter();
-
-	    System.out.println("Forgot password reached");
-	    String email = request.getParameter("email");
-	    System.out.println("Email received: " + email); 
-
-	    if (ForgotDAO.passwordReset(email)) {
-	        out.print("{ \"message\": \"OTP sent to your email.\" }");
-	    } else {
-	        out.print("{ \"error\": \"Email not found!\" }");
-	    }
-	    
+		
+//		String email=
+		JavaSendEmail.sendMail("allinroshya@gmail.com", "1540");
+		response.getWriter().write("Send.....");
 	}
+
 }

@@ -13,7 +13,6 @@ public class ForgotDAO {
             PreparedStatement userStmt = DBConnection.getConnection().prepareStatement("SELECT id FROM users WHERE email = ?");
             userStmt.setString(1, email);
             ResultSet resultIdUser = userStmt.executeQuery();
-
             int userId = 0;
             if (resultIdUser.next()) {
                 userId = resultIdUser.getInt("id");

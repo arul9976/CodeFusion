@@ -43,7 +43,7 @@ public class LogInServ extends HttpServlet {
 	 */
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+ 
 		BufferedReader reader = request.getReader();
         StringBuilder sb = new StringBuilder();
         String line;
@@ -69,7 +69,6 @@ public class LogInServ extends HttpServlet {
                 userCookie.setPath("/");
                 sessionCookie.setPath("/");
 
-
                 response.addCookie(userCookie);
                 response.addCookie(sessionCookie);
 
@@ -88,5 +87,4 @@ public class LogInServ extends HttpServlet {
             response.getWriter().write("{\"error\": \"Invalid request\"}");
         }
 	}
-
 }
