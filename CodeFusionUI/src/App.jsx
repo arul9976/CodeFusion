@@ -1,12 +1,13 @@
 
 import { Routes, Route } from "react-router-dom";
 import './App.css';
-// import Chat from "./ChatComponents/Chat"
+import Chat from "./ChatComponents/Chat"
 
 import LoginRegister from "./LogInPage/loginRegister";
 import ForgotPassword from "./LogInPage/ForgotPassword";
 import ResetPassword from "./LogInPage/ResetPassword";
 import CodeEditor from "./Editor/CodeEditor";
+
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
         <Route path="/loginRegister" element={<LoginRegister />} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />
         <Route path="/resetPassword" element={<ResetPassword />} />
+        <Route path="/chat" element ={<Chat/>} />
     </Routes>
 
     // <Routes>

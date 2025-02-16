@@ -10,16 +10,30 @@ function ForgotPassword() {
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
 
+    // const handleSubmit = async (event) => {
+    //     event.preventDefault();
+    //     try {
+    //         const response = await axios.post("http://localhost:8080/CodeFusionUI/ForgotPasswordServ", { email });
+    //         setMessage(response.data.message);
+    //     } catch (error) {
+    //         setMessage("Error: " + (error.response?.data?.error || "Server Error"));
+    //     }
+    // };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post("http://localhost:8080/CodeFusionUI/ForgotPasswordServ", { email });
+            const response = await axios.post(
+                "http://localhost:8080/CodeFusionUI/ForgotPasswordServ",
+                new URLSearchParams({ email }).toString(),
+                { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+            );
             setMessage(response.data.message);
+            navigate("/resetPassword"); 
         } catch (error) {
             setMessage("Error: " + (error.response?.data?.error || "Server Error"));
         }
     };
-
     return (
         <div className="body-container">
             <div className="forgot-password-container">
@@ -36,11 +50,12 @@ function ForgotPassword() {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                         />
-
-                        <button className="logBtn" type="submit" onClick={() => navigate("/resetPassword")}>Send Reset Link</button>
+                    <button className="logBtn" type="submit">Send Reset Link</button>
                     </form>
                     {message && <p className="message">{message}</p>}
-                    <BacktoLogin />
+                    <button className="back-btn" onClick={() => navigate("/loginRegister")}>
+                        Back to Login
+                    </button>
                 </div>
             </div>
         </div>
@@ -48,3 +63,6 @@ function ForgotPassword() {
 }
 
 export default ForgotPassword;
+
+
+

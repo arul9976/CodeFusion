@@ -3,6 +3,53 @@ a {
     padding: 2px;
 }
 
+
+.backButton {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #1E2D40, #3B7A94);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.backButton:hover {
+    background: linear-gradient(135deg, #3B7A94, #1E2D40);
+    transform: scale(1.1);
+}
+
+.backButton:active {
+    transform: scale(0.9);
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.backButton {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+
 .logh1Font {
     margin-bottom: 20px;
     font-size: 2em;
@@ -16,6 +63,7 @@ a {
     cursor: pointer;
     font-size: 18px;
     color: #497D74; /* Match your theme */
+    margin-top: -8px;
 }
 
 .password-container {
@@ -155,7 +203,6 @@ form {
     transition: all 0.3s ease-in-out;
     width: 150px;
     margin-top: 25px;
-    margin-left: -5px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -329,7 +376,7 @@ form {
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
     animation: slideIn 0.8s ease-out;
     width: 450px;
-    height: 440px;
+    height: 470px;
     z-index: 10;
 }
 
@@ -382,3 +429,14 @@ form {
 .input-glowcolor:focus {
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
 }
+
+.message {
+    max-width: 43%;
+    margin-bottom: 12px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.2s ease;
+  }

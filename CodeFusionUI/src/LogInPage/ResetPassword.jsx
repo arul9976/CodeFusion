@@ -1,18 +1,18 @@
 
-
-
-
 import React, { useState } from "react";
 import axios from "axios";
 import "./signUpheader.css";
-
+import { useNavigate } from "react-router-dom";
 function ResetPassword() {
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
+    const navigate = useNavigate();
 
+
+    
     const handleSubmit = async (event) => {
         event.preventDefault();
         if (password !== confirmPassword) {
@@ -21,7 +21,9 @@ function ResetPassword() {
         }
 
         try {
-            const response = await axios.post("http://localhost:8080/ResetPasswordServ", { email, otp, password });
+            const response = await axios.post("http://localhost:8080/ResetPasswordServ", { email, otp, password },
+                { headers: { "Content-Type": "application/json" } }
+            );
             setMessage(response.data.message);
         } catch (error) {
             setMessage("Error: " + (error.response?.data?.error || "Server Error"));
@@ -32,6 +34,10 @@ function ResetPassword() {
         <div className="body-container">
             <div className="reset-password-container">
                 <div className="reset-password-card animate-fade-in">
+                
+                <button className="backButton" onClick={() => navigate("/loginRegister")}>
+                    &#8592;
+                </button>
                     <h2 className="styleH2">Reset Password</h2>
                     <p className="stylep">Enter your registered email and OTP.</p>
                     <form onSubmit={handleSubmit}>

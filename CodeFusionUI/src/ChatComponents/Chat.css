@@ -1,0 +1,224 @@
+.chat-window {
+    width: 430px;
+    height: 100vh;
+    background-color: #ffffff;
+    border-radius: 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-header {
+    background: linear-gradient(to right,
+            #1e2a3a,
+            #3f6b63,#1e2a3a);
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 64px;
+}
+
+
+
+/* Dropdown Styles */
+.dropdown-container {
+    position: relative;
+}
+
+.user-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 118px;
+    padding: 9px 12px;
+    background-color:
+        #3f6b63;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.user-button:hover {
+    background-color:
+        #1e2a3a;
+    transform: translateY(-2px);
+}
+
+.chevron {
+    margin-left: 8px;
+    transition: transform 0.3s ease;
+}
+
+.chevron.rotate {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 110px;
+    background-color: #3f6b63;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    animation: slideDown 0.2s ease;
+}
+
+.dropdown-item {
+    padding: 8px 12px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #2a4c46;
+}
+
+.bot-button {
+    padding: 9px 22px;
+    background-color:
+        #3f6b63;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.bot-button:hover {
+    background-color:
+        #1e2a3a;
+    transform: translateY(-2px);
+}
+
+/* Messages Container */
+.messages-container {
+    flex-grow: 1;
+    padding: 16px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+}
+
+.messages-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 2px;
+}
+
+.message {
+    max-width: 40%;
+    margin-bottom: 12px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.2s ease;
+}
+
+.message.sent {
+    margin-left: auto;
+    background-color: #3f6b63;
+    color: white;
+}
+
+.message.received {
+    margin-right: auto;
+    background-color: white;
+    color: #1e2a3a;
+    border: 1px solid #e2e8f0;
+}
+
+/* Input Section */
+.input-container {
+    position: relative;
+    width: 100%;
+    height: 8%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background-color: white;
+    border-top: 1px solid #e2e8f0;
+}
+
+.message-input {
+    width: 92%;
+    padding: 18px 40px 15px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    outline: none;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-color: #f8f9fa;
+    text-align: left;
+}
+
+.message-input:focus {
+    border-color: #3f6b63;
+    box-shadow: 0 0 0 2px rgba(63, 107, 99, 0.1);
+    background-color: white;
+}
+
+.send-button {
+    position: absolute;
+    right: 28px;
+    bottom: 25px;
+    width: 40px;
+    height: 36px;
+    background-color: #1e2a3a;
+    color: white;
+    border: none;
+      border-top-color: currentcolor;
+      border-right-color: currentcolor;
+      border-bottom-color: currentcolor;
+      border-left-color: currentcolor;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+  }
+
+.send-button:hover {
+    background-color: #3f6b63;
+    transform: scale(1.05);
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

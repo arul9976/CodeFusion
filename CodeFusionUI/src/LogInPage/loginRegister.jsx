@@ -44,33 +44,28 @@ function LoginRegister() {
         }
     };
 
-
+    
     const handleLogin = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post("http://localhost:8080/CodeFusionUI/LogInServ", {
-                email,
-                password
-            }, {
+            const response = await axios.post("http://localhost:8080/CodeFusionUI/LogInServ", 
+            { email, password }, 
+            {
                 headers: { "Content-Type": "application/json" },
-                withCredentials: true
+                withCredentials: true 
             });
-
+    
             if (response.status === 200) {
                 alert("Login successful!");
                 document.cookie = `SessionID=${response.data.sessionId}`;
                 document.cookie = `userID=${response.data.userId}`;
-                // navigate("/codeEditor");
-
             } else {
                 alert("Invalid credentials");
             }
         } catch (error) {
-            alert("Login Failed: " + error.response?.data?.error || "Server Error");
+            alert("Login Failed: " + (error.response?.data?.error || "Server Error"));
         }
-    }
-
-
+    };
     useEffect(() => {
         const body = document.body;
         const createHalfCircle = () => {
@@ -109,7 +104,7 @@ function LoginRegister() {
                                 name="password"
                                 placeholder="Password"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={handleInputChange}
                                 required
                             />
                             <span onClick={togglePassword} className="eye-icon">
@@ -126,7 +121,22 @@ function LoginRegister() {
                     <form onSubmit={handleLogin}>
                         <h1 className="logh1Font">Sign In</h1>
                         <input className="logInp" type="email" name="email" placeholder="Email" value={email} onChange={handleInputChange} required />
-                        <input className="logInp paddingStyle" type="password" name="password" placeholder="Password" value={password} onChange={handleInputChange} required />
+
+                        <div className="password-container">
+                            <input className="logInp paddingStyle"
+                             type ={showPassword ? "text" : "password"} 
+                             name="password" 
+                             placeholder="Password"
+                              value={password}
+                              onChange={handleInputChange}
+                              required
+                              />
+                              <span onClick={togglePassword} className="eye-icon">
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                              </span>
+                        </div>
+
+                        {/* <input className="logInp paddingStyle" type="password" name="password" placeholder="Password" value={password} onChange={handleInputChange} required /> */}
                         <div className="options">
                             <a href="#" onClick={(e) => { e.preventDefault(); navigate("/forgotPassword"); }}>
                                 Forgot Password?
