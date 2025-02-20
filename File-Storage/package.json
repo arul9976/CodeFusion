@@ -1,0 +1,29 @@
+{
+  "name": "codefusion",
+  "version": "1.0.0",
+  "description": "",
+  "main": "file-Storage.js",
+  "type": "module",  
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arul9976/CodeFusion.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arul9976/CodeFusion/issues"
+  },
+  "homepage": "https://github.com/arul9976/CodeFusion#readme",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "fs-extra": "^11.3.0",
+    "path": "^0.12.7"
+  }
+}
+
