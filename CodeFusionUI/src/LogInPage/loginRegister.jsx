@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useMemo } from "react";
 import axios from "axios";
 import "./signUpheader.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import eye icons
+import { FaEye, FaEyeSlash } from "react-icons/fa"; 
 
 
 
@@ -15,6 +15,7 @@ function LoginRegister() {
     const [isActive, setIsActive] = useState(false);
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false); 
+  
 
     const togglePassword = () => {
         setShowPassword(!showPassword);
@@ -26,8 +27,10 @@ function LoginRegister() {
         if (name === 'name') setName(value);
         else if (name === 'email') setEmail(value);
         else if (name === 'password') setPassword(value);
+        
     };
-
+  
+    const userName = useMemo(() => email.includes("@") ? email.split("@")[0] : email, [email]);
 
     const handleSignUp = async (event) => {
         event.preventDefault();
@@ -35,7 +38,8 @@ function LoginRegister() {
             const response = await axios.post("http://localhost:8080/CodeFusionUI/SignUpServlet", {
                 name,
                 email,
-                password
+                password,
+                userName
             }, { headers: { "Content-Type": "application/json" } });
 
             alert(response.data.message);

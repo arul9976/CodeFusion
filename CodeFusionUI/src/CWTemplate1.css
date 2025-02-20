@@ -1,0 +1,31 @@
+.dashboardMainDiv {
+    width: 1920px;
+   margin: 0 auto;
+   display:flex;
+   flex-direction:row;
+   }
+   .dashboardSidePannel{
+   width:300px;
+   height:100dvh;
+   border: 0px solid black;
+   background-color:#27445D;
+   }
+   .dashboardSidePannelButtons{
+   height:30px;
+   width:240px;
+   font-size :1.3em;
+   padding:10px;
+   margin-top:30px;
+   background-color:#27445D;
+   color:#EFE9D5;
+   border-top-right-radius:30px;
+   border-bottom-right-radius:30px;
+   }
+   .dashBoardworkspacelistbox{
+   font-size :1em;
+   padding-left:50px;
+   margin:15px;
+   display:flex;
+   flex-direction:row;
+   color:#000000;
+   }
