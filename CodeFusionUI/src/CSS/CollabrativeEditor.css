@@ -1,0 +1,38 @@
+/* CollaborativeEditor.css */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ... (previous CSS remains the same until cursor styles) ... */
+
+/* Cursor and Label Styles */
+.remote-cursor-label {
+  position: absolute;
+  background-color: var(--user-color);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1000;
+  transform: translateY(-100%);
+}
+
+.remote-cursor {
+  position: absolute;
+  width: 2px;
+  background-color: var(--user-color);
+  pointer-events: none;
+}
+
+.remote-selection {
+  background-color: var(--user-color-transparent);
+  position: absolute;
+}
+
+/* ... (rest of previous CSS remains the same) ... */

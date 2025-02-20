@@ -1,9 +1,10 @@
 /* App.css */
-
+@import url('./CSS/FileExplorer.css');
 #root {
   height: 100dvh;
   width: 100%;
   overflow: hidden;
+  transition: .5s ease;
 }
 
 body {
@@ -12,3 +13,7 @@ body {
   padding: 0;
   color: white;
 }
+
+/* h1 {
+  color: red;
+} */

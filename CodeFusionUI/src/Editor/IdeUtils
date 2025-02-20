@@ -1,0 +1,254 @@
+
+
+
+const themeUtil = (curr, isExplorerOpen, showTerminal) => {
+
+
+
+  const themes = {
+    dark: {
+      base: '#1a1a1a',
+      surface: '#252526',
+      surfaceLight: '#2c2c2c',
+      surfaceDark: '#1e1e1e',
+      menuGradient: 'linear-gradient(to bottom, #2c2c2c, #252525)',
+      sidebarGradient: 'linear-gradient(to bottom, #292929, #222222)',
+      text: '#e0e0e0',
+      textDim: '#bbb',
+      accent: '#0078d4',
+      folder: '#dcb67a',
+    },
+    black: {
+      base: '#000000',
+      surface: '#121212',
+      surfaceLight: '#1a1a1a',
+      surfaceDark: '#0a0a0a',
+      menuGradient: 'linear-gradient(to bottom, #181818, #101010)',
+      sidebarGradient: 'linear-gradient(to bottom, #161616, #0c0c0c)',
+      text: '#e0e0e0',
+      textDim: '#999',
+      accent: '#0050a0',
+      folder: '#c4a269',
+    }
+  };
+
+  const theme = themes[curr]
+
+  const styles = {
+    container: {
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      backgroundColor: theme.base,
+      color: theme.text,
+      fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+    },
+    menuBar: {
+      display: 'flex',
+      background: theme.menuGradient,
+      padding: '0 12px',
+      height: '36px',
+      alignItems: 'center',
+      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+    },
+    menuItem: {
+      padding: '0 12px',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      cursor: 'pointer',
+      userSelect: 'none',
+      fontSize: '13px',
+      transition: 'background-color 0.15s ease',
+    },
+    menuItemHover: {
+      backgroundColor: theme.surfaceLight,
+      borderRadius: '4px',
+    },
+    mainContent: {
+      display: 'flex',
+      flexGrow: 1,
+      overflow: 'hidden',
+    },
+    sideBar: {
+      width: '48px',
+      background: theme.sidebarGradient,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '8px 0',
+      boxShadow: '1px 0 3px rgba(0, 0, 0, 0.2)',
+      zIndex: 10,
+    },
+    sideBarIcon: {
+      padding: '12px',
+      cursor: 'pointer',
+      borderLeft: '2px solid transparent',
+      transition: 'all 0.2s ease',
+      borderRadius: '0 4px 4px 0',
+    },
+    activeSideBarIcon: {
+      borderLeft: `2px solid ${theme.accent}`,
+      backgroundColor: theme.surfaceLight,
+    },
+    explorer: {
+      backgroundColor: theme.surface,
+      display: 'flex',
+      flexDirection: 'column',
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      transition: 'width 0.3s ease',
+      // width: isExplorerOpen ? '280px' : '1px',
+
+    },
+    explorerHeader: {
+      padding: '10px 16px',
+      fontWeight: '600',
+      fontSize: '12px',
+      textTransform: 'uppercase',
+      letterSpacing: '1px',
+      color: theme.textDim,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    folderItem: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '6px 8px 6px 16px',
+      cursor: 'pointer',
+      userSelect: 'none',
+      transition: 'background-color 0.15s ease',
+      borderRadius: '4px',
+      margin: '0 4px',
+    },
+    fileItem: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '6px 8px 6px 36px',
+      cursor: 'pointer',
+      userSelect: 'none',
+      transition: 'background-color 0.15s ease',
+      borderRadius: '4px',
+      margin: '0 4px',
+    },
+    folderName: {
+      marginLeft: '8px',
+      fontSize: '13px',
+    },
+    fileName: {
+      marginLeft: '8px',
+      fontSize: '13px',
+    },
+    main: {
+      flexGrow: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      background: theme.surfaceDark,
+    },
+    tabBar: {
+      display: 'flex',
+      overflowX: 'auto',
+      backgroundColor: theme.surface,
+      borderBottom: `1px solid ${theme.surfaceLight}`,
+      height: '36px',
+    },
+    tab: (isActive) => ({
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0 16px',
+      minWidth: '0',
+      height: '100%',
+      cursor: 'pointer',
+      userSelect: 'none',
+      backgroundColor: isActive ? theme.surfaceDark : 'transparent',
+      transition: 'background-color 0.2s ease',
+      position: 'relative',
+      overflow: 'hidden',
+    }),
+    tabContent: {
+      display: 'flex',
+      alignItems: 'center',
+      maxWidth: '200px',
+    },
+    tabFileName: {
+      marginLeft: '8px',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      fontSize: '13px',
+    },
+    closeButton: {
+      marginLeft: '8px',
+      padding: '4px',
+      borderRadius: '50%',
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer',
+      color: theme.text,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background-color 0.15s ease',
+      opacity: 0.7,
+    },
+    editorContainer: {
+      flexGrow: 1,
+      position: 'relative',
+    },
+    terminalContainer: {
+      height: showTerminal ? '250px' : '0',
+      backgroundColor: theme.base,
+      borderTop: showTerminal ? `1px solid ${theme.surfaceLight}` : 'none',
+      overflow: 'hidden',
+      transition: 'height 0.3s ease',
+    },
+    terminalHeader: {
+      backgroundColor: theme.surface,
+      padding: '6px 12px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    terminalTitle: {
+      fontSize: '13px',
+      fontWeight: '600',
+    },
+    terminalContent: {
+      padding: '12px',
+      height: 'calc(100% - 36px)',
+      overflowY: 'auto',
+      fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+      whiteSpace: 'pre-wrap',
+      fontSize: '13px',
+    },
+    terminalToggle: {
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+    },
+    actionButton: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '6px',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      transition: 'background-color 0.15s ease',
+    },
+    themeToggle: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '32px',
+      height: '32px',
+      borderRadius: '4px',
+      marginLeft: '8px',
+      cursor: 'pointer',
+      transition: 'background-color 0.15s ease',
+    },
+  };
+
+  return { theme, styles };
+}
+
+export { themeUtil };

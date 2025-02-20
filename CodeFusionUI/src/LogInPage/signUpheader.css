@@ -15,12 +15,14 @@ a {
     transform: translateY(-50%);
     cursor: pointer;
     font-size: 18px;
-    color: #497D74; /* Match your theme */
+    color: #497D74;
+    /* Match your theme */
 }
 
 .password-container {
     position: relative;
 }
+
 /* Expanding Circle */
 .half-circle {
     position: absolute;
@@ -414,4 +416,102 @@ form {
 
 .social-button.github:hover {
     background-color: #2c3138;
+}
+
+/* Modern Social Login Buttons */
+.social-container {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.social-title {
+    margin-bottom: 15px;
+    color: #777;
+    font-size: 14px;
+}
+
+.social-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.social-button-wrapper {
+    display: inline-block;
+}
+
+/* Style the Google button wrapper to match our design */
+.social-button-wrapper div {
+    border-radius: 50% !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden !important;
+    width: 40px !important;
+    height: 40px !important;
+}
+
+/* Custom GitHub button */
+.social-button.github-btn {
+    background: #24292e;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.social-button.github-btn:hover {
+    background: #2c3136;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Google OAuth Button Styling */
+.google-button-container {
+    display: inline-block;
+    position: relative;
+}
+
+.google-button-container ::before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    top: 0;
+    right: 0;
+    background: url('../images/icons8-google-48.png') no-repeat;
+    background-size: contain;
+}
+
+/* Style for the user profile after successful login */
+.user-profile {
+    text-align: center;
+    margin: 10px 0;
+}
+
+.user-profile h2 {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.user-profile p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.profile-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #eee;
 }

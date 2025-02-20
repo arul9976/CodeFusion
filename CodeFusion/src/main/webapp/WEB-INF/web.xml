@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <context-param>
+        <param-name>host</param-name>
+        <param-value>smtp.gmail.com</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>port</param-name>
+        <param-value>587</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>user</param-name>
+        <param-value>codefusion368@gmail.com</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>pass</param-name>
+        <param-value>dgwl rmgj nezr wqpp</param-value>
+    </context-param>
+
+    <filter>
+        <filter-name>JwtAuthFilter</filter-name>
+        <filter-class>com.ide.codefusion.auth.JwtAuthFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>JwtAuthFilter</filter-name>
+        <url-pattern>/*</url-pattern> <!-- Apply this filter to API endpoints -->
+    </filter-mapping>
+
+    <filter>
+        <filter-name>CORSFilter</filter-name>
+        <filter-class>com.ide.codefusion.auth.CORSFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>CORSFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+
+</web-app>

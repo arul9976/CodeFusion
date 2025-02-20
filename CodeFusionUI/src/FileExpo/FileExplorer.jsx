@@ -1,17 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Folder, File, ChevronRight, ChevronDown } from 'lucide-react';
-import './FileExplorer.css'; 
 
-const FileExplorer = () => {
+import '../CSS/FileExplorer.css';
+import { getFileIcon } from '../utils/GetIcon';
+import { ClientContext } from '../Editor/ClientContext';
+
+const FileExplorer = ({ isExplorerOpen, files, setFiles, setActiveFileId }) => {
+  const { fileOpenAndDocCreate } = useContext(ClientContext);
   const [fileData, setFileData] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState({});
   const [user, setUser] = useState('arul');
+  const idxRef = useRef(0);
+
+  const handleFile = (e) => {
+    e['name'] = e.file;
+    let curFile = files.find(f => f.id === e.id);
+    // console.log("Curr file : " + curFile ? curFile : e);
+
+    if (curFile) {
+      setActiveFileId(curFile.id);
+      return;
+    }
+    // console.log(e);
+    setActiveFileId(e.id);
+    setFiles([...files, e])
+  }
 
   useEffect(() => {
     const fetchFiles = async () => {
       try {
+        // const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user}`);
         const response = await fetch(`http://localhost:3000/list-all-files/${user}`);
         const data = await response.json();
+
         // const data = {
         //   "arul": [
         //     {
@@ -52,13 +73,17 @@ const FileExplorer = () => {
         //     }
         //   ]
         // };
+        // setTimeout(() => {
+        // console.log(data[user]);
+
         setFileData(data[user]);
+        // }, 2000);
       } catch (error) {
         console.error("Error fetching files:", error);
       }
     };
     fetchFiles();
-  }, [user]);
+  }, [user, isExplorerOpen]);
 
   const toggleFolder = (folderPath) => {
     setExpandedFolders(prev => ({
@@ -67,23 +92,31 @@ const FileExplorer = () => {
     }));
   };
 
-  const renderFiles = (files, parentPath = '') => {
+
+  useEffect(() => {
+    if (!isExplorerOpen) {
+      setFileData(null);
+    }
+
+  }, [isExplorerOpen])
+
+  const renderFiles = (files, parentPath = '', id = 0) => {
     return (
       <ul className="file-list">
-        {files.map((fileOrFolder, index) => {
+        {files.map((fileOrFolder) => {
           if (fileOrFolder.file) {
-            // This is a file
+            // console.log(fileOrFolder);
+            if (!fileOrFolder.id)
+              fileOrFolder['id'] = fileOrFolder.url;
+            // console.log("---> " + Object.entries(fileOrFolder));
+
             return (
-              <li key={`${parentPath}/${fileOrFolder.file}`} className="file-item">
-                <a
-                  href={fileOrFolder.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="file-link"
-                >
-                  <File size={16} className="file-icon" />
+              <li key={fileOrFolder.id} className="file-item" onClick={() => handleFile(fileOrFolder)}>
+
+                <p className='file-link'>
+                  {getFileIcon(fileOrFolder.file)}
                   <span>{fileOrFolder.file}</span>
-                </a>
+                </p>
               </li>
             );
           } else if (typeof fileOrFolder === 'object') {
@@ -106,7 +139,7 @@ const FileExplorer = () => {
                   <span>{folderName}</span>
                 </button>
 
-                {isExpanded && renderFiles(folderContents, currentPath)}
+                {isExpanded && renderFiles(folderContents, currentPath, id)}
               </li>
             );
           }
@@ -125,12 +158,12 @@ const FileExplorer = () => {
   }
 
   return (
-    <div className="file-explorer">
+    <div className={'file-explorer'}>
       <div className="header">
         <div className="avatar">
           {user.slice(0, 1).toUpperCase()}
         </div>
-        <h1>{user}'s File Explorer</h1>
+        <h1 className='myclass'>{user}'s File Explorer</h1>
       </div>
 
       {fileData.length === 0 ? (
@@ -145,3 +178,9 @@ const FileExplorer = () => {
 };
 
 export default FileExplorer;
+
+
+
+
+
+

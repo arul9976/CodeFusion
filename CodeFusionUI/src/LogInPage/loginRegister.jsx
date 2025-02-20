@@ -13,56 +13,6 @@
 //     const navigate = useNavigate();
 
 
-//     const handleInputChange = (event) => {
-//         const { name, value } = event.target;
-//         if (name === 'name') setName(value);
-//         else if (name === 'email') setEmail(value);
-//         else if (name === 'password') setPassword(value);
-//     };
-
-
-//     const handleSignUp = async (event) => {
-//         event.preventDefault();
-//         try {
-//             const response = await axios.post("http://localhost:8080/CodeFusionUI/SignUpServlet", {
-//                 name,
-//                 email,
-//                 password
-//             }, { headers: { "Content-Type": "application/json" } });
-
-//             alert(response.data.message);
-//         } catch (error) {
-//             alert("Signup Failed: " + error.response?.data?.error || "Server Error");
-//         }
-//     };
-
-
-//     const handleLogin = async (event) => {
-//         event.preventDefault();
-//         try {
-//             const response = await axios.post("http://localhost:8080/CodeFusionUI/LogInServ", {
-//                 email,
-//                 password
-//             }, {
-//                 headers: { "Content-Type": "application/json" },
-//                 withCredentials: true
-//             });
-
-//             if (response.status === 200) {
-//                 alert("Login successful!");
-//                 document.cookie = `SessionID=${response.data.sessionId}`;
-//                 document.cookie = `userID=${response.data.userId}`;
-//                 // navigate("/codeEditor");
-
-//             } else {
-//                 alert("Invalid credentials");
-//             }
-//         } catch (error) {
-//             alert("Login Failed: " + error.response?.data?.error || "Server Error");
-//         }
-//     }
-
-
 //     useEffect(() => {
 //         const body = document.body;
 
@@ -131,24 +81,22 @@
 
 
 
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./signUpheader.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import eye icons
-
 import { useNavigate } from "react-router-dom";
+import { FaGithub, FaGoogle } from 'react-icons/fa';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import GoogleAuth from "../Auth/GoogleAuth";
 
 function LoginRegister() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isActive, setIsActive] = useState(false);
+    const [token, setToken] = useState(null);
     const navigate = useNavigate();
-    const [showPassword, setShowPassword] = useState(false); 
-
-    const togglePassword = () => {
-        setShowPassword(!showPassword);
-    };
 
 
     const handleInputChange = (event) => {
@@ -158,25 +106,32 @@ function LoginRegister() {
         else if (name === 'password') setPassword(value);
     };
 
+
     const handleSignUp = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post("http://localhost:8080/CodeFusionUI/SignUpServlet", {
-                name,
-                email,
-                password
-            }, { headers: { "Content-Type": "application/json" } });
+            const response = await axios.post("http://localhost:8080/CodeFusion_war/signup", {
+                username: name,
+                email: email,
+                password: password
+            });
+            console.log(response);
 
-            alert(response.data.message);
+            if (response.status === 201) {
+                localStorage.setItem('token', response.data.token);
+                navigate("/IDE");
+            }
+
         } catch (error) {
-            alert("Signup Failed: " + error.response?.data?.error || "Server Error");
+            console.log("Signup Failed: " + error.response?.data?.error || "Server Error");
         }
     };
+
 
     const handleLogin = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post("http://localhost:8080/CodeFusionUI/LogInServ", {
+            const response = await axios.post("http://localhost:8080/CodeFusion_war/login", {
                 email,
                 password
             }, {
@@ -184,10 +139,12 @@ function LoginRegister() {
                 withCredentials: true
             });
 
-            if (response.status === 200) {
+            if (response.status === 201) {
+                console.log(response.data);
+                console.log(response.data.token);
                 localStorage.setItem('token', response.data.token);
-                alert("Login successful!");
-                // navigate("/codeEditor");
+                navigate("/IDE");
+
             } else {
                 alert("Invalid credentials");
             }
@@ -209,52 +166,47 @@ function LoginRegister() {
             }, 6000);
         };
 
-        const interval = setInterval(createHalfCircle, 8000);
 
+
+        const interval = setInterval(createHalfCircle, 8000);
         return () => clearInterval(interval);
     }, []);
 
+    const handleGitHubLogin = () => {
+        window.location.href = 'http://localhost:8080/CodeFusionUI/auth/github';
+    };
 
+    // useEffect(() => {
+    //     if (localStorage.getItem('token')) {
+    //         navigate("/IDE");
+    //     }
+    // }, [token])
 
     return (
         <div className="body-container">
             <div className={`login-container ${isActive ? "active" : ""}`}>
-                {/* SIGN UP FORM */}
+
                 <div className="form-container sign-up-container">
                     <form onSubmit={handleSignUp}>
                         <h1 className="logh1Font">Create Account</h1>
                         <input className="logInp" type="text" name="name" placeholder="Name" value={name} onChange={handleInputChange} required />
                         <input className="logInp" type="email" name="email" placeholder="Email" value={email} onChange={handleInputChange} required />
-                        {/* <input className="logInp" type="password" name="password" placeholder="Password" value={password} onChange={handleInputChange} required /> */}
-
-
-                        <div className="password-container">
-                            <input
-                                className="logInp paddingStyle"
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-                            <span onClick={togglePassword} className="eye-icon">
-                                {showPassword ? <FaEyeSlash /> : <FaEye />}
-                            </span>
-                        </div>
-
+                        <input className="logInp" type="password" name="password" placeholder="Password" value={password} onChange={handleInputChange} required />
                         <button className="logBtn" type="submit">Register</button>
 
                         <div className="social-container">
-                            <div id="google-signin-button"></div>
-                            <button className="social-button github" onClick={handleGitHubLogin}>
-                                Sign up with GitHub
-                            </button>
+                            <p className="social-title">Or sign up with</p>
+                            <div className="social-buttons">
+                                <GoogleAuth />
+                                <button type="button" className="social-button github-btn" onClick={handleGitHubLogin}>
+                                    <FaGithub />
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
 
-                {/* LOGIN FORM */}
+
                 <div className="form-container sign-in-container">
                     <form onSubmit={handleLogin}>
                         <h1 className="logh1Font">Sign In</h1>
@@ -268,10 +220,13 @@ function LoginRegister() {
                         <button className="logBtn" type="submit">Log In</button>
 
                         <div className="social-container">
-                            <div id="google-signin-button-login"></div>
-                            <button className="social-button github" onClick={handleGitHubLogin}>
-                                Log in with GitHub
-                            </button>
+                            <p className="social-title">Or log in with</p>
+                            <div className="social-buttons">
+                                <GoogleAuth />
+                                <button type="button" className="social-button github-btn" onClick={handleGitHubLogin}>
+                                    <FaGithub />
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>

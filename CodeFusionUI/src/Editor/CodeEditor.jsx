@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 // import FileExplorer from './FileExpo/FileExplorer';
 
 import AceEditor from 'react-ace';
 import Term from '../Terminal/Terminal';
 import ace from 'ace-builds';
-import * as Y from 'yjs';
 import _ from 'lodash';
 
 
@@ -46,10 +45,13 @@ import 'ace-builds/src-noconflict/snippets/ruby';
 import { io } from 'socket.io-client';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCode } from '../Redux/editorSlice';
+import { getFileMode } from '../utils/GetIcon';
+import { ClientContext } from './ClientContext';
+import { YEvent } from 'yjs';
 
-// const socket = io('http://172.17.22.225:3000');
+// const socket.current = io('http://172.17.22.225:3000');
 
-const socket = io('http://localhost:3000');
+// const socket.current = io('http://localhost:3000');
 
 const styles = {
   container: {
@@ -85,28 +87,27 @@ const styles = {
 };
 
 const CodeEditor = () => {
-  const dispatch = useDispatch();
-  const code = useSelector((state) => state.editor.code);
+
+  const { socket, code, language, dispatch, activeFile, editorTheme, yText, isInit, bindToYtext } = useContext(ClientContext);
+
   // const cursor = useSelector((state) => state.editor.cursor);
 
   const errRef = useRef(null);
   const connectRef = useRef(false);
 
-  const [language, setLanguage] = useState('javascript');
-  const [theme, setTheme] = useState('github');
+  // const [theme, setTheme] = useState('github');
   const [currentRoom, setCurrentRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
 
   const editorRef = useRef(null);
 
-  const ydoc = new Y.Doc();
-  const yText = ydoc.getText('editor');
+
 
   const isLocalChangeRef = useRef(false);
   const cursorRef = useRef({ row: 0, column: 0 });
 
-  const updated = useRef(false);
   const pendingDeltas = useRef([]);
+  const pendingDeltasLines = useRef([]);
 
   const languageOptions = [
     { value: 'javascript', label: 'JavaScript', mode: 'javascript' },
@@ -117,13 +118,12 @@ const CodeEditor = () => {
     { value: 'ruby', label: 'Ruby', mode: 'ruby' }
   ];
 
-  const themeOptions = [
-    { value: 'github', label: 'Light' },
-    { value: 'monokai', label: 'Dark' },
-    { value: 'terminal', label: 'Terminal' },
-    { value: 'tomorrow', label: 'Tomorrow' },
-    { value: 'twilight', label: 'Twilight' }
-  ];
+  // const themeOptions = [
+  //   { value: 'github', label: 'Light' },
+  //   { value: 'monokai', label: 'Dark' },
+  //   { value: 'terminal', label: 'Terminal' },
+  //   { value: 'solarized_dark', label: 'Solarized Dark' }
+  // ];
 
   const getDefaultCode = (lang) => {
     const examples = {
@@ -141,38 +141,46 @@ const CodeEditor = () => {
 
   const applyYjsDeltaToEditor = (yDelta) => {
     const editor = editorRef.current.editor;
-    console.log(yDelta);
+    // console.log(yDelta);
     if (code !== yDelta.lines) {
       editor.session.getDocument().applyDeltas(yDelta);
       console.log("Binded...");
     }
   };
 
-  const joinRoom = (roomId) => {
-    if (currentRoom) {
-      socket.emit("leave-room", currentRoom);
-    }
-    console.log(roomId);
-    socket.emit("join-room", roomId);
-    setCurrentRoom(roomId);
-  };
+  // const joinRoom = (roomId) => {
+  //   if (currentRoom) {
+  //     socket.current.emit("leave-room", currentRoom);
+  //   }
+  //   console.log(roomId);
+  //   socket.current.emit("join-room", roomId);
+  //   setCurrentRoom(roomId);
+  // };
 
-  const leaveRoom = () => {
-    if (currentRoom) {
-      socket.emit("leave-room", currentRoom);
-      setCurrentRoom(null);
-    }
-  };
+  // const leaveRoom = () => {
+  //   if (currentRoom) {
+  //     socket.current.emit("leave-room", currentRoom);
+  //     setCurrentRoom(null);
+  //   }
+  // };
 
 
+  const sendUpdateLine = useCallback(
+    _.debounce(() => {
+      if (pendingDeltasLines.current.length > 0) {
+        socket.current.emit('codeUpdate', { pendingDeltas: pendingDeltasLines.current, path: activeFile.url });
+        pendingDeltasLines.current = [];
+      }
+    }, 1400), []
+  );
 
   const sendUpdate = useCallback(
     _.debounce(() => {
       if (pendingDeltas.current.length > 0) {
-        socket.emit('codeUpdate', pendingDeltas.current);
+        socket.current.emit('codeUpdate', { pendingDeltas: pendingDeltas.current, path: activeFile.url });
         pendingDeltas.current = [];
       }
-    }, 500), []
+    }, 800), []
   );
 
   const handleLanguageChange = (e) => {
@@ -193,48 +201,57 @@ const CodeEditor = () => {
 
   const handleCodeChange = useCallback((delta) => {
 
+    console.log(isInit.current);
+
+    if (isInit.current > 0) {
+      console.log("Ended................................................................");
+      isInit.current--;
+      return;
+    }
+
     const { start, end, lines, action } = delta;
 
     const session = editorRef.current.editor.getSession();
+    // console.log(delta);
 
     const startIdx = session.getDocument().positionToIndex(start);
     const endIdx = session.getDocument().positionToIndex(end);
     const changedTxt = lines.join("\n");
+    const yDelta = { start: startIdx, end: endIdx, lines: changedTxt, action: action, totalLines: yText.toString().split("\n").length };
 
-    console.log(updated.current, yText.toString());
 
-    if (action == 'insert') {
-      yText.applyDelta([
-        { retain: startIdx },
-        { insert: changedTxt }
-      ]);
-    }
-
-    else if (action == 'remove') {
-      yText.applyDelta([
-        { retain: startIdx },
-        { delete: changedTxt.length }
-      ]);
-    }
-
-    if (!updated.current) {
+    if (bindToYtext(yDelta)) {
+      if (changedTxt == '\n') {
+        pendingDeltasLines.current.push({
+          yDelta,
+          aceDelta: delta, cursor: cursorRef.current
+        });
+        console.log("Pending Line Deltas Added", yText.toString());
+        sendUpdateLine();
+        return;
+      }
+      console.log("Pending Deltas Added", yText.toString());
+      // yDelta['totalLines'] = yText.toString().split("\n").length;
       pendingDeltas.current.push({
-        yDelta: { start: startIdx, end: endIdx, lines: changedTxt, action: action },
+        yDelta,
         aceDelta: delta, cursor: cursorRef.current
       });
 
       sendUpdate();
-    }
-    else
-      updated.current = false;
 
-    console.log("client to --> serv", yText.toString());
+    }
+
+
+
+
+
+    // console.log("client to --> serv", yText.toString());
 
   }, []);
 
 
   const runCode = () => {
-    socket.emit('output', { code, language });
+    socket.current.emit('output', { code, language });
   };
 
 
@@ -260,6 +277,7 @@ const CodeEditor = () => {
           handlerRef.current(e);
         }
       };
+      // console.log("Editor Setter");
 
 
       editor.on('change', stableChangeHandler);
@@ -280,85 +298,136 @@ const CodeEditor = () => {
 
   useEffect(() => {
 
-    socket.on('connect', () => {
-      connectRef.current = true;
-      errRef.current = null;
-      console.log("You are connected");
+    // socket.current.on('connect', () => {
+    //   connectRef.current = true;
+    //   errRef.current = null;
+    //   console.log("You are connected");
 
-    });
-
-
-
-    socket.on('disconnect', () => {
-      connectRef.current = false;
-      console.log('Disconnected from server');
-    });
-
-    socket.on('updatedCode', (data) => {
-
-      const { cursors, aceDelta } = data;
-      const { start, end, lines } = aceDelta;
-
-      if (lines !== code) {
-        updated.current = true;
-        applyYjsDeltaToEditor([aceDelta]);
-      }
-
-      console.log("serv to --> cli " + yText.toString());
-
-      console.log(`Update applied for client ${socket.id}`);
+    // });
 
 
-    });
 
-    socket.on('error', (err) => {
-      errRef.current = err.message || 'An error occurred';
-      console.error('Socket error:', err);
-    });
+    // socket.current.on('disconnect', () => {
+    //   connectRef.current = false;
+    //   console.log('Disconnected from server');
+    // });
 
-    socket.on('reconnect_attempt', () => {
-      console.log('Attempting to reconnect...');
-    });
+    socket.current.on('updatedCode', (data) => {
+      // console.log(data);
 
-    socket.on('reconnect_error', (err) => {
-      console.error('Reconnection failed:', err);
-    });
+      const { pendingDeltas, path } = data;
+      if (path === activeFile.file) return;
 
-    socket.on('reconnect_failed', () => {
-      console.error('Reconnection failed after multiple attempts');
-    });
+      let aceDeltas = [];
+      const rows = editorRef.current.editor.getSession().getLength();
+      console.log("Rows: " + rows);
+      console.log(pendingDeltasLines.current);
+      
+      let updatedLine = pendingDeltasLines.current.at(-1)?.aceDelta.start.row || 25;
+      if (pendingDeltas.every(d => {
+        let cLine = rows - d.yDelta.totalLines;
+        let startRow = d.aceDelta.start.row;
+        console.log("Updated and startRow: " + updatedLine, startRow);
 
-    const syncHandler = (data) => {
-      console.log("syncing");
+        if (updatedLine < startRow) {
+          console.log("cline: " + cLine);
+          console.log("aceRowCol Before --> " + d.aceDelta.start.row, d.aceDelta.end.row);
+          d.aceDelta['start']['row'] += cLine;
+          d.aceDelta['end']['row'] += cLine;
+          console.log("aceRowCol After --> " + d.aceDelta.start.row, d.aceDelta.end.row);
 
-      const { update } = data;
-      if (yText) {
-        updated.current = true;
-        applyYjsDeltaToEditor([
-          {
-            action: 'insert',
-            start: { row: 0, column: 0 },
-            end: { row: 0, column: 0 },
-            lines: (update || getDefaultCode(language)).split("\n"),
-          },
-        ]);
+        } else console.log("Updated Line is Greater");
 
+
+        aceDeltas.push(d.aceDelta);
+        return bindToYtext(d.yDelta);
+      })) {
+        console.log(aceDeltas);
+        // aceDeltas = aceDeltas.map(d => {
+        //   let curr = d.start.row;
+        //   console.log("Curr Row Len : " + curr);
+        //   d.start.row = curr != rows ? rows : curr;
+        //   return d;
+        // })
+        isInit.current = aceDeltas.length;
+        console.log("EveryThing True", aceDeltas);
+        applyYjsDeltaToEditor(aceDeltas);
+      } else {
+        console.log("Not EveryThing True");
 
       }
-    };
 
-    socket.on('sync', syncHandler);
+      // pendingDeltas.forEach(del => {
+      //   const { cursors, aceDelta, yDelta } = del;
+      //   const { start, end, lines } = aceDelta;
+      //   // console.log(aceDelta, yDelta);
+
+      //   if (lines !== code) {
+      //     // updated.current = true;
+      //     if (bindToYtext(yDelta)) {
+      //       applyYjsDeltaToEditor([aceDelta]);
+      //     }
+      //     isInit.current = false;
+
+      //   }
+      // })
+      isInit.current = false;;
+
+
+      console.log("serv to --> cli\n" + yText.toString());
+      console.log(`Update applied for client ${socket.current.id}`);
+
+
+    });
+
+    // socket.current.on('error', (err) => {
+    //   errRef.current = err.message || 'An error occurred';
+    //   console.error('Socket.current error:', err);
+    // });
+
+    // socket.current.on('reconnect_attempt', () => {
+    //   console.log('Attempting to reconnect...');
+    // });
+
+    // socket.current.on('reconnect_error', (err) => {
+    //   console.error('Reconnection failed:', err);
+    // });
+
+    // socket.current.on('reconnect_failed', () => {
+    //   console.error('Reconnection failed after multiple attempts');
+    // });
+
+    // const syncHandler = (data) => {
+    //   console.log("syncing");
+
+    //   const { update } = data;
+    //   if (yText) {
+    //     updated.current = true;
+    //     applyYjsDeltaToEditor([
+    //       {
+    //         action: 'insert',
+    //         start: { row: 0, column: 0 },
+    //         end: { row: 0, column: 0 },
+    //         lines: (update || getDefaultCode(language)).split("\n"),
+    //       },
+    //     ]);
+
+
+    //   }
+    // };
+
+    // socket.current.on('sync', syncHandler);
 
 
     return () => {
-      socket.off('updatedCode');
-      if (isObserved) {
-        yText.unobserve(handler);
-        isObserved = false;
-      }
-      socket.off('sync', syncHandler);
-      // socket.off('code-change', handleServerData);
-      // socket.disconnect();
+      socket.current.off('updatedCode');
+      // if (isObserved) {
+      //   yText.unobserve(handler);
+      //   isObserved = false;
+      // }
+      // socket.current.off('sync', syncHandler);
+      // socket.current.off('code-change', handleServerData);
+      // socket.current.disconnect();
     };
 
   }, []);
@@ -366,128 +435,54 @@ const CodeEditor = () => {
 
   return (
     <>
-    <div className= {`app ${connectRef.current ? "connected" : "disconnected"}`
-}>
-  <header className="header" >
-    <div className="container" >
-      <h1 className="logo" > CodeCollab { connectRef.current ? "connected" : "disconnected" } </h1>
-        < nav >
-        <button
-                className="btn nav-btn"
-onClick = {() => joinRoom("room1")}
-              >
-  Join Room 1
-    </button>
-    < button
-className = "btn nav-btn"
-onClick = {() => joinRoom("room2")}
-              >
-  Join Room 2
-    </button>
-{
-  currentRoom && (
-    <button className="btn leave-btn" onClick = { leaveRoom } >
-      Leave Room
-        </button>
-              )
-}
-</nav>
-  </div>
-  </header>
-
-  < main className = "main-content" >
-    <div className="container" >
-      <div className="editor-container" >
-        <h2>Collaborative Code Editor </h2>
-          < div style = { styles.container } >
-            <div style={ styles.controls }>
-              <div>
-              <label style={ styles.label }> Language: </label>
-                < select
-value = { language }
-onChange = { handleLanguageChange }
-style = { styles.select }
-  >
-{
-  languageOptions.map(option => (
-    <option key= { option.value } value = { option.value } >
-    { option.label }
-    </option>
-  ))
-}
-  </select>
-  </div>
-
-  < div >
-  <label style={ styles.label }> Theme: </label>
-    < select
-value = { theme }
-onChange = {(e) => setTheme(e.target.value)}
-style = { styles.select }
-  >
-{
-  themeOptions.map(option => (
-    <option key= { option.value } value = { option.value } >
-    { option.label }
-    </option>
-  ))
-}
-  </select>
-  </div>
-  </div>
-
-  < AceEditor
-ref = { editorRef }
-mode = { languageOptions.find(l => l.value === language)?.mode }
-theme = { theme }
-name = "code-editor"
-value = { code }
-width = "1200px"
-height = "400px"
-fontSize = { 14}
-onCursorChange = { handleCursorChange }
-showPrintMargin = { true}
-showGutter = { true}
-highlightActiveLine = { true}
-setOptions = {{
-  enableBasicAutocompletion: true,
-    enableLiveAutocompletion: true,
-      enableSnippets: true,
-        showLineNumbers: true,
+      < AceEditor
+        ref={editorRef}
+        mode={getFileMode(activeFile.file)}
+        theme={editorTheme}
+        name="code-editor"
+        value={code}
+        width="100%"
+        height="80%"
+        fontSize={14}
+        onCursorChange={handleCursorChange}
+        showPrintMargin={true}
+        showGutter={true}
+        highlightActiveLine={true}
+        setOptions={{
+          enableBasicAutocompletion: true,
+          enableLiveAutocompletion: true,
+          enableSnippets: true,
+          showLineNumbers: true,
           tabSize: 2,
-                  }}
-                />
+          fontFamily: '"JetBrains Mono", "Fira Code", monospace',
 
-  < button onClick = { runCode } style = { styles.button } >
-    Run Code
-      </button>
+        }}
 
-      < Term socket = { socket } />
 
-        </div>
-        </div>
-        < div className = "rooms-list" >
-          <h3>Available Rooms </h3>
-            <ul>
-{
-  rooms.map((room, index) => (
-    <li key= { index } >
-    <button
-                      className="room-btn"
-                      onClick = {() => joinRoom(room)}
-disabled = { currentRoom === room}
-                    >
-  { room }
-  </button>
-  </li>
-                ))}
-</ul>
-  </div>
-  </div>
-  </main>
-  </div>
-  </>
+      />
 
+      {/* <AceEditor
+        mode={getFileMode(activeFile.name)}
+        theme={editorTheme}
+        onChange={handleFileChange}
+        value={code}
+        name="ace-editor"
+        width="100%"
+        height="100%"
+        fontSize={14}
+        showPrintMargin={false}
+        showGutter={true}
+        highlightActiveLine={true}
+        setOptions={{
+          enableBasicAutocompletion: true,
+          enableLiveAutocompletion: true,
+          enableSnippets: true,
+          showLineNumbers: true,
+          tabSize: 2,
+          fontFamily: '"JetBrains Mono", "Fira Code", monospace',
+        }}
+      /> */}
+    </>
   );
 
 };

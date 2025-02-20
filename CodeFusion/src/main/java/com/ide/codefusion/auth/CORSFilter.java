@@ -1,4 +1,4 @@
-package auth;
+package com.ide.codefusion.auth;
 
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.crypto.dsig.spec.XPathType;
 import java.io.IOException;
 
-@WebFilter("/CORSFilter")
+@WebFilter("/*")
 public class CORSFilter implements Filter {
 
 
@@ -48,6 +48,7 @@ public class CORSFilter implements Filter {
     @Override
     public void init(FilterConfig fConfig) throws ServletException {
         // TODO Auto-generated method stub
+        System.out.println("CORSFilter init");
     }
 
 }
