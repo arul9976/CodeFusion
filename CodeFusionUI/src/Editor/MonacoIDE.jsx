@@ -292,166 +292,197 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { MonacoBinding } from 'y-monaco';
 import Editor from '@monaco-editor/react';
 
-import * as Y from 'yjs';
 import { ClientContext } from './ClientContext';
 import { getFileMode } from '../utils/GetIcon';
-const MonacoIDE = () => {
+import { getFileContent } from '../utils/Fetch';
+const MonacoIDE = ({ activeFile }) => {
 
-  const { initAndGetProvider, activeFile, getYtext } = useContext(ClientContext);
+  const { initAndGetProvider, getYtext, editorsRef, bindings } = useContext(ClientContext);
 
   const editorRef = useRef(null);
+  const currFile = useRef(null);
+  const monacoRef = useRef(null);
 
-  const awarenessRef = useRef(null);
-  const [editorInstance, setEditorInstance] = useState(null);
-  // const [doc, setDoc] = useState(new Y.Doc());
-  const [userCursors, setUserCursors] = useState(null);
-  const [provider, setProvider] = useState(null);
-  const [currentUser, setCurrentUser] = useState('User_0');
-  const [binding, setBinding] = useState(null);
 
-  function handleEditorDidMount(editor, monaco) {
-    editorRef.current = editor;
-    const model = editor.getModel();
+  const initiateFile = (file) => {
+    currFile.current = file;
+    console.log(file);
 
-    const provider = initAndGetProvider(activeFile.url);
-    const yText = getYtext(activeFile.url);
+    if (!editorRef.current) {
+      console.log("Editor is not available");
+      return;
 
-    console.log("---> " + yText.toString() + " END");
+    }
 
-    awarenessRef.current = provider.awareness;
+    editorsRef.current.get(file.id);
+
+    const provider = initAndGetProvider(file.url);
+    // awarenessRef.current = provider.awareness;
+    // provider.onopen = () => console.log('Connected');
 
 
     provider.on("sync", (isSynced) => {
+
+      const model = editorRef.current.getModel();
+
       if (isSynced) {
+
+        const yText = getYtext(file.url);
+        console.log("Before sync " + yText.toString());
+
         if (provider && yText) {
           const monacoBinding = new MonacoBinding(
             yText,
             model,
-            new Set([editor]),
+            new Set([editorRef.current]),
             provider.awareness
           );
+          console.log("After sync", yText.toString());
 
-          setProvider(provider);
-          setBinding(monacoBinding);
-          console.log("editor");
+          // fileEntry.binding = monacoBinding;
+          bindings.current.set(file.url, monacoBinding);
+
+          if (yText.toString().length === 0) {
+            getFileContent(file.url).then((res) => {
+              yText.insert(0, res);
+            })
+
+          }
 
         }
       }
       console.log("Synced with server:", isSynced);
     });
+  }
 
-    const loadDocumentContent = async () => {
-      const existingText = yText.toString();
-      console.log(existingText);
+  function handleEditorDidMount(editor, monaco, file) {
+    console.log(file);
 
-    };
-
-    loadDocumentContent();
-
-    // yText.observe(() => {
-    //   console.log("Log From Observe--> " + yText.toString());
-
-    // });
-
-
-
-    // monacoBinding.on('sync', () => {
-    //   console.log('Yjs document synced');
-    // });
+    if (!file) return;
+    monacoRef.current = monaco;
+    editorRef.current = editor;
+    editorsRef.current.set(file.id, editor);
+    initiateFile(file);
 
   }
 
-  const handleCursorChange = (e) => {
-    console.log(e);
-
-    const position = editorRef.current?.getPosition();
-    console.log(position);
-    const cursorPosition = { line: position.lineNumber - 1, column: position.column - 1 };
-
-    awarenessRef.current.setLocalStateField('user', {
-      username: currentUser,
-      cursorPosition,
-    });
-  };
-
   useEffect(() => {
-
-    console.log("editor2");
-
-    if (editorRef.current) {
-      console.log("Initiating");
-
+    console.log("Runned");
+    if (editorRef.current && currFile.current.id !== activeFile.id) {
+      console.log(activeFile);    
+      monacoRef.current.editor.setModelLanguage(editorRef.current.getModel(), getFileMode(activeFile.name))
+      initiateFile(activeFile);
+      console.log("Initiated");
 
     }
+  })
 
-    return () => {
-      if (provider) {
-        provider.destroy();
-      }
-    };
-  }, [provider]);
+  // const handleCursorChange = (e) => {
+  //   console.log(e);
 
-  const renderUserCursors = () => {
-    const decorations = [];
+  //   const position = editorRef.current?.getPosition();
+  //   console.log(position);
+  //   const cursorPosition = { line: position.lineNumber - 1, column: position.column - 1 };
 
-    Object.entries(userCursors).forEach(([clientId, user]) => {
-      const cursor = user.cursorPosition;
-      const { username } = user;
-
-      decorations.push({
-        range: new MonacoEditor.Range(cursor.line + 1, cursor.column + 1, cursor.line + 1, cursor.column + 1), // 1-indexed
-        options: {
-          inlineClassName: 'user-cursor',
-          hoverMessage: { value: `User: ${username}` },
-        },
-      });
-
-      const userDecoration = {
-        range: new MonacoEditor.Range(cursor.line + 1, cursor.column + 1, cursor.line + 1, cursor.column + 1),
-        options: {
-          className: 'username-decoration',
-        },
-      };
-
-      decorations.push(userDecoration);
-    });
-
-    editorRef.current?.deltaDecorations([], decorations);
-  };
-
-  useEffect(() => {
-    if (editorRef.current && userCursors) {
-      console.log(userCursors);
-
-      // renderUserCursors();
-    }
-  }, [userCursors]);
-
+  //   awarenessRef.current.setLocalStateField('user', {
+  //     username: currentUser,
+  //     cursorPosition,
+  //   });
+  // };
 
   // useEffect(() => {
-  //   if (editorRef.current) {
-  // const position = editorRef.current?.getPosition();
-  // console.log(position);
+  //   if (provider) {
+  //     provider.ws.onmessage = (event) => {
+  //       if (typeof event.data === 'string') {
+  //         try {
+  //           const data = JSON.parse(event.data);
+  //           if (data.type === 'users') {
+  //             setUsers(data.users);
+  //             console.log(data.message);
+  //           }
+  //         } catch (e) {
+  //           console.error('Error parsing JSON message:', e);
+  //         }
+  //       } else if (event.data instanceof ArrayBuffer) {
+  //         // Convert ArrayBuffer to Uint8Array
+  //         const update = new Uint8Array(event.data);
+  //         console.log('Received Yjs binary update:', update, 'bytes');
 
+  //         // Manually apply the update to Y.Doc
+  //         try {
+  //           Y.applyUpdate(ydoc, update);
+  //           const content = yText.toString();
+  //           console.log('Applied update manually. Y.Text:', content);
+  //           if (content && !isReady) {
+  //             setIsReady(true);
+  //           }
+  //         } catch (e) {
+  //           console.error('Error applying Yjs update:', e);
+  //         }
+  //       }
+  //     };
   //   }
+  // }, [provider]);
+
+  // const renderUserCursors = () => {
+  //   const decorations = [];
+
+  //   Object.entries(userCursors).forEach(([clientId, user]) => {
+  //     const cursor = user.cursorPosition;
+  //     const { username } = user;
+
+  //     decorations.push({
+  //       range: new MonacoEditor.Range(cursor.line + 1, cursor.column + 1, cursor.line + 1, cursor.column + 1), // 1-indexed
+  //       options: {
+  //         inlineClassName: 'user-cursor',
+  //         hoverMessage: { value: `User: ${username}` },
+  //       },
+  //     });
+
+  //     const userDecoration = {
+  //       range: new MonacoEditor.Range(cursor.line + 1, cursor.column + 1, cursor.line + 1, cursor.column + 1),
+  //       options: {
+  //         className: 'username-decoration',
+  //       },
+  //     };
+
+  //     decorations.push(userDecoration);
+  //   });
+
+  //   editorRef.current?.deltaDecorations([], decorations);
+  // };
+
+  // useEffect(() => {
+  //   if (editorRef.current && userCursors) {
+  //     console.log(userCursors);
+
+  //     // renderUserCursors();
+  //   }
+  // }, [userCursors]);
 
 
 
-  // }, [editorRef.current?.getPosition()])
 
   return (
-    <div>
-      <h1>Collaborative Code Editor</h1>
 
+    <div>
       <Editor
         height="90vh"
         theme="vs-dark"
         defaultLanguage={getFileMode(activeFile.name)}
-        onMount={handleEditorDidMount}
-        onChange={handleCursorChange}
-        ref={editorRef} />
-    </div>
-  );
+        onMount={(editor, monaco) => handleEditorDidMount(editor, monaco, activeFile)}
+        options={{
+          minimap: { enabled: false },
+          fontSize: 16,
+          wordWrap: 'on'
+        }} />
+    </div >
+
+  )
+
+
+
+
 
 
 };

@@ -148,10 +148,8 @@
 
 
 // UserContext.js
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { io } from 'socket.io-client';
-import { getYdoc, pushYdoc, setCode } from '../Redux/editorSlice';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 
@@ -168,46 +166,82 @@ const ClientProvider = ({ children }) => {
   const activeFile = useSelector(state => state.editor.activeFile);
   const cursor = useSelector(state => state.editor.cursor);
   const output = useSelector(state => state.editor.output);
-  const ydocs = useRef(new Map());
+  const ydocsRef = useRef(new Map());
   const ydocRef = useRef(null);
+  const editorsRef = useRef(new Map());
+  const bindings = useRef(new Map());
   const yTextRef = useRef(null);
 
-  const providerRef = useRef(null);
-
+  const providersRef = useRef(new Map());
 
   const initAndGetProvider = (path) => {
-    // console.log('Initializing provider...');
-    const ydoc = new Y.Doc();
-    ydocs.current.set(path, ydoc);
+    console.log(providersRef.current);
+    
+    if (!path) {
+      console.error('No file path provided');
+      return null;
+    }
 
-    providerRef.current = new WebsocketProvider(`ws://localhost:3000?username=${"User" + userRef.current++}&filePath=${activeFile.url}&`, activeFile.url, ydoc);
-    return providerRef.current;
+    if (!ydocsRef.current.has(path)) {
+      const ydoc = new Y.Doc();
+      ydocsRef.current.set(path, ydoc);
+      console.log(`New Y.Doc created for ${path}`);
+    }
 
-  }
+    if (!providersRef.current.has(path)) {
+      const ydoc = ydocsRef.current.get(path);
+      // const provider = new WebsocketProvider(
+      //   `ws://localhost:3000?username=User${userRef.current++}&filePath=${path}&`,
+      //   path,
+      //   ydoc
+      // );
+
+      const provider = new WebsocketProvider(
+        `ws://172.17.22.225:3000?username=User${userRef.current++}&filePath=${path}&`,
+        path,
+        ydoc
+      );
+
+      providersRef.current.set(path, provider);
+      console.log(`Initialized provider for ${path}`);
+    }
+
+    return providersRef.current.get(path);
+  };
 
   const getYtext = (path) => {
-    console.log(ydocs.current);
-
-    const ydoc = ydocs.current.get(path);
-    console.log(ydoc);
-
-    if (ydoc) {
-      const yt = ydoc.getText('monaco');
-      // if (activeFile.content && yt.toString() !== activeFile.content) {
-      //   yt.insert(0, activeFile.content);
-      //   console.log("<<<<<- " + yt.toString());
-
-      return yt;
-      // }
+    if (!path) {
+      console.error('No file path provided for getYtext');
+      return null;
     }
+
+    const ydoc = ydocsRef.current.get(path);
+    if (ydoc) {
+      const ytext = ydoc.getText(path);
+      // ytext.delete(0, ytext.toString().length);
+      console.log(`Retrieved Y.Text for ${path}: ${ytext.toString()}...`);
+      return ytext;
+    }
+    console.warn(`No Y.Doc found for ${path}`);
     return null;
+  };
+
+  const getBindings = (path) => {
+    if (!path || !bindings.current.has(path)) {
+      console.error('No file path provided for getBindings');
+      return null;
+    }
+    return bindings.current.get(path);
   }
+
 
   return (
     <ClientContext.Provider value={{
       dispatch, currentTheme, language, code,
       editorTheme, activeFile, cursor, output, ydocRef, getYtext,
-      initAndGetProvider
+      initAndGetProvider, editorsRef, getBindings, bindings,
+      providersRef
+
 
     }}>
       {children}

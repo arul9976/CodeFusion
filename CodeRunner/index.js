@@ -170,9 +170,7 @@ function getFileContent(path) {
   console.log("Getting file content " + path);
 
   try {
-    const fileData = fs.readFileSync(`/home/arul-zstk404/Documents/JAVA/CodeFusion/CodeRunner/${path}`, 'utf8');
-    console.log("File content " + fileData);
-
+    const fileData = fs.readFileSync(`/home/arul-zstk404/Documents/JAVA/CodeFusion/CodeRunner${path}`, 'utf8');
     return fileData;
   } catch (err) {
     console.error(`Error reading file: ${path}`);
@@ -180,6 +178,17 @@ function getFileContent(path) {
   }
 
 }
+
+app.get('/getFileContent/:filePath', (req, res) => {
+  const filePath = req.params.filePath;
+  const fileContent = getFileContent(filePath);
+
+  if (fileContent) {
+    res.send(JSON.stringify(fileContent));
+  } else {
+    res.status(404).send('File not found');
+  }
+})
 
 
 function listFilesInDirectory(directory, fileList = [], result = {}) {
@@ -197,10 +206,11 @@ function listFilesInDirectory(directory, fileList = [], result = {}) {
     } else {
       // fileList.push(`/${relativePath}`);
       // console.log("Full Path " + fullPath);
+      const fileData = fs.readFileSync(fullPath, 'utf8');
 
       fileList.push({
         "file": file,
-        "url": `/${relativePath}`,
+        "url": `/${relativePath}`
       });
 
       // result[directory.split("/").at(-1)] = ;
@@ -294,7 +304,7 @@ const cursors = new Map();
 const docs = new Map();
 
 function disconnectAllSockets() {
-  const sockets = io.sockets.sockets; // Get all connected sockets
+  const sockets = io.sockets.sockets;
   console.log(sockets);
 
   sockets.forEach(socket => {
@@ -304,20 +314,21 @@ function disconnectAllSockets() {
 
 }
 
-function getOrUpdateYtext(path) {
-  if (!docs.has(path)) {
-    const doc = new Y.Doc();
-    const yt = doc.getText('monaco');
-    const content = getFileContent(path);
-
-    if (content != null) {
-      yt.insert(0, content);
-
-    }
-    docs.set(path, doc);
+function getOrUpdateYtext(filePath) {
+  let doc;
+  if (!docs.has(filePath)) {
+    doc = new Y.Doc();
+    docs.set(filePath, doc);
+    console.log(`Created new Y.Doc for ${filePath}`);
+  } else {
+    doc = docs.get(filePath);
+    console.log(`Reusing existing Y.Doc for ${filePath}`);
   }
-  return docs.get(path); //.getText('editor');
 
+  const yt = docs.get(filePath).getText(filePath);
+  yt.delete(0, yt.length); // Clear existing content
+  console.log(`Cleared Y.Text for ${filePath}`);
+  return docs.get(filePath);
 }
 
 
@@ -335,7 +346,8 @@ wss.on('connection', (ws, req) => {
   console.log("| " + username, filePath);
   // const awareness = new Aware
 
-  const ydoc = getOrUpdateYtext(filePath);
+
+  const doc = getOrUpdateYtext(filePath);
 
   const currUser = {
     username: username,
@@ -344,16 +356,13 @@ wss.on('connection', (ws, req) => {
 
   connectedUsers.add(currUser);
 
-  console.log(connectedUsers);
+  // console.log(connectedUsers, doc.get("monaco").toString() + " END");
 
-  setupWSConnection(ws, req, { doc: ydoc });
+  setupWSConnection(ws, req, { doc });
 
-  console.log("Text -> " + ydoc.getText("monaco").toString());
+  // console.log(doc);
 
-  ydoc.getText("monaco").observe(() => {
-    console.log(ydoc.getText("monaco").toString());
-
-  })
+  console.log("Text -> " + doc.getText("monaco").toString());
 
   const userList = Array.from(connectedUsers);
 
@@ -363,16 +372,13 @@ wss.on('connection', (ws, req) => {
     message: `${username} joined the session`
   };
 
+
+
   // wss.clients.forEach(client => {
   //   if (client.readyState === WebSocket.OPEN) {
   //     client.send(JSON.stringify(message));
   //   }
   // });
-
-  ws.send(JSON.stringify({
-    type: 'sync',
-    content: Y.encodeStateAsUpdate(ydoc),
-  }));
 
   console.log(`${username} connected. Total users: ${connectedUsers.size}`);
 

@@ -335,8 +335,7 @@ import 'ace-builds/src-noconflict/theme-twilight';
 import FileExplorer from '../FileExpo/FileExplorer';
 import { getFileIcon, getFileMode } from '../utils/GetIcon';
 import { ClientContext } from './ClientContext';
-import CodeEditor from './CodeEditor';
-import { setActiveFile, setCurrentTheme } from '../Redux/editorSlice';
+import { setCurrentTheme } from '../Redux/editorSlice';
 import MonacoIDE from './MonacoIDE';
 // import { useSelector } from 'react-redux';
 
@@ -349,12 +348,12 @@ import MonacoIDE from './MonacoIDE';
 
 const EditorACE = () => {
 
-  const { currentTheme, activeFile, dispatch } = useContext(ClientContext);
+  const { currentTheme, dispatch, initAndGetProvider, editorsRef, getBindings, providersRef } = useContext(ClientContext);
 
   const [files, setFiles] = useState([]);
-  const [activeFileId, setActiveFileId] = useState('1');
+  const [activeFile, setActiveFile] = useState(null);
   const [showTerminal, setShowTerminal] = useState(false);
-  
+
   const [isExplorerOpen, setIsExplorerOpen] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -381,9 +380,10 @@ const EditorACE = () => {
 
   const closeFile = (fileId, e) => {
     e.stopPropagation();
+    let fileIdx = files.findIndex(file => file.id === fileId);
     const newFiles = files.filter(file => file.id !== fileId);
-    if (newFiles.length > 0 && fileId === activeFileId) {
-      setActiveFileId(newFiles[0].id);
+    if (newFiles.length > 0 && fileId === activeFile.id) {
+      setActiveFile(files[fileIdx - 1]);
     }
     setFiles(newFiles);
   };
@@ -405,15 +405,63 @@ const EditorACE = () => {
     setTimeout(() => setIsSaving(false), 800);
   };
 
-  useEffect(() => {
-    const file = (files.find(file => file.id === activeFileId) || files[0]);
-    if (file) {
-      dispatch(setActiveFile(file));
+  const handleFile = (e) => {
+
+    if (activeFile) {
+      const bind = getBindings(activeFile.url);
+      console.log(bind);
+
+      if (bind) {
+        const provider = initAndGetProvider(activeFile.url);
+        console.log(provider);
+
+        bind.destroy();
+        if (provider) {
+          providersRef.current.delete(activeFile.url);
+          provider.destroy();
+        }
+      }
+      console.log(activeFile);
+    }
+
+    if (e.name) {
 
     }
-    // setActiveFileId(files.length - 1);
-  }, [files, activeFileId]);
 
+    let curFile = files.find(f => f.id === e.id);
+    if (curFile) {
+      console.log("Active file Setted");
+
+      setActiveFile(curFile);
+      return;
+    }
+    e['name'] = e.file;
+    e['binding'] = null;
+    console.log(e);
+    setActiveFile(e);
+    setFiles([...files, e]);
+
+
+  }
+
+  useEffect(() => {
+    // if (activeFile) {
+    //   const bind = getBindings(activeFile.url);
+    //   console.log(bind);
+
+    //   if (bind) {
+    //     const provider = initAndGetProvider(activeFile.url);
+    //     console.log(provider);
+
+    //     bind.destroy();
+    //     if (provider) {
+    //       provider.destroy();
+    //     }
+    //   }
+    console.log(activeFile);
+    // }
+
+  }, [activeFile]);
 
 
   return (
@@ -511,7 +559,7 @@ const EditorACE = () => {
             width: isExplorerOpen ? 280 : 0
           }}
         >
-          <FileExplorer isExplorerOpen={isExplorerOpen} files={files} setFiles={setFiles} setActiveFileId={setActiveFileId} />
+          <FileExplorer isExplorerOpen={isExplorerOpen} files={files} handleFile={handleFile} />
         </div>
 
 
@@ -521,8 +569,8 @@ const EditorACE = () => {
             {files.map(file => (
               <div
                 key={file.id}
-                onClick={() => setActiveFile(file)}
-                style={styles.tab(activeFileId === file.id)}
+                onClick={() => handleFile(file)}
+                style={styles.tab(activeFile.id === file.id)}
               >
                 <div style={styles.tabContent}>
                   {getFileIcon(file.name)}
@@ -538,11 +586,11 @@ const EditorACE = () => {
             ))}
           </div>
 
-          {activeFile && (
-            <div style={styles.editorContainer}>
-              <MonacoIDE />
-            </div>
-          )}
+          {
+
+            activeFile && <MonacoIDE activeFile={activeFile} />
+          }
+
         </div>
       </div>
 

@@ -5,32 +5,51 @@ import '../CSS/FileExplorer.css';
 import { getFileIcon } from '../utils/GetIcon';
 import { ClientContext } from '../Editor/ClientContext';
 
-const FileExplorer = ({ isExplorerOpen, files, setFiles, setActiveFileId }) => {
-  const { fileOpenAndDocCreate } = useContext(ClientContext);
+const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
+  const { fileOpenAndDocCreate, dispatch, getBindings, initAndGetProvider } = useContext(ClientContext);
   const [fileData, setFileData] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState({});
   const [user, setUser] = useState('arul');
   const idxRef = useRef(0);
 
-  const handleFile = (e) => {
-    e['name'] = e.file;
-    let curFile = files.find(f => f.id === e.id);
-    // console.log("Curr file : " + curFile ? curFile : e);
+  // const handleFile = (e) => {
 
-    if (curFile) {
-      setActiveFileId(curFile.id);
-      return;
-    }
-    // console.log(e);
-    setActiveFileId(e.id);
-    setFiles([...files, e])
-  }
+  //   if (activeFile) {
+  //     const bind = getBindings(activeFile.url);
+  //     console.log(bind);
+
+  //     if (bind) {
+  //       const provider = initAndGetProvider(activeFile.url);
+  //       console.log(provider);
+
+  //       bind.destroy();
+  //       if (provider) {
+  //         provider.destroy();
+  //       }
+  //     }
+  //     console.log(activeFile);
+  //   }
+
+
+  //   let curFile = files.find(f => f.id === e.id);
+  //   if (curFile) {
+  //     setActiveFile(curFile);
+  //     return;
+  //   }
+  //   e['name'] = e.file;
+  //   e['binding'] = null;
+  //   console.log(e);
+  //   setActiveFile(e);
+  //   setFiles([...files, e]);
+
+   
+  // }
 
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        // const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user}`);
-        const response = await fetch(`http://localhost:3000/list-all-files/${user}`);
+        const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user}`);
+        // const response = await fetch(`http://localhost:3000/list-all-files/${user}`);
         const data = await response.json();
 
         // const data = {

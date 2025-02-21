@@ -59,6 +59,7 @@ const getFileIcon = (filename) => {
 
 const getFileMode = (filename) => {
   const extension = filename.split('.').pop().toLowerCase();
+  console.log(extension);
 
   switch (extension) {
     case 'js':
