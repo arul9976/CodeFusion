@@ -1,82 +1,106 @@
-import { useContext, useEffect, useRef } from 'react'
-import { useXTerm } from 'react-xtermjs'
-import { FitAddon } from '@xterm/addon-fit'
-import { ClientContext } from '../Editor/ClientContext'
+import { useContext, useEffect, useRef } from 'react';
+import { useXTerm } from 'react-xtermjs';
+import { FitAddon } from '@xterm/addon-fit';
+import { ClientContext } from '../Editor/ClientContext';
+import { UserContext } from '../LogInPage/UserProvider';
 
-const Term = () => {
-  const socket = useContext(ClientContext);
+const Term = ({ terminalOutput, inputWantRef }) => {
 
+  const { user } = useContext(UserContext);
 
-  const { instance, ref } = useXTerm()
-  const fitAddon = new FitAddon()
-  const terminalDataRef = useRef('') // Use ref to track terminal input data
+  const { instance, ref } = useXTerm();
+  const fitAddon = new FitAddon();
+  const terminalDataRef = useRef('');
+  const listenerRef = useRef(null);
 
   useEffect(() => {
-    instance?.loadAddon(fitAddon)
-    const handleResize = () => fitAddon.fit()
+    if (!instance) return;
 
-    // instance?.setOption('theme', {
-    //   background: '#000000', // Set background to black
-    //   foreground: '#FFFFFF', // Set foreground (text) to white
-    // });
 
-    window.addEventListener('resize', handleResize)
-    instance?.write(' @arul > ')
+    instance.loadAddon(fitAddon);
+    const handleResize = () => fitAddon.fit();
 
+    window.addEventListener('resize', handleResize);
 
     const handleData = (data) => {
-
       if (data === '\r') {
-        const inputData = terminalDataRef.current.trim()
+        const inputData = terminalDataRef.current.trim();
         if (inputData) {
-          if (inputData == "clear") {
+          if (inputData === 'clear') {
             terminalDataRef.current = '';
             instance.reset();
-            instance?.write(' @arul > ')
-
+            instance.write(` @${user.username}`);
             return;
           }
-
-          console.log("Sending data to server:", inputData)
-          socket.current?.emit('input', inputData)
+          if (inputWantRef.current) {
+            terminalOutput.ws.send(JSON.stringify({
+              "event": 'input',
+              "data": inputData,
+            }));
+          }
+          // if()
+          console.log('Sending data to server:', inputData);
           terminalDataRef.current = '';
+          instance.writeln('');
+
+          return;
 
         }
-        instance?.writeln("")
-        instance?.write(' @arul > ')
-
+        instance.writeln('');
+        instance.write(` @${user.username}`);
       } else if (data === '\u007f') {
-        terminalDataRef.current = terminalDataRef.current.slice(0, -1)
-        instance?.write('\b \b')
+        console.log(terminalDataRef.current);
+        if (terminalDataRef.current.length <= 0) return;
+        terminalDataRef.current = terminalDataRef.current.slice(0, -1);
+        instance.write('\b \b');
       } else {
-        terminalDataRef.current += data
-        instance?.write(data)
+        console.log(data);
+        // console.log(user);
+
+        terminalDataRef.current += data;
+        instance.write(data);
+        return;
       }
+
+      instance.write(` @${user.username}`);
+
+    };
+
+    listenerRef.current = instance.onData(handleData);
+
+
+    if (Object.keys(terminalOutput).length > 0) {
+      // instance.writeln('');
+      if (inputWantRef.current)
+        instance.write(` @${user.username}`);
+
+      console.log(inputWantRef);
+
+      console.log(terminalOutput);
+
+      terminalOutput.output.split('\n').forEach((o) => {
+        instance.writeln(" " + o);
+      });
+
+      instance.write(` @${user.username}`);
+      return;
     }
 
-    instance?.onData(handleData)
-
-    socket.current?.on('output', (data) => {
-      let lines = data.split("\n").filter(v => v.length > 0);
-      console.log(lines);
 
 
-      lines.forEach(v => {
-        console.log(v);
-        instance?.writeln(v);
-      })
-
-      instance?.write(' @arul > ')
-
-    })
 
     return () => {
-      window.removeEventListener('resize', handleResize)
-      instance?.offData(handleData)
-    }
-  }, [instance])
+      window.removeEventListener('resize', handleResize);
+      listenerRef.current?.dispose();
+    };
+  }, [instance, terminalOutput]);
 
-  return <div ref={ref} style={{ width: '100%', height: '100%', display: 'block', textAlign: 'start', padding: '0' }} />
-}
+  return (
+    <div
+      ref={ref}
+      style={{ width: '100%', height: '100%', display: 'block', textAlign: 'start', padding: '0' }}
+    />
+  );
+};
 
-export default Term
+export default Term;

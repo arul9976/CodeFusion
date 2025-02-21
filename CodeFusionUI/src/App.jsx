@@ -9,22 +9,40 @@ import ResetPassword from "./LogInPage/ResetPassword";
 import CodeEditor from "./Editor/CodeEditor";
 import EditorACE from "./Editor/EditorACE";
 import GoogleAuth from "./Auth/GoogleAuth";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import FileExplorer from "./FileExpo/FileExplorer";
 import IDE from "./Editor/IDE";
 import TestEditor from "./Editor/MonacoIDE";
+import Chat from "./ChatComponents/Chat";
+import { UserContext } from "./LogInPage/UserProvider";
+import NewFileComp from "./FileExpo/NewFileComp";
+// import './ChatComponents/Chat.css';
+
 const App = () => {
   
   const navigate = useNavigate();
+  const user = useContext(UserContext);
+
   
-  // useEffect(() => {
-  //       const token = localStorage.getItem("token");
-  //       if (token) {
-  //         navigate("/IDE")
-  //       }else {
-  //         navigate("/loginRegister")
-  //       }
-  //      }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    
+  })
+  
+  useEffect(() => {
+    // const token = localStorage.getItem("token");
+
+    // if (user.isLoggedIn) {
+    //   console.log("In App", user.user , user);
+      
+    //    navigate("/IDE")
+    // }
+    // else {
+    //   navigate("/loginRegister")
+    // }
+  }, [user]);
       
   return (
 
@@ -37,6 +55,8 @@ const App = () => {
       <Route path="/IDE" Component={IDE} /> 
        <Route path="/IDE1" Component={CodeEditor} />
       <Route path="/Google" Component={GoogleAuth} />
+      <Route path="/Chat" Component={Chat} />
+      <Route path="/NewFile" Component={NewFileComp} />
       {/* <Route path="/Test" Component={TestEditor} /> */}
 
     </Routes>

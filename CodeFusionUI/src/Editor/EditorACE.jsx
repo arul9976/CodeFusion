@@ -313,30 +313,19 @@
 // export default EditorACE;
 
 
-import React, { useState, useEffect, useContext } from 'react';
-import AceEditor from 'react-ace';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { FileText, X, Settings, Search, Terminal, GitBranch, ChevronUp, ChevronDown, RefreshCw, Share2, Menu, Save, Play, Moon, Sun } from 'lucide-react';
 import Term from '../Terminal/Terminal';
 import { themeUtil } from './IdeUtils';
 // import { io } from 'socket.io-client';
-
-import 'ace-builds/src-noconflict/mode-javascript';
-import 'ace-builds/src-noconflict/mode-html';
-import 'ace-builds/src-noconflict/mode-css';
-import 'ace-builds/src-noconflict/mode-python';
-import 'ace-builds/src-noconflict/mode-java';
-import 'ace-builds/src-noconflict/theme-monokai';
-import 'ace-builds/src-noconflict/theme-tomorrow_night';
-import 'ace-builds/src-noconflict/theme-twilight';
-
-
-
 
 import FileExplorer from '../FileExpo/FileExplorer';
 import { getFileIcon, getFileMode } from '../utils/GetIcon';
 import { ClientContext } from './ClientContext';
 import { setCurrentTheme } from '../Redux/editorSlice';
 import MonacoIDE from './MonacoIDE';
+import { UserContext } from '../LogInPage/UserProvider';
+import NewFile from './NewFile';
 // import { useSelector } from 'react-redux';
 
 
@@ -348,11 +337,16 @@ import MonacoIDE from './MonacoIDE';
 
 const EditorACE = () => {
 
-  const { currentTheme, dispatch, initAndGetProvider, editorsRef, getBindings, providersRef } = useContext(ClientContext);
+  const { currentTheme, dispatch, initAndGetProvider, editorsRef, getBindings, providersRef, getYtext, language } = useContext(ClientContext);
+  const user = useContext(UserContext);
 
   const [files, setFiles] = useState([]);
   const [activeFile, setActiveFile] = useState(null);
   const [showTerminal, setShowTerminal] = useState(false);
+  const [showNewFile, setShowNewFile] = useState(false);
+
+  const [terminalOutput, setTerminalOutput] = useState({});
+  const inputWantRef = useRef(false);
 
   const [isExplorerOpen, setIsExplorerOpen] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -444,6 +438,63 @@ const EditorACE = () => {
 
   }
 
+  const handleFileOpen = (val) => {
+    console.log(val);
+
+    if (typeof val == 'string') {
+      console.log("Creating " + val);
+
+    }
+    console.log("handleFileOpen");
+    setShowNewFile(!showNewFile);
+  }
+
+
+  const getOutput = () => {
+    if (!activeFile) {
+      console.log("Please select a file");
+      return;
+    }
+    const provider = initAndGetProvider(activeFile.url);
+    const yText = getYtext(activeFile.url);
+    console.log(language, yText.toString());
+
+    provider.ws.send(JSON.stringify({
+      "language": language,
+      "code": yText.toString(),
+    }));
+
+
+    provider.ws.onmessage = (event) => {
+      console.log(event, typeof event.data);
+
+      if (typeof event.data === 'string') {
+        const res = JSON.parse(event.data);
+        console.log(res);
+
+        if (res.event === 'output') {
+          setShowTerminal(true);
+          setTerminalOutput({ output: res.data, ws: provider.ws });
+          if (res.input) {
+            inputWantRef.current = true;
+          } else {
+            inputWantRef.current = false;
+          }
+        }
+      }
+    };
+
+
+    // provider.ws.on('message', (event) => {
+    //   console.log(event);
+
+    //   if (event.type === 'connected') {
+    //     console.log('Connected to WebSocket server');
+    //   }
+    // });
+
+  }
+
   useEffect(() => {
     // if (activeFile) {
     //   const bind = getBindings(activeFile.url);
@@ -458,16 +509,17 @@ const EditorACE = () => {
     //       provider.destroy();
     //     }
     //   }
-    console.log(activeFile);
+    console.log("Current User --> " + user);
     // }
 
-  }, [activeFile]);
+  }, [user]);
 
 
   return (
     <div style={styles.container}>
+
       <div style={styles.menuBar}>
-        <div style={styles.menuItem}>
+        <div style={styles.menuItem} onClick={handleFileOpen}>
           <Menu size={16} style={{ marginRight: '8px' }} />
           File
         </div>
@@ -490,7 +542,7 @@ const EditorACE = () => {
           <div
             style={{ ...styles.actionButton, marginLeft: '4px' }}
           >
-            <Play size={16} />
+            <Play onClick={getOutput} size={16} />
           </div>
 
           <div
@@ -590,6 +642,9 @@ const EditorACE = () => {
 
             activeFile && <MonacoIDE activeFile={activeFile} />
           }
+          {
+            showNewFile ? <NewFile fileOnClick={handleFileOpen} /> : <h1>Arul</h1>
+          }
 
         </div>
       </div>
@@ -611,7 +666,7 @@ const EditorACE = () => {
           </div>
         </div>
         <div style={styles.terminalContent}>
-          {/* <Term /> */}
+          <Term terminalOutput={terminalOutput} inputWantRef={inputWantRef} />
         </div>
       </div>
     </div>

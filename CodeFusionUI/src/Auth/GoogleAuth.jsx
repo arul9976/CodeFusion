@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../LogInPage/UserProvider';
 
 const GoogleAuth = () => {
+
+  const { setUserLoginCredentials } = useContext(UserContext);
 
   const navigate = useNavigate();
   const onSuccess = async (response) => {
@@ -15,21 +18,24 @@ const GoogleAuth = () => {
     try {
       const response = await axios.post(`http://localhost:8080/CodeFusion_war/oauth/google`, { token: token });
       console.log(response);
-      
+
       if (response.status === 201 || response.status === 200) {
-        localStorage.setItem('token', response.data.token);
-        navigate("/IDE")
+        console.log("From Google Auth");
+        const success = setUserLoginCredentials(response.data);
+        console.log(success);
+
+        if (success) {
+          localStorage.setItem('token', response.data.token);
+          // navigate("/IDE");
+        }
       }
     } catch (error) {
       if (error.response) {
-        // The request was made and the server responded with a status code outside the range of 2xx
         console.error('Error response from server:', error.response.data);
         console.error('Status code:', error.response.status);
       } else if (error.request) {
-        // The request was made but no response was received
         console.error('No response received:', error.request);
       } else {
-        // Something else went wrong during the request setup
         console.error('Error during request setup:', error.message);
       }
     }

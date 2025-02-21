@@ -65,9 +65,10 @@ public class GoogleAuth extends HttpServlet {
                 String token = jwtUtil.generateToken(email);
 
                 JSONObject jsonResponse = new JSONObject();
-                jsonResponse.put("email", user.getUserName());
-                jsonResponse.put("email", user.getEmail());
                 jsonResponse.put("token", token);
+                jsonResponse.put("email", user.getEmail());
+                jsonResponse.put("username", user.getEmail().split("@")[0]);
+                jsonResponse.put("name", user.getUserName());
 
                 response.getWriter().write(jsonResponse.toString());
             } else {

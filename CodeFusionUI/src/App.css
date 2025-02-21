@@ -1,5 +1,7 @@
 /* App.css */
 @import url('./CSS/FileExplorer.css');
+@import url('./ChatComponents/Chat.css');
+
 #root {
   height: 100dvh;
   width: 100%;

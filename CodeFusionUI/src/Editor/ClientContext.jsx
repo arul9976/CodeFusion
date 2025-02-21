@@ -148,6 +148,7 @@
 
 
 // UserContext.js
+
 import React, { createContext, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Y from 'yjs';
@@ -190,17 +191,17 @@ const ClientProvider = ({ children }) => {
 
     if (!providersRef.current.has(path)) {
       const ydoc = ydocsRef.current.get(path);
-      // const provider = new WebsocketProvider(
-      //   `ws://localhost:3000?username=User${userRef.current++}&filePath=${path}&`,
-      //   path,
-      //   ydoc
-      // );
-
       const provider = new WebsocketProvider(
-        `ws://172.17.22.225:3000?username=User${userRef.current++}&filePath=${path}&`,
+        `ws://localhost:3000?username=User${userRef.current++}&filePath=${path}&`,
         path,
         ydoc
       );
+
+      // const provider = new WebsocketProvider(
+      //   `ws://172.17.22.225:3000?username=User${userRef.current++}&filePath=${path}&`,
+      //   path,
+      //   ydoc
+      // );
 
       providersRef.current.set(path, provider);
       console.log(`Initialized provider for ${path}`);

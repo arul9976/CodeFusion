@@ -1,6 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
+  user: {
+    name: '',
+    username: '',
+    email: '',
+    isLoggedIn: false
+  },
   code: '',
   language: 'javascript',
   output: '',
@@ -44,9 +50,20 @@ const editorSlice = createSlice({
       state.editorTheme = action.payload;
     },
 
+    setUser: (state, action) => {
+      console.log(action.payload);
+      const { username, email, isLoggedIn } = action.payload;
+      state.user.username = username;
+      state.user.email = email;
+      state.user.isLoggedIn = isLoggedIn;
+      console.log(state.user.username);
+
+
+    }
+
   },
 });
 
-export const { setCode, setLang, setOutput, setCursor, setCurrentTheme, setActiveFile, setEditorTheme, pushYdoc, getYdoc, removeYdoc } = editorSlice.actions;
+export const { setCode, setLang, setOutput, setCursor, setCurrentTheme, setActiveFile, setEditorTheme, removeYdoc, setUser } = editorSlice.actions;
 
 export default editorSlice.reducer;

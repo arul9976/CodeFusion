@@ -82,15 +82,18 @@
 
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import "./signUpheader.css";
 import { useNavigate } from "react-router-dom";
 import { FaGithub, FaGoogle } from 'react-icons/fa';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import GoogleAuth from "../Auth/GoogleAuth";
+import { UserContext } from "./UserProvider";
 
 function LoginRegister() {
+    const { setUserLoginCredentials } = useContext(UserContext);
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -118,6 +121,7 @@ function LoginRegister() {
             console.log(response);
 
             if (response.status === 201) {
+                setUserLoginCredentials(response.data)
                 localStorage.setItem('token', response.data.token);
                 navigate("/IDE");
             }
@@ -142,6 +146,8 @@ function LoginRegister() {
             if (response.status === 201) {
                 console.log(response.data);
                 console.log(response.data.token);
+                setUserLoginCredentials(response.data)
+
                 localStorage.setItem('token', response.data.token);
                 navigate("/IDE");
 

@@ -71,6 +71,7 @@ public class SignUp extends HttpServlet {
         JSONObject jsonResponse = new JSONObject();
         jsonResponse.put("token", token);
         jsonResponse.put("email", user.getEmail());
+        jsonResponse.put("username", user.getEmail().split("@")[0]);
         jsonResponse.put("name", user.getUserName());
 
         response.getWriter().write(jsonResponse.toString());

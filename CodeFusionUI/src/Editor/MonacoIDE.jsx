@@ -295,9 +295,10 @@ import Editor from '@monaco-editor/react';
 import { ClientContext } from './ClientContext';
 import { getFileMode } from '../utils/GetIcon';
 import { getFileContent } from '../utils/Fetch';
+import { setLang } from '../Redux/editorSlice';
 const MonacoIDE = ({ activeFile }) => {
 
-  const { initAndGetProvider, getYtext, editorsRef, bindings } = useContext(ClientContext);
+  const { initAndGetProvider, getYtext, editorsRef, bindings, dispatch, language } = useContext(ClientContext);
 
   const editorRef = useRef(null);
   const currFile = useRef(null);
@@ -366,11 +367,19 @@ const MonacoIDE = ({ activeFile }) => {
 
   }
 
+
+
   useEffect(() => {
     console.log("Runned");
+
+    const lan = getFileMode(activeFile.name);
+    dispatch(setLang(lan))
+    console.log(language);
+
     if (editorRef.current && currFile.current.id !== activeFile.id) {
-      console.log(activeFile);    
-      monacoRef.current.editor.setModelLanguage(editorRef.current.getModel(), getFileMode(activeFile.name))
+      console.log(activeFile);
+
+      monacoRef.current.editor.setModelLanguage(editorRef.current.getModel(), lan)
       initiateFile(activeFile);
       console.log("Initiated");
 

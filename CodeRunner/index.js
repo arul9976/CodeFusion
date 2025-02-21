@@ -290,16 +290,24 @@ function listFilesJSON(directory) {
 // API to list files and directories (recursive)
 app.get('/list-all-files/:userId', (req, res) => {
   const { userId } = req.params;
-  const uploadsDirectory = path.join(__dirname, 'codefusion', userId);
-  const fileList = listFilesInDirectory(uploadsDirectory);
-  let result = {};
-  result[userId] = fileList;
-  res.json(result);
+  try {
+    const uploadsDirectory = path.join(__dirname, 'codefusion', userId);
+    const fileList = listFilesInDirectory(uploadsDirectory);
+    let result = {};
+    result[userId] = fileList;
+    res.json(result);
+
+  }
+  catch (err) {
+    console.log(err);
+    res.status(404).json({ msg: "No File List found" });
+
+  }
 });
 
 // const yCursor = doc.getText('cursor');
 let connectedUsers = new Set();
-
+const clientRooms = new Map();
 const cursors = new Map();
 const docs = new Map();
 
@@ -331,7 +339,7 @@ function getOrUpdateYtext(filePath) {
   return docs.get(filePath);
 }
 
-
+const processes = new Map();
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const username = url.searchParams.get('username');
@@ -345,7 +353,7 @@ wss.on('connection', (ws, req) => {
 
   console.log("| " + username, filePath);
   // const awareness = new Aware
-
+  clientRooms.set(ws, filePath);
 
   const doc = getOrUpdateYtext(filePath);
 
@@ -382,22 +390,81 @@ wss.on('connection', (ws, req) => {
 
   console.log(`${username} connected. Total users: ${connectedUsers.size}`);
 
-  // console.log(ydoc);
-
-  // const provider = new WebsocketProvider('ws://localhost:3000', filePath, ydoc);
-
-  // provider.awareness.setLocalState({
-  //   'user': currUser,
-  //   'userList': userList,
-  // });
-
   ws.on('message', (message) => {
+    let data;
     try {
-      const data = JSON.parse(message);
-      console.log('Received message:', data);
+      data = JSON.parse(message.toString());
     } catch (e) {
+      return;
     }
+
+    const { language, code } = data;
+
+    if (!language || !code) {
+      return;
+    }
+
+    console.log("Code : " + code + "\nLanguage : " + language);
+
+    let command = '';
+    let args = [];
+    let process;
+    let tempFileName;
+
+    switch (language) {
+      case 'python':
+        command = 'python3';
+        args = ['-c', code];
+        process = spawn(command, args);
+        break;
+      case 'javascript':
+        command = 'node';
+        args = ['-e', code];
+        process = spawn(command, args);
+        break;
+      case 'java':
+        tempFileName = 'TempCode';
+        let fileNameWithPath = `./${tempFileName}.java`;
+        fs.writeFileSync(fileNameWithPath, code);
+        command = 'javac';
+        args = [fileNameWithPath];
+        process = spawn(command, args);
+        break;
+      case 'go':
+        command = 'go';
+        args = ['run', '-'];
+        process = spawn(command, args);
+        break;
+      case 'ruby':
+        command = 'ruby';
+        args = ['-e', code];
+        process = spawn(command, args);
+        break;
+      case 'c':
+        command = 'gcc';
+        args = ['-x', 'c', '-o', 'a.out', '-'];
+        process = spawn(command, args);
+        break;
+      case 'cpp':
+        command = 'g++';
+        args = ['-x', 'c++', '-o', 'a.out', '-'];
+        process = spawn(command, args);
+        break;
+      default:
+        sendToRoom(wss, filePath, { event: 'codeResult', data: 'Unsupported language' });
+        return;
+    }
+
+    processes.set(ws, process); // Track process for this client
+    processHeader(ws, process, language, tempFileName, filePath);
   });
+  // ws.on('message', (message) => {
+  //   try {
+  //     const data = JSON.parse(message);
+  //     console.log('Received message:', data);
+  //   } catch (e) {
+  //   }
+  // });
 
   ws.on('close', () => {
     connectedUsers.delete(currUser);
@@ -416,6 +483,78 @@ wss.on('connection', (ws, req) => {
     console.log(`${username} disconnected. Total users: ${connectedUsers.size}`);
   });
 });
+
+
+
+const processHeader = (ws, pss, lang, fn, roomId) => {
+  let output = '';
+  let errorOutput = '';
+
+  pss.stdout.on('data', (data) => {
+    const strData = data.toString();
+    console.log("Output --> " + strData);
+
+    const lines = strData.split('\n').filter(line => line.trim() !== "");
+
+    lines.forEach(line => {
+      output = line + '\n';
+      sendToRoom(wss, roomId, { event: 'output', data: output, input: true });
+    });
+  });
+
+  pss.stderr.on('data', (data) => {
+    errorOutput += data.toString();
+    sendToRoom(wss, roomId, { event: 'output', data: errorOutput, input: false });
+  });
+
+  pss.on('exit', (code) => {
+    if (code !== 0) {
+      sendToRoom(wss, roomId, {
+        event: 'output',
+        data: `Error: ${errorOutput || 'Unknown error occurred'}`
+      });
+      return;
+    }
+    if (lang === 'java') {
+      console.log("=== Compilation Success ===");
+      sendToRoom(wss, roomId, { event: 'output', data: "=== Compilation Success ===" });
+
+      if (fn) {
+        pss = spawn('java', [fn], { cwd: './' });
+        processes.set(ws, pss);
+        processHeader(ws, pss, '', fn, roomId);
+      }
+      return;
+    }
+    sendToRoom(wss, roomId, { event: 'output', data: "=== Code Execution Completed ===" });
+  });
+
+  ws.on('message', (message) => {
+    let data;
+    try {
+      data = JSON.parse(message.toString());
+    } catch (e) {
+      return;
+    }
+    if (data.event === 'input') {
+      pss.stdin.write(data.data + '\n');
+    }
+  });
+};
+
+function sendToRoom(wss, roomId, message) {
+  const msg = JSON.stringify(message);
+  console.log("Send Msg :" + msg);
+
+  wss.clients.forEach((client) => {
+    const clientRoom = clientRooms.get(client);
+    console.log("CR --> " + clientRoom, roomId);
+
+    if (clientRoom === roomId && client.readyState === WebSocket.OPEN) {
+      client.send(msg);
+    }
+  });
+}
 
 // io.on('connection', (socket) => {
 //   // disconnectAllSockets()

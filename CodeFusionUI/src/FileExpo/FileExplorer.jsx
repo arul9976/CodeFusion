@@ -1,15 +1,15 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Folder, File, ChevronRight, ChevronDown } from 'lucide-react';
+import { Folder, ChevronRight, ChevronDown } from 'lucide-react';
 
 import '../CSS/FileExplorer.css';
 import { getFileIcon } from '../utils/GetIcon';
-import { ClientContext } from '../Editor/ClientContext';
+import { UserContext } from '../LogInPage/UserProvider';
 
 const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
-  const { fileOpenAndDocCreate, dispatch, getBindings, initAndGetProvider } = useContext(ClientContext);
+  const { user } = useContext(UserContext);
   const [fileData, setFileData] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState({});
-  const [user, setUser] = useState('arul');
+  // const [user, setUser] = useState('arul');
   const idxRef = useRef(0);
 
   // const handleFile = (e) => {
@@ -42,14 +42,14 @@ const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
   //   setActiveFile(e);
   //   setFiles([...files, e]);
 
-   
+
   // }
 
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user}`);
-        // const response = await fetch(`http://localhost:3000/list-all-files/${user}`);
+        // const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user}`);
+        const response = await fetch(`http://localhost:3000/list-all-files/${user.username}`);
         const data = await response.json();
 
         // const data = {
@@ -94,8 +94,16 @@ const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
         // };
         // setTimeout(() => {
         // console.log(data[user]);
+        console.log(response);
 
-        setFileData(data[user]);
+        if (response.status == 200) {
+          setFileData(data[user.username]);
+
+        } else {
+          setFileData([]);
+
+        }
+
         // }, 2000);
       } catch (error) {
         console.error("Error fetching files:", error);
@@ -180,9 +188,9 @@ const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
     <div className={'file-explorer'}>
       <div className="header">
         <div className="avatar">
-          {user.slice(0, 1).toUpperCase()}
+          {user.username.slice(0, 1).toUpperCase()}
         </div>
-        <h1 className='myclass'>{user}'s File Explorer</h1>
+        <h1 className='myclass'>{user.username.length > 9 ? user.username.substring(0, 9) + "..." : user.username}'s File Explorer</h1>
       </div>
 
       {fileData.length === 0 ? (
