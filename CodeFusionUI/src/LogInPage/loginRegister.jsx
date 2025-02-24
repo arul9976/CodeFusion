@@ -113,11 +113,16 @@ function LoginRegister() {
     const handleSignUp = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post("http://localhost:8080/CodeFusion_war/signup", {
+            const response = await axios.post("http://172.17.22.225:8080/CodeFusion_war/signup", {
                 username: name,
                 email: email,
                 password: password
             });
+            // const response = await axios.post("http://localhost:8080/CodeFusion_war/signup", {
+            //     username: name,
+            //     email: email,
+            //     password: password
+            // });
             console.log(response);
 
             if (response.status === 201) {
@@ -135,11 +140,16 @@ function LoginRegister() {
     const handleLogin = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post("http://localhost:8080/CodeFusion_war/login", {
+            const response = await axios.post("http://172.17.22.225:8080/CodeFusion_war/login", {
                 username: "",
                 email,
                 password
             });
+            // const response = await axios.post("http://localhost:8080/CodeFusion_war/login", {
+            //     username: "",
+            //     email,
+            //     password
+            // });
             console.log(response);
 
             if (response.status === 200) {
@@ -154,7 +164,9 @@ function LoginRegister() {
                 alert("Invalid credentials");
             }
         } catch (error) {
-            alert("Login Failed: " + error.response?.data?.error || "Server Error");
+            console.log(error);
+            
+            // alert("Login Failed: " + error.response?.data?.error || "Server Error");
         }
     }
 

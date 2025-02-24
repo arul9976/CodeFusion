@@ -296,6 +296,7 @@ import { ClientContext } from './ClientContext';
 import { getFileMode } from '../utils/GetIcon';
 import { getFileContent } from '../utils/Fetch';
 import { setLang } from '../Redux/editorSlice';
+import { debounce } from 'lodash';
 const MonacoIDE = ({ activeFile }) => {
 
   const { initAndGetProvider, getYtext, editorsRef, bindings, dispatch, language } = useContext(ClientContext);
@@ -336,7 +337,10 @@ const MonacoIDE = ({ activeFile }) => {
             yText,
             model,
             new Set([editorRef.current]),
-            provider.awareness
+            provider.awareness,
+            {
+              throttle: debounce((fn) => fn(), 700)
+            }
           );
           console.log("After sync", yText.toString());
 

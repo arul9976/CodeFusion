@@ -193,17 +193,25 @@ const ClientProvider = ({ children }) => {
 
     if (!providersRef.current.has(path)) {
       const ydoc = ydocsRef.current.get(path);
-      const provider = new WebsocketProvider(
-        `ws://localhost:3000?username=${user.username}&filePath=${path}&`,
-        path,
-        ydoc
-      );
-
       // const provider = new WebsocketProvider(
-      //   `ws://172.17.22.225:3000?username=User${userRef.current++}&filePath=${'arul'}&`,
+      //   `ws://localhost:3000?username=${user.username}&filePath=${path}&`,
       //   path,
-      //   ydoc
+      //   ydoc,
+      //   {
+      //     maxPayloadSize: 1024 * 1024,
+      //     connect: true,
+      //     awareness: true,
+      //     WebSocketPolyfill: WebSocket,
+      //     resyncInterval: 10000
+      //   }
       // );
+
+      const provider = new WebsocketProvider(
+        `ws://172.17.22.225:3000?username=${user.username}&filePath=${path}&`,
+        path,
+        ydoc,
+        
+      );
 
       providersRef.current.set(path, provider);
       console.log(`Initialized provider for ${path}`);
@@ -222,6 +230,7 @@ const ClientProvider = ({ children }) => {
     if (ydoc) {
       const ytext = ydoc.getText(path);
       // ytext.delete(0, ytext.toString().length);
+
       console.log(`Retrieved Y.Text for ${path}: ${ytext.toString()}...`);
       return ytext;
     }

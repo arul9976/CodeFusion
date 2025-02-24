@@ -1,3 +1,51 @@
+
+// const express = require('express');
+// const http = require('http');
+// const WebSocket = require('ws');
+// const cors = require('cors');
+// const Y = require('yjs');
+// const { WebsocketProvider } = require('y-websocket');
+// const fs = require('fs').promises;
+// const fsSync = require('fs');
+// const path = require('path');
+// const bodyParser = require('body-parser');
+// const { spawn } = require('child_process');
+// const { setupWSConnection } = require('y-websocket/bin/utils');
+
+// // Constants
+// const MAX_PAYLOAD_SIZE = 50 * 1024 * 1024; // 50MB
+// const PORT = process.env.PORT || 3000;
+// const MAX_RECONNECTION_ATTEMPTS = 5;
+// const RECONNECTION_TIMEOUT = 5000;
+// const FILE_OPERATION_TIMEOUT = 10000;
+
+// // Error classes
+// class FileOperationError extends Error {
+//   constructor(message, path) {
+//     super(message);
+//     this.name = 'FileOperationError';
+//     this.path = path;
+//   }
+// }
+
+// class WebSocketError extends Error {
+//   constructor(message, code) {
+//     super(message);
+//     this.name = 'WebSocketError';
+//     this.code = code;
+//   }
+// }
+
+// const app = express();
+// const server = http.createServer(app);
+// global.WebSocket = WebSocket;
+
+// app.use(express.static('public'));
+// app.use(bodyParser.text());
+// app.use(cors());
+// app.use('/codefusion', express.static(path.join(__dirname, 'codefusion')));
+// app.use(express.json());
+
 const express = require('express');
 const http = require('http');
 // const socketIo = require('socket.io');
@@ -16,14 +64,6 @@ const { setupWSConnection } = require('y-websocket/bin/utils');
 const app = express();
 const server = http.createServer(app);
 global.WebSocket = WebSocket;
-// const io = socketIo(server, {
-//   cors: {
-//     origin: '*',
-//     // origin: 'http://localhost:3001',
-//     // origin: 'http://172.17.22.225:3001',
-//     methods: ['GET', 'POST'],
-//   },
-// });
 
 app.use(express.static('public'));
 app.use(bodyParser.text());
@@ -34,7 +74,23 @@ app.use('/codefusion', express.static(path.join(__dirname, 'codefusion')));
 app.use(express.json());
 
 const wss = new WebSocket.Server({
-  server: server
+  server: server,
+  maxPayload: 50 * 1024 * 1024,
+  perMessageDeflate: {
+    zlibDeflateOptions: {
+      chunkSize: 1024,
+      memLevel: 7,
+      level: 3
+    },
+    zlibInflateOptions: {
+      chunkSize: 10 * 1024
+    },
+    clientNoContextTakeover: true,
+    serverNoContextTakeover: true,
+    serverMaxWindowBits: 10,
+    concurrencyLimit: 10,
+    threshold: 1024
+  }
 });
 
 
@@ -253,92 +309,34 @@ function listFilesInDirectory(directory, fileList = [], result = {}) {
       result[dName] = listFilesInDirectory(fullPath);
       fileList.push(result);
       result = {};
-      // result[directory.split("/").at(-1)] = listFilesInDirectory(fullPath, [], result);
     } else {
-      // fileList.push(`/${relativePath}`);
-      // console.log("Full Path " + fullPath);
-      // const fileData = fs.readFileSync(fullPath, 'utf8');
-
       fileList.push({
         "file": file,
         "url": `/${relativePath}`
       });
 
-      // result[directory.split("/").at(-1)] = ;
-
     }
 
   });
-  // if (result)
-  // fileList.push(result);
 
 
 
   return fileList;
 }
 
-function listFilesJSON(directory) {
-  const result = {};
-
-  const users = fs.readdirSync(directory);
-
-  users.forEach(user => {
-    const userDirectory = path.join(directory, user);
-    result[user] = listFilesInDirectory(userDirectory);
-
-    //   const projects = fs.readdirSync(userDirectory);
-    //   result[user] = {};
-
-    //   projects.forEach(project => {
-
-    //     const projectDirectory = path.join(userDirectory, project);
-    //     if (fs.statSync(projectDirectory).isDirectory()) {
-    //       console.log(project);
-
-    //       const files = fs.readdirSync(projectDirectory);
-    //       result[user][project] = files.map(file => {
-    //         return {
-    //           "file": file,
-    //           "url": `/uploads/${user}/${project}/${file}`
-    //         };
-    //       });
-    //     } else { }
-    //   });
-
-  });
-
-  return result;
-}
-
-// function listFilesInDirectory(directory) {
+// function listFilesJSON(directory) {
 //   const result = {};
 
 //   const users = fs.readdirSync(directory);
 
 //   users.forEach(user => {
-//     const userDir = path.join(directory, user);
-//     if (fs.statSync(userDir).isDirectory()) {
-//       const userProjects = fs.readdirSync(userDir);
-//       result[user] = {};
-
-//       userProjects.forEach(project => {
-//         const projectDir = path.join(userDir, project);
-//         if (fs.statSync(projectDir).isDirectory()) {
-//           result[user][project] = listFilesInDirectory(projectDir);
-//          } else {
-//           result[user][project] = {
-//             file: project,
-//             url: `/codefusion/${user}/${project}`
-//           };
-//         }
-//       });
-//     }
+//     const userDirectory = path.join(directory, user);
+//     result[user] = listFilesInDirectory(userDirectory);
 //   });
 
 //   return result;
 // }
 
-// API to list files and directories (recursive)
 app.get('/list-all-files/:userId', (req, res) => {
   const { userId } = req.params;
   try {
@@ -431,14 +429,6 @@ wss.on('connection', (ws, req) => {
     message: `${username} joined the session`
   };
 
-
-
-  // wss.clients.forEach(client => {
-  //   if (client.readyState === WebSocket.OPEN) {
-  //     client.send(JSON.stringify(message));
-  //   }
-  // });
-
   console.log(`${username} connected. Total users: ${connectedUsers.size}`);
 
   ws.on('message', (message) => {
@@ -506,9 +496,10 @@ wss.on('connection', (ws, req) => {
         return;
     }
 
-    processes.set(ws, process); // Track process for this client
+    processes.set(ws, process); 
     processHeader(ws, process, language, tempFileName, filePath);
   });
+
   // ws.on('message', (message) => {
   //   try {
   //     const data = JSON.parse(message);
@@ -556,6 +547,19 @@ const processHeader = (ws, pss, lang, fn, roomId) => {
   pss.stderr.on('data', (data) => {
     errorOutput += data.toString();
     sendToRoom(wss, roomId, { event: 'output', data: errorOutput, input: false });
+  });
+
+  pss.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    try {
+      wss.close(() => {
+        server.close(() => {
+          pss.exit(1);
+        });
+      });
+    } catch (e) {
+      pss.exit(1);
+    }
   });
 
   pss.on('exit', (code) => {
@@ -609,226 +613,357 @@ function sendToRoom(wss, roomId, message) {
   });
 }
 
-// io.on('connection', (socket) => {
-//   // disconnectAllSockets()
-//   console.log(`\nUser Connected --> ${socket.id}\n`);
-//   cursors.set(socket.id, { row: 0, column: 0 });
-
-
-//   socket.on('newuser', (data) => {
-//     console.log('UserConnected ', data);
-//     socket.broadcast.emit('newuser', { message: 'You are now connected!' });
-
-//   });
-
-//   // socket.on('join-room', (roomId) => {
-//   //   socket.join(roomId);
-//   //   console.log(`${socket.id} joined room ${roomId}`);
-//   //   console.log(socket.rooms);
-//   //   // socket.broadcast.emit('sync', { update: yText.toString() });
-//   //   socket.to(roomId).emit('sync', "{ update: yText }");
-//   //   // socket.to(roomId).broadcast.emit('sync', "{ update: yText }");
-//   // });
-
-
-//   // socket.to(roomId).emit('sync', { update: yText });
-
-//   socket.on('fileOpenAndDocCreate', (data) => {
-//     console.log(docs);
-
-//     console.log('fileOpenAndDocCreate Loaded');
-//     const { path, content } = data;
-//     console.log(path);
-
-//     const ydoc = getOrUpdateYtext(path);
-//     const yText = ydoc.getText("editor");
-//     if (yText.toString().length === 0)
-//       yText.insert(0, content);
-
-//     console.log(yText.toString());
-
-//     socket.emit('fileLoaded', { content: yText.toString(), statusCode: 200, id: socket.id });
-
-//   })
-
-//   socket.on('codeUpdate', (data) => {
-//     // console.log(docs);
-
-//     const { pendingDeltas, path } = data;
-//     // console.log(pendingDeltas, path);
-
-//     const ydoc = getOrUpdateYtext(path);
-//     const yText = ydoc.getText("editor");
-
-//     pendingDeltas.forEach(d => {
-
-//       const { cursor, yDelta, aceDelta } = d;
-//       const { action, start, end, lines, totalLines } = yDelta;
-//       let s = start;
-
-//       // cursors.set(socket.id, cursor);
-//       if (lines !== yText.toString()) {
-//         console.log("\nDelta ==> " + start, end, lines, action);
-
-//         console.log("\nBefore\n" + yText.toString());
-
-//         if (action == 'insert') {
-//           console.log(yText.toString().split('\n').length, totalLines, (yText.toString().split('\n').length - totalLines));
-//           let n = (yText.toString().split('\n').length - totalLines);
-//           // s += n > 0 ? n : 0;
-
-//           ydoc.transact(() => {
-//             yText.delete(start, 0);
-//             yText.insert(s, lines);
-//           });
-//         }
-//         else if (action == 'remove') {
-//           ydoc.transact(() => {
-//             yText.delete(start, lines.length);
-//           })
-//         }
-//       }
-//     });
-
-//     // yText.applyDelta([{ delete: 0 }, ...retains]);
-//     console.log("\nAfter\n" + yText.toString());
-
-//     socket.broadcast.emit('updatedCode', { cursors: Array.from(cursors), pendingDeltas, path });
-//     console.log("\n--> BroadCast Successfully <--\n");
-
-
-//   });
-
-//   socket.on('output', (data) => {
-//     const { language, code } = data;
-//     console.log("Code : " + code + "\nLanguage : " + language);
-
-//     let command = '';
-//     let args = [];
-//     let process;
-//     let tempFileName;
-
-//     switch (language) {
-//       case 'python':
-//         command = 'python3';
-//         args = ['-c', code];
-//         process = spawn(command, args);
-//         break;
-//       case 'javascript':
-//         command = 'node';
-//         args = ['-e', code];
-//         process = spawn(command, args);
-//         break;
-//       case 'java':
-//         tempFileName = 'TempCode';
-//         let fileNameWithPath = `./${tempFileName}.java`;
-//         fs.writeFileSync(fileNameWithPath, code);
-//         command = 'javac';
-//         args = [fileNameWithPath];
-//         process = spawn(command, args);
-//         break;
-//       case 'go':
-//         command = 'go';
-//         args = ['run', '-'];
-//         process = spawn(command, args);
-//         break;
-//       case 'ruby':
-//         command = 'ruby';
-//         args = ['-e', code];
-//         process = spawn(command, args);
-//         break;
-//       case 'c':
-//         command = 'gcc';
-//         args = ['-x', 'c', '-o', 'a.out', '-'];
-//         process = spawn(command, args);
-//         break;
-//       case 'cpp':
-//         command = 'g++';
-//         args = ['-x', 'c++', '-o', 'a.out', '-'];
-//         process = spawn(command, args);
-//         break;
-//       default:
-//         socket.to(roomId).emit('codeResult', 'Unsupported language');
-//         return;
-//     }
-
-//     processHeader(process, language, tempFileName);
-
-
-//   });
-
-
-//   const processHeader = (pss, lang, fn) => {
-//     let output = '';
-//     let errorOutput = '';
-
-//     pss.stdout.on('data', (data) => {
-
-//       const strData = data.toString();
-//       console.log("Output --> " + strData);
-
-//       const lines = strData.split('\n').filter(line => line.trim() !== "");
-
-//       lines.forEach(line => {
-//         output = line + '\n'
-//         socket.to(roomId).emit('output', output);
-
-//       });
-
-//     });
-
-//     pss.stderr.on('data', (data) => {
-//       socket.to(roomId).emit('output', data.toString());
-//     });
-
-
-
-//     pss.on('exit', (code) => {
-//       if (code !== 0) {
-//         socket.to(roomId).emit('output', `Error: ${errorOutput || 'Unknown error occurred'}`);
-//         return;
-//       }
-//       // socket.to(roomId).emit("output", output);
-//       if (lang == 'java') {
-//         console.log("=== Compilation Success ===");
-//         socket.to(roomId).emit('output', "=== Compilation Success ===");
-
-//         if (fn != null && fn) {
-//           pss = spawn('java', [fn], {
-//             cwd: './'
-//           });
-
-//         }
-//         processHeader(pss, '', fn);
-//         return;
-
-//       }
-//       socket.to(roomId).emit('output', "=== Code Execution Completed ===");
-//     });
-
-//     socket.on('input', (input) => {
-//       pss.stdin.write(input + '\n');
-//     });
-
-//     return;
-//   }
-
-//   socket.on('leave-room', (roomId) => {
-//     socket.leave(roomId);
-//     console.log(`${socket.id} left room ${roomId}`);
-//     socket.to(roomId).emit('message', `${socket.id} has left the room`);
-//   });
-
-
-//   socket.on('/clearSockets', disconnectAllSockets)
-
-//   socket.on('disconnect', () => {
-//     console.log('User disconnected ' + socket.id);
-//   });
-// });
-
-
 server.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
 
+
+
+// const express = require('express');
+// const http = require('http');
+// const WebSocket = require('ws');
+// const cors = require('cors');
+// const Y = require('yjs');
+// const { WebsocketProvider } = require('y-websocket');
+// const fs = require('fs').promises;
+// const fsSync = require('fs');
+// const path = require('path');
+// const bodyParser = require('body-parser');
+// const { spawn } = require('child_process');
+// const { setupWSConnection } = require('y-websocket/bin/utils');
+
+// // Constants
+// const MAX_PAYLOAD_SIZE = 50 * 1024 * 1024; // 50MB
+// const PORT = process.env.PORT || 3000;
+// const MAX_RECONNECTION_ATTEMPTS = 5;
+// const RECONNECTION_TIMEOUT = 5000;
+// const FILE_OPERATION_TIMEOUT = 10000;
+
+// // Error classes
+// class FileOperationError extends Error {
+//   constructor(message, path) {
+//     super(message);
+//     this.name = 'FileOperationError';
+//     this.path = path;
+//   }
+// }
+
+// class WebSocketError extends Error {
+//   constructor(message, code) {
+//     super(message);
+//     this.name = 'WebSocketError';
+//     this.code = code;
+//   }
+// }
+
+// const app = express();
+// const server = http.createServer(app);
+// global.WebSocket = WebSocket;
+
+// app.use(express.static('public'));
+// app.use(bodyParser.text());
+// app.use(cors());
+// app.use('/codefusion', express.static(path.join(__dirname, 'codefusion')));
+// app.use(express.json());
+
+// WebSocket server setup with error handling
+// const wss = new WebSocket.Server({
+//   server,
+//   maxPayload: MAX_PAYLOAD_SIZE,
+//   perMessageDeflate: {
+//     zlibDeflateOptions: {
+//       chunkSize: 1024,
+//       memLevel: 7,
+//       level: 3
+//     },
+//     zlibInflateOptions: {
+//       chunkSize: 10 * 1024
+//     },
+//     clientNoContextTakeover: true,
+//     serverNoContextTakeover: true,
+//     serverMaxWindowBits: 10,
+//     concurrencyLimit: 10,
+//     threshold: 1024
+//   }
+// });
+
+// // State management
+// const connectedUsers = new Set();
+// const clientRooms = new Map();
+// const docs = new Map();
+// const processes = new Map();
+// const reconnectionAttempts = new Map();
+
+// // Utility functions
+// const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// const safeJSONParse = (str) => {
+//   try {
+//     return JSON.parse(str);
+//   } catch (e) {
+//     return null;
+//   }
+// };
+
+// // File system operations with error handling
+// async function ensureDirectory(dirPath) {
+//   try {
+//     await fs.access(dirPath);
+//   } catch {
+//     await fs.mkdir(dirPath, { recursive: true });
+//   }
+// }
+
+// async function writeFileWithRetry(filePath, content, attempts = 3) {
+//   for (let i = 0; i < attempts; i++) {
+//     try {
+//       await fs.writeFile(filePath, content);
+//       return;
+//     } catch (err) {
+//       if (i === attempts - 1) throw err;
+//       await sleep(1000);
+//     }
+//   }
+// }
+
+// // Enhanced Y.js document management
+// function getOrUpdateYtext(filePath) {
+//   try {
+//     let doc = docs.get(filePath);
+//     if (!doc) {
+//       doc = new Y.Doc();
+//       docs.set(filePath, doc);
+//       console.log(`Created new Y.Doc for ${filePath}`);
+//     }
+
+//     const ytext = doc.getText(filePath);
+//     ytext.delete(0, ytext.length);
+//     return doc;
+//   } catch (error) {
+//     console.error(`Error in Y.js document management: ${error.message}`);
+//     throw new Error('Failed to initialize document');
+//   }
+// }
+
+// // Process management
+// function killProcess(ws) {
+//   const process = processes.get(ws);
+//   if (process) {
+//     try {
+//       process.kill('SIGTERM');
+//       setTimeout(() => {
+//         if (!process.killed) {
+//           process.kill('SIGKILL');
+//         }
+//       }, 5000);
+//     } catch (error) {
+//       console.error(`Error killing process: ${error.message}`);
+//     }
+//     processes.delete(ws);
+//   }
+// }
+
+// // WebSocket connection handler
+// wss.on('connection', async (ws, req) => {
+//   let username, filePath;
+
+//   try {
+//     const url = new URL(req.url, `http://${req.headers.host}`);
+//     username = url.searchParams.get('username');
+//     filePath = url.searchParams.get('filePath');
+
+//     if (!username || !filePath) {
+//       throw new WebSocketError('Missing username or file path', 4000);
+//     }
+
+//     clientRooms.set(ws, filePath);
+//     const doc = getOrUpdateYtext(filePath);
+
+//     const currUser = { username, filePath };
+//     connectedUsers.add(currUser);
+
+//     setupWSConnection(ws, req, { doc });
+
+//     const userList = Array.from(connectedUsers);
+//     broadcastToRoom(filePath, {
+//       type: 'users',
+//       users: userList,
+//       message: `${username} joined the session`
+//     });
+
+//     ws.on('message', async (message) => {
+//       const data = safeJSONParse(message);
+//       if (!data) return;
+
+//       if (data.event === 'code') {
+//         await handleCodeExecution(ws, data, filePath);
+//       } else if (data.event === 'input') {
+//         handleProcessInput(ws, data);
+//       }
+//     });
+
+//     ws.on('close', () => handleDisconnect(ws, currUser));
+
+//     ws.on('error', (error) => handleWebSocketError(ws, error));
+
+//   } catch (error) {
+//     handleConnectionError(ws, error);
+//   }
+// });
+
+// // Code execution handler
+// async function handleCodeExecution(ws, data, roomId) {
+//   const { language, code } = data;
+//   if (!language || !code) return;
+
+//   try {
+//     killProcess(ws); // Kill any existing process
+
+//     const config = getLanguageConfig(language);
+//     if (!config) {
+//       throw new Error('Unsupported language');
+//     }
+
+//     const process = await spawnProcess(config, code);
+//     processes.set(ws, process);
+//     setupProcessHandlers(ws, process, config, roomId);
+
+//   } catch (error) {
+//     sendToRoom(wss, roomId, {
+//       event: 'error',
+//       data: `Execution error: ${error.message}`
+//     });
+//   }
+// }
+
+// // Language configuration
+// function getLanguageConfig(language) {
+//   const configs = {
+//     python: { command: 'python3', args: ['-c'] },
+//     javascript: { command: 'node', args: ['-e'] },
+//     java: { command: 'javac', tempFile: true, className: 'TempCode' },
+//     go: { command: 'go', args: ['run', '-'] },
+//     ruby: { command: 'ruby', args: ['-e'] },
+//     c: { command: 'gcc', args: ['-x', 'c', '-o', 'a.out', '-'] },
+//     cpp: { command: 'g++', args: ['-x', 'c++', '-o', 'a.out', '-'] }
+//   };
+//   return configs[language];
+// }
+
+// // Process spawning and handling
+// async function spawnProcess(config, code) {
+//   let process;
+//   if (config.tempFile) {
+//     const filePath = `./${config.className}.java`;
+//     await writeFileWithRetry(filePath, code);
+//     process = spawn(config.command, [filePath]);
+//   } else {
+//     process = spawn(config.command, [...config.args, code]);
+//   }
+//   return process;
+// }
+
+// function setupProcessHandlers(ws, process, config, roomId) {
+//   let output = '';
+//   let errorOutput = '';
+
+//   process.stdout.on('data', (data) => {
+//     handleProcessOutput(data, true, roomId);
+//   });
+
+//   process.stderr.on('data', (data) => {
+//     handleProcessOutput(data, false, roomId);
+//   });
+
+//   process.on('error', (error) => {
+//     handleProcessError(error, roomId);
+//   });
+
+//   process.on('exit', (code) => {
+//     handleProcessExit(code, config, errorOutput, roomId);
+//   });
+// }
+
+// // Broadcast helpers
+// function broadcastToRoom(roomId, message) {
+//   const msg = JSON.stringify(message);
+//   wss.clients.forEach((client) => {
+//     if (clientRooms.get(client) === roomId && client.readyState === WebSocket.OPEN) {
+//       client.send(msg);
+//     }
+//   });
+// }
+
+// // Error handlers
+// function handleConnectionError(ws, error) {
+//   console.error(`Connection error: ${error.message}`);
+//   ws.send(JSON.stringify({
+//     type: 'error',
+//     message: 'Failed to establish connection'
+//   }));
+//   ws.close(4000, error.message);
+// }
+
+// function handleWebSocketError(ws, error) {
+//   console.error(`WebSocket error: ${error.message}`);
+//   try {
+//     ws.send(JSON.stringify({
+//       type: 'error',
+//       message: 'WebSocket error occurred'
+//     }));
+//   } catch (e) {
+//     // Connection might be already closed
+//   }
+// }
+
+// function handleDisconnect(ws, user) {
+//   connectedUsers.delete(user);
+//   clientRooms.delete(ws);
+//   killProcess(ws);
+
+//   broadcastToRoom(user.filePath, {
+//     type: 'users',
+//     users: Array.from(connectedUsers),
+//     message: `${user.username} left the session`
+//   });
+// }
+
+// server.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// }).on('error', (error) => {
+//   console.error(`Server failed to start: ${error.message}`);
+//   process.exit(1);
+// });
+
+// process.on('SIGTERM', gracefulShutdown);
+// process.on('SIGINT', gracefulShutdown);
+
+// async function gracefulShutdown() {
+//   console.log('Initiating graceful shutdown...');
+
+//   wss.clients.forEach(client => {
+//     try {
+//       client.close(1000, 'Server shutting down');
+//     } catch (e) {
+//       console.error('Error closing WebSocket connection:', e);
+//     }
+//   });
+
+//   processes.forEach((process) => {
+//     try {
+//       process.kill('SIGTERM');
+//     } catch (e) {
+//       console.error('Error killing process:', e);
+//     }
+//   });
+
+//   server.close(() => {
+//     console.log('Server shut down complete');
+//     process.exit(0);
+//   });
+
+//   setTimeout(() => {
+//     console.error('Forced shutdown due to timeout');
+//     process.exit(1);
+//   }, 10000);
+// }

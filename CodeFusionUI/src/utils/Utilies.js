@@ -1,3 +1,5 @@
+
+
 function mysqlNow() {
   const now = new Date();
 
@@ -11,6 +13,9 @@ function mysqlNow() {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-
+// const loggedOut = () => {
+//   localStorage.removeItem('token');
+//   navigator('/loginsignup');
+// }
 
 export { mysqlNow };

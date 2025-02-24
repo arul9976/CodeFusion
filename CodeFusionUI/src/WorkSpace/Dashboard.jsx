@@ -204,6 +204,8 @@ const DashboardPage = () => {
 
 
 
+
+
   useEffect(() => {
     console.log(user);
 
@@ -254,7 +256,7 @@ const DashboardPage = () => {
         <button className={'navButton'}>
           <Settings size={20} /> Settings
         </button>
-        <button className={`navButton`} onClick={'loggedOut'} style={{ marginBottom: '20px' }}>
+        <button className={`navButton`} style={{ marginBottom: '20px' }}>
           <LogOut size={20} /> Logout
         </button>
       </div>

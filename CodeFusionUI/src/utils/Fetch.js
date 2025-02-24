@@ -6,8 +6,8 @@ const getFileContent = async (path) => {
 
   try {
     // const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user}`);
-    const response = await fetch(`http://localhost:3000/getFileContent/${encodeURIComponent(path)}`);
-    // const response = await fetch(`http://172.17.22.225:3000/getFileContent/${encodeURIComponent(path)}`);
+    // const response = await fetch(`http://localhost:3000/getFileContent/${encodeURIComponent(path)}`);
+    const response = await fetch(`http://172.17.22.225:3000/getFileContent/${encodeURIComponent(path)}`);
     const data = await response.json();
     console.log("FileContent " + data);
 
@@ -22,8 +22,8 @@ const getFileContent = async (path) => {
 
 const createFile = async (username, fileData) => {
   console.log(username, fileData);
-  const response = await fetch(`http://localhost:3000/createOrUpdateFile/${encodeURIComponent(username)}`, {
-    // const response = await fetch(`http://172.17.22.225:3000/createOrUpdateFile/${encodeURIComponent(username)}`, {
+  // const response = await fetch(`http://localhost:3000/createOrUpdateFile/${encodeURIComponent(username)}`, {
+    const response = await fetch(`http://172.17.22.225:3000/createOrUpdateFile/${encodeURIComponent(username)}`, {
     method: "POST",
     body: JSON.stringify(fileData),
   });
@@ -39,7 +39,8 @@ const createFile = async (username, fileData) => {
 const getFolders = async (username) => {
   console.log("---> " + username);
 
-  const response = await fetch(`http://localhost:3000/getFolders/${username}`);
+  // const response = await fetch(`http://localhost:3000/getFolders/${username}`);
+  const response = await fetch(`http://172.17.22.225:3000/getFolders/${username}`);
   console.log(response);
 
   if (response.status == 200) {
@@ -55,7 +56,8 @@ const getWorkSpaces = async (email) => {
   const token = localStorage.getItem("token");
   console.log("Token " + token);
   try {
-    const response = await axios.get(`http://localhost:8080/CodeFusion_war/getwslist?email=${email}`, {
+    // const response = await axios.get(`http://localhost:8080/CodeFusion_war/getwslist?email=${email}`, {
+    const response = await axios.get(`http://172.17.22.225:8080/CodeFusion_war/getwslist?email=${email}`, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -75,7 +77,8 @@ const createWorkspace = async (workspace) => {
   const token = localStorage.getItem("token");
   console.log("Token " + token);
   try {
-    const response = await axios.post(`http://localhost:8080/CodeFusion_war/createworkspace`, workspace);
+    // const response = await axios.post(`http://localhost:8080/CodeFusion_war/createworkspace`, workspace);
+    const response = await axios.post(`http://172.17.22.225:8080/CodeFusion_war/createworkspace`, workspace);
     console.log(response);
 
     if (response.status === 201) {
@@ -92,7 +95,8 @@ const createWorkspace = async (workspace) => {
 
 const searchUser = async (username) => {
   console.log("---> " + username);
-  const response = await axios.get(`http://localhost:8080/CodeFusion_war/collabsearch?username=${username}`);
+  const response = await axios.get(`http://172.17.22.225:8080/CodeFusion_war/collabsearch?username=${username}`);
+  // const response = await axios.get(`http://localhost:8080/CodeFusion_war/collabsearch?username=${username}`);
   console.log(response);
   if (response.status === 200) {
     return response?.data || [];

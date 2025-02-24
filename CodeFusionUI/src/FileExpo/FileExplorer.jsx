@@ -14,8 +14,9 @@ const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/list-all-files/${user.username}`);
-        const data = await response.json();
+        const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user.username}`);
+        // const response = await fetch(`http://localhost:3000/list-all-files/${user.username}`);
+        const data = await response?.json();
 
         if (response.status === 200) {
           setFileData(data[user.username]);
