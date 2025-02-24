@@ -136,14 +136,13 @@ function LoginRegister() {
         event.preventDefault();
         try {
             const response = await axios.post("http://localhost:8080/CodeFusion_war/login", {
+                username: "",
                 email,
                 password
-            }, {
-                headers: { "Content-Type": "application/json" },
-                withCredentials: true
             });
+            console.log(response);
 
-            if (response.status === 201) {
+            if (response.status === 200) {
                 console.log(response.data);
                 console.log(response.data.token);
                 setUserLoginCredentials(response.data)

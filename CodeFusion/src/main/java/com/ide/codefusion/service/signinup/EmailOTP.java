@@ -1,4 +1,4 @@
-package com.ide.codefusion.service;
+package com.ide.codefusion.service.signinup;
 
 import com.ide.codefusion.dao.UserDAO;
 import com.ide.codefusion.utils.SendOTP;

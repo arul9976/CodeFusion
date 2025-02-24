@@ -116,6 +116,7 @@ const Chat = () => {
 
 
   return (
+    
     <div className="chat-container">
       <div className="chat-window">
         {/* Header Section */}
@@ -208,7 +209,7 @@ const Chat = () => {
             className="message-input"
           />
           <button type="submit" className="send-button">
-            <FaPaperPlane style={{ width: "20px", height: "20px" }} />
+            <FaPaperPlane size={20}  />
           </button>
         </form>
       </div>

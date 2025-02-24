@@ -12,9 +12,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-@WebServlet(name = "createworkspace", value = "/createworkspace")
+@WebServlet(name = "CreateWorkspace", value = "/createworkspace")
 public class CreateWorkspace extends HttpServlet {
-
+    private static final long serialVersionUID = 1L;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -22,16 +22,25 @@ public class CreateWorkspace extends HttpServlet {
         resp.setContentType("application/json");
         JSONObject resJson = new JSONObject();
         ObjectMapper mapper = new ObjectMapper();
-        Workspace workspace = mapper.readValue(req.getReader(), Workspace.class);
 
-        if (workspace != null && WorkspaceDAO.createWorkspace(workspace)) {
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            resJson.put("message", "Workspace created");
-
-        }else {
-            resp.setStatus(404);
-            resJson.put("message", "Workspace Details not Valid");
+        try {
+            Workspace workspace = mapper.readValue(req.getReader(), Workspace.class);
+            System.out.println("Email : " + workspace.getOwnerEmail() + "\nName : " + workspace.getName() + "\nTech Stack : " + workspace.getTechStack());
+            if (workspace != null && WorkspaceDAO.createWorkspace(workspace)) {
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+                resJson.put("message", "Workspace created");
+            } else {
+                resp.setStatus(404);
+                resJson.put("message", "Workspace Details not Valid");
+            }
+            resp.getWriter().write(resJson.toString());
+            return;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            resJson.put("message", e.getMessage());
         }
+        resp.setStatus(406);
         resp.getWriter().write(resJson.toString());
+
     }
 }

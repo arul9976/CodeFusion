@@ -8,15 +8,17 @@ import App from './App.jsx'
 import { Provider } from 'react-redux'
 import store from './Redux/store.jsx'
 import { UserProvider } from './LogInPage/UserProvider.jsx'
+import { TerminalContextProvider } from 'react-terminal'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter basename='CodeFusion'>
       <Provider store={store}>
-        <UserProvider>
-          <App />
-        </UserProvider>
-
+        <TerminalContextProvider>
+          <UserProvider>
+            <App />
+          </UserProvider>
+        </TerminalContextProvider>
       </Provider>
     </BrowserRouter>
 

@@ -1,4 +1,4 @@
-package com.ide.codefusion.service;
+package com.ide.codefusion.service.signinup;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;

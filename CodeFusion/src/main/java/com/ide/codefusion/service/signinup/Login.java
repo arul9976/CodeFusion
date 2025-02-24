@@ -1,4 +1,4 @@
-package com.ide.codefusion.service;
+package com.ide.codefusion.service.signinup;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +64,8 @@ public class Login extends HttpServlet {
             jsonResponse.put("email", user.getEmail());
             jsonResponse.put("username", user.getEmail().split("@")[0]);
             jsonResponse.put("name", user.getUserName());
+
+            response.setHeader("Authorization", "Bearer " + token);
 
             response.getWriter().write(jsonResponse.toString());
             return;

@@ -22,16 +22,21 @@ public class JwtAuthFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
 
+        System.out.println("JwtAuthFilter");
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        if (isPublicUrl(request.getRequestURI())) {
+        System.out.println("Type " + request.getHeader("Access-Control-Request-Method"));
+        System.out.println("Auth " + request.getHeader("Authorization"));
+        System.out.println("Email " + request.getParameter("email"));
+
+        if (true) {
             filterChain.doFilter(request, response);
             return;
         }
 
         final String requestTokenHeader = request.getHeader("Authorization");
-
+//        System.out.println(requestTokenHeader);
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             String jwtToken = requestTokenHeader.substring(7);
             System.out.println("Token " + jwtToken);
@@ -51,7 +56,7 @@ public class JwtAuthFilter implements Filter {
             }
         }
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setStatus(401);
         response.getWriter().write("Authentication required");
 
     }

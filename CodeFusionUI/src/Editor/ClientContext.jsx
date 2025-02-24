@@ -149,15 +149,17 @@
 
 // UserContext.js
 
-import React, { createContext, useRef } from 'react';
+import React, { createContext, useContext, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
+import { UserContext } from '../LogInPage/UserProvider';
 
 // Create a Context for the user data
 const ClientContext = createContext(null);
 // Create a Provider component
 const ClientProvider = ({ children }) => {
+  const { user } = useContext(UserContext);
   const dispatch = useDispatch();
   const userRef = useRef(0);
   const currentTheme = useSelector(state => state.editor.currentTheme);
@@ -177,7 +179,7 @@ const ClientProvider = ({ children }) => {
 
   const initAndGetProvider = (path) => {
     console.log(providersRef.current);
-    
+
     if (!path) {
       console.error('No file path provided');
       return null;
@@ -192,13 +194,13 @@ const ClientProvider = ({ children }) => {
     if (!providersRef.current.has(path)) {
       const ydoc = ydocsRef.current.get(path);
       const provider = new WebsocketProvider(
-        `ws://localhost:3000?username=User${userRef.current++}&filePath=${path}&`,
+        `ws://localhost:3000?username=${user.username}&filePath=${path}&`,
         path,
         ydoc
       );
 
       // const provider = new WebsocketProvider(
-      //   `ws://172.17.22.225:3000?username=User${userRef.current++}&filePath=${path}&`,
+      //   `ws://172.17.22.225:3000?username=User${userRef.current++}&filePath=${'arul'}&`,
       //   path,
       //   ydoc
       // );

@@ -46,37 +46,55 @@ app.get('/', (req, res) => {
 
 app.post('/createOrUpdateFile/:userId', (req, res) => {
   const userId = req.params.userId;
-  const { fileName, fileContent } = req.body;
+  console.log(req.body);
+
+  const { fileName, fileContent } = JSON.parse(req.body);
+  // const { fileName, fileContent } = req.body;
+
 
   let filePath = path.join(__dirname, 'codefusion');
 
-  if (!fs.existsSync(filePath)) {
-    fs.mkdirSync(path.join(filePath), { recursive: true });
-  }
-  filePath = path.join(__dirname, userId);
+  console.log(userId, fileName, fileContent);
+  console.log("1 " + filePath);
 
   if (!fs.existsSync(filePath)) {
     fs.mkdirSync(path.join(filePath), { recursive: true });
   }
+  filePath = path.join(filePath, userId);
+  console.log("2 " + filePath);
 
-  if (fs.existsSync(path.join(filePath, fileName), { recursive: true })) {
-    return res.status(202).send('Folder Exists');
-
+  if (!fs.existsSync(filePath)) {
+    fs.mkdirSync(path.join(filePath), { recursive: true });
   }
+  console.log("3 " + filePath);
 
-  fileName.split("/").forEach(fName => {
+  const Folders = fileName.split("/").filter(i => i);
+  const endFile = Folders.pop();
+  console.log(Folders);
+  console.log(endFile);
+
+  Folders.forEach(fName => {
     filePath = path.join(filePath, fName)
     if (!fs.existsSync(filePath)) {
       fs.mkdirSync(filePath, { recursive: true });
     }
-  })
+  });
+  filePath = path.join(filePath, endFile);
+  console.log("4 " + filePath);
 
   fs.writeFile(filePath, fileContent, (err) => {
     if (err) {
       return res.status(500).send('Error creating/updating file');
     }
     console.log(`File '/${userId}/${fileName}' created/updated successfully with the provided content.`);
-    res.send(`File '/${userId}/${fileName}' created/updated successfully with the provided content.`);
+
+    res.status(201).send(JSON.stringify({
+      userId,
+      fileName,
+      message: 'File created successfully',
+      url: filePath.split(`/${userId}/`)[0]
+    }));
+
   });
 });
 
@@ -188,6 +206,39 @@ app.get('/getFileContent/:filePath', (req, res) => {
   } else {
     res.status(404).send('File not found');
   }
+});
+
+function getFolders(directory, userId, Folders = []) {
+  // console.log("-->" + directory);
+
+  const files = fs.readdirSync(directory);
+  console.log(files);
+
+  files.forEach(fileOrFolder => {
+    const fullPath = path.join(directory, fileOrFolder);
+    const partialPath = path.join((directory.split(`/${userId}/`)[1] || ''), fileOrFolder);
+
+    if (fs.statSync(fullPath).isDirectory()) {
+      console.log("--> " + partialPath);
+      Folders.push(partialPath);
+      return getFolders(fullPath, userId, Folders);
+    }
+  })
+
+  return Folders;
+}
+
+app.get('/getFolders/:userId', (req, res) => {
+  const userId = req.params.userId;
+  const directoryPath = path.join(__dirname, 'codefusion', userId);
+
+  if (!fs.existsSync(directoryPath)) {
+    return res.status(404).send('No files found');
+  }
+
+  const fileList = getFolders(directoryPath, userId);
+
+  res.send(fileList);
 })
 
 
@@ -206,7 +257,7 @@ function listFilesInDirectory(directory, fileList = [], result = {}) {
     } else {
       // fileList.push(`/${relativePath}`);
       // console.log("Full Path " + fullPath);
-      const fileData = fs.readFileSync(fullPath, 'utf8');
+      // const fileData = fs.readFileSync(fullPath, 'utf8');
 
       fileList.push({
         "file": file,
@@ -370,7 +421,7 @@ wss.on('connection', (ws, req) => {
 
   // console.log(doc);
 
-  console.log("Text -> " + doc.getText("monaco").toString());
+  console.log("Text -> " + doc.getText(filePath).toString());
 
   const userList = Array.from(connectedUsers);
 
@@ -517,7 +568,9 @@ const processHeader = (ws, pss, lang, fn, roomId) => {
     }
     if (lang === 'java') {
       console.log("=== Compilation Success ===");
-      sendToRoom(wss, roomId, { event: 'output', data: "=== Compilation Success ===" });
+      setTimeout(() => {
+        sendToRoom(wss, roomId, { event: 'output', data: "=== Compilation Success ===" });
+      }, 500);
 
       if (fn) {
         pss = spawn('java', [fn], { cwd: './' });

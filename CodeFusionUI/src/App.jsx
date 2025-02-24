@@ -9,20 +9,26 @@ import ResetPassword from "./LogInPage/ResetPassword";
 import CodeEditor from "./Editor/CodeEditor";
 import EditorACE from "./Editor/EditorACE";
 import GoogleAuth from "./Auth/GoogleAuth";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import FileExplorer from "./FileExpo/FileExplorer";
 import IDE from "./Editor/IDE";
 import TestEditor from "./Editor/MonacoIDE";
 import Chat from "./ChatComponents/Chat";
 import { UserContext } from "./LogInPage/UserProvider";
 import NewFileComp from "./FileExpo/NewFileComp";
-// import './ChatComponents/Chat.css';
+import ProfileInfo from "./Profile/ProfilePage";
+import ProfileEdit from "./Profile/ProfileEdit";
+import TechnologyStack from "./WorkSpace/TechnologyStack";
+import DashPage from "./WorkSpace/Dashboard";
+import Notification from "./WorkSpace/Notification";
+import CreateWorkspace from "./WorkSpace/CwTemplate";
+import Collaborators from "./Collab/Collabrators";
 
 const App = () => {
   
   const navigate = useNavigate();
   const user = useContext(UserContext);
-
+// const userinfo = useState()
   
 
   useEffect(() => {
@@ -32,16 +38,15 @@ const App = () => {
   })
   
   useEffect(() => {
-    // const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-    // if (user.isLoggedIn) {
-    //   console.log("In App", user.user , user);
-      
-    //    navigate("/IDE")
-    // }
-    // else {
-    //   navigate("/loginRegister")
-    // }
+    if (user?.user?.username) {
+      console.log("In App", user.user , user);
+       navigate("/Dashboard")
+    }
+    else {
+      navigate("/loginRegister")
+    }
   }, [user]);
       
   return (
@@ -53,10 +58,19 @@ const App = () => {
       <Route path="/resetPassword" Component={ResetPassword} />
       <Route path="/File" Component={FileExplorer} />
       <Route path="/IDE" Component={IDE} /> 
-       <Route path="/IDE1" Component={CodeEditor} />
+       {/* <Route path="/IDE1" Component={CodeEditor} /> */}
       <Route path="/Google" Component={GoogleAuth} />
       <Route path="/Chat" Component={Chat} />
-      <Route path="/NewFile" Component={NewFileComp} />
+    {/* <Route path="/NewFile" Component={NewFileComp} /> */}
+      <Route path="/Edit" element={<ProfileEdit />} />
+      <Route path="/Dashboard" element={<DashPage />} />
+      {/* <Route path="/Collab" element={<Collaborators />} /> */}
+      {/* <Route path="/Tech" element={<CreateWorkspace />} /> */}
+      {/* <Route path="/Profile" element={<ProfileInfo user={{
+        name: 'john',
+        email: 'john@example.com',
+        username: 'johndao'
+      }}/>} /> */}
       {/* <Route path="/Test" Component={TestEditor} /> */}
 
     </Routes>

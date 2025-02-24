@@ -1,7 +1,7 @@
+
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Folder, ChevronRight, ChevronDown } from 'lucide-react';
-
-import '../CSS/FileExplorer.css';
+import { motion, AnimatePresence } from "framer-motion"
 import { getFileIcon } from '../utils/GetIcon';
 import { UserContext } from '../LogInPage/UserProvider';
 
@@ -9,102 +9,19 @@ const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
   const { user } = useContext(UserContext);
   const [fileData, setFileData] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState({});
-  // const [user, setUser] = useState('arul');
   const idxRef = useRef(0);
-
-  // const handleFile = (e) => {
-
-  //   if (activeFile) {
-  //     const bind = getBindings(activeFile.url);
-  //     console.log(bind);
-
-  //     if (bind) {
-  //       const provider = initAndGetProvider(activeFile.url);
-  //       console.log(provider);
-
-  //       bind.destroy();
-  //       if (provider) {
-  //         provider.destroy();
-  //       }
-  //     }
-  //     console.log(activeFile);
-  //   }
-
-
-  //   let curFile = files.find(f => f.id === e.id);
-  //   if (curFile) {
-  //     setActiveFile(curFile);
-  //     return;
-  //   }
-  //   e['name'] = e.file;
-  //   e['binding'] = null;
-  //   console.log(e);
-  //   setActiveFile(e);
-  //   setFiles([...files, e]);
-
-
-  // }
 
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        // const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user}`);
         const response = await fetch(`http://localhost:3000/list-all-files/${user.username}`);
         const data = await response.json();
 
-        // const data = {
-        //   "arul": [
-        //     {
-        //       "file": "a1.html",
-        //       "url": "/codefusion/arul/a1.html"
-        //     },
-        //     {
-        //       "project1": [
-        //         {
-        //           "MyFolder": [
-        //             {
-        //               "file": "app.css",
-        //               "url": "/codefusion/arul/project1/MyFolder/app.css"
-        //             },
-        //             {
-        //               "file": "a.css",
-        //               "url": "/codefusion/arul/project1/MyFolder/a.css"
-        //             }
-        //           ]
-        //         },
-        //         {
-        //           "Folder": [
-        //             {
-        //               "file": "app.css",
-        //               "url": "/codefusion/arul/project1/Folder/app.css"
-        //             },
-        //             {
-        //               "file": "a.css",
-        //               "url": "/codefusion/arul/project1/Folder/a.css"
-        //             }
-        //           ]
-        //         },
-        //         {
-        //           "file": "project1.html",
-        //           "url": "/codefusion/arul/project1/project1.html"
-        //         }
-        //       ]
-        //     }
-        //   ]
-        // };
-        // setTimeout(() => {
-        // console.log(data[user]);
-        console.log(response);
-
-        if (response.status == 200) {
+        if (response.status === 200) {
           setFileData(data[user.username]);
-
         } else {
           setFileData([]);
-
         }
-
-        // }, 2000);
       } catch (error) {
         console.error("Error fetching files:", error);
       }
@@ -119,95 +36,213 @@ const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
     }));
   };
 
-
   useEffect(() => {
     if (!isExplorerOpen) {
       setFileData(null);
     }
+  }, [isExplorerOpen]);
 
-  }, [isExplorerOpen])
+  useEffect(() => {
+
+  }, [files])
 
   const renderFiles = (files, parentPath = '', id = 0) => {
     return (
-      <ul className="file-list">
+      <motion.ul
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0,
+          marginLeft: parentPath ? '20px' : 0
+        }}
+      >
         {files.map((fileOrFolder) => {
           if (fileOrFolder.file) {
-            // console.log(fileOrFolder);
-            if (!fileOrFolder.id)
+            if (!fileOrFolder.id) {
               fileOrFolder['id'] = fileOrFolder.url;
-            // console.log("---> " + Object.entries(fileOrFolder));
+            }
 
             return (
-              <li key={fileOrFolder.id} className="file-item" onClick={() => handleFile(fileOrFolder)}>
-
-                <p className='file-link'>
+              <motion.li
+                key={fileOrFolder.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ backgroundColor: "#2D3748" }}
+                style={{
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  borderRadius: "6px",
+                  marginBottom: "2px"
+                }}
+                onClick={() => handleFile(fileOrFolder)}
+              >
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: "#E2E8F0"
+                }}>
                   {getFileIcon(fileOrFolder.file)}
                   <span>{fileOrFolder.file}</span>
-                </p>
-              </li>
+                </div>
+              </motion.li>
             );
           } else if (typeof fileOrFolder === 'object') {
             const folderName = Object.keys(fileOrFolder)[0];
             const folderContents = Object.values(fileOrFolder)[0];
             const currentPath = `${parentPath}/${folderName}`;
-            const isExpanded = expandedFolders[currentPath] !== false; // Default to expanded
+            const isExpanded = expandedFolders[currentPath] !== false;
 
             return (
-              <li key={`${parentPath}/${folderName}`} className="folder-item">
-                <button
+              <motion.li
+                key={`${parentPath}/${folderName}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                style={{ marginBottom: "2px" }}
+              >
+                <motion.button
+                  whileHover={{ backgroundColor: "#2D3748" }}
                   onClick={() => toggleFolder(currentPath)}
-                  className="folder-button"
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#E2E8F0",
+                    borderRadius: "6px",
+                    fontSize: "14px"
+                  }}
                 >
-                  {isExpanded ?
-                    <ChevronDown size={16} className="chevron-icon" /> :
-                    <ChevronRight size={16} className="chevron-icon" />
-                  }
-                  <Folder size={16} className="folder-icon" />
+                  <motion.div
+                    animate={{ rotate: isExpanded ? 90 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ChevronRight size={16} />
+                  </motion.div>
+                  <Folder size={16} style={{ color: "#3B82F6" }} />
                   <span>{folderName}</span>
-                </button>
-
-                {isExpanded && renderFiles(folderContents, currentPath, id)}
-              </li>
+                </motion.button>
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{ overflow: "hidden" }}
+                    >
+                      {renderFiles(folderContents, currentPath, id)}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.li>
             );
           }
           return null;
         })}
-      </ul>
+      </motion.ul>
     );
   };
 
   if (!fileData) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "200px",
+        color: "#E2E8F0"
+      }}>
+        <motion.div
+          animate={{
+            rotate: 360
+          }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          style={{
+            width: "24px",
+            height: "24px",
+            border: "3px solid #3B82F6",
+            borderTopColor: "transparent",
+            borderRadius: "50%"
+          }}
+        />
       </div>
     );
   }
 
   return (
-    <div className={'file-explorer'}>
-      <div className="header">
-        <div className="avatar">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      style={{
+        backgroundColor: "#1E293B",
+        borderRadius: "16px",
+        overflow: "hidden",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column"
+      }}
+    >
+      <div style={{
+        padding: "20px",
+        backgroundColor: "#0F172A",
+        display: "flex",
+        alignItems: "center",
+        gap: "12px"
+      }}>
+        <div style={{
+          width: "32px",
+          height: "32px",
+          backgroundColor: "#3B82F6",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
+          fontWeight: "bold"
+        }}>
           {user.username.slice(0, 1).toUpperCase()}
         </div>
-        <h1 className='myclass'>{user.username.length > 9 ? user.username.substring(0, 9) + "..." : user.username}'s File Explorer</h1>
+        <h1 style={{
+          margin: 0,
+          fontSize: "1.25rem",
+          color: "#E2E8F0",
+          fontWeight: "bold"
+        }}>
+          {user.username.length > 9 ? user.username.substring(0, 9) + "..." : user.username}'s Files
+        </h1>
       </div>
 
-      {fileData.length === 0 ? (
-        <p className="empty-message">No files or folders found for this user.</p>
-      ) : (
-        <div className="explorer-content">
-          {renderFiles(fileData)}
-        </div>
-      )}
-    </div>
+      <div style={{
+        padding: "20px",
+        overflow: "auto",
+        flex: 1
+      }}>
+        {fileData.length === 0 ? (
+          <p style={{
+            textAlign: "center",
+            color: "#94A3B8",
+            fontSize: "0.875rem"
+          }}>
+            No files or folders found for this user.
+          </p>
+        ) : (
+          renderFiles(fileData)
+        )}
+      </div>
+    </motion.div>
   );
 };
 
 export default FileExplorer;
-
-
-
-
-
-

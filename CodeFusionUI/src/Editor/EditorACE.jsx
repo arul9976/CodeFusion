@@ -326,7 +326,14 @@ import { setCurrentTheme } from '../Redux/editorSlice';
 import MonacoIDE from './MonacoIDE';
 import { UserContext } from '../LogInPage/UserProvider';
 import NewFile from './NewFile';
+import { createFile } from '../utils/Fetch';
+import SidebarWithExplorer from './SideBarWithExplorer';
+import TabInterface from './TabInterface';
+import MenuBar from './MenuBar';
+import Chat from '../ChatComponents/Chat';
 // import { useSelector } from 'react-redux';
+import { motion } from "framer-motion";
+
 
 
 
@@ -346,10 +353,11 @@ const EditorACE = () => {
   const [showNewFile, setShowNewFile] = useState(false);
 
   const [terminalOutput, setTerminalOutput] = useState({});
-  const inputWantRef = useRef(false);
 
   const [isExplorerOpen, setIsExplorerOpen] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
 
   const [showFileExplorer, setShowFileExplorer] = useState(false);
 
@@ -442,7 +450,18 @@ const EditorACE = () => {
     console.log(val);
 
     if (typeof val == 'string') {
+      console.log(user);
+
       console.log("Creating " + val);
+      createFile(user.user.username, {
+        fileName: val,
+        fileContent: ""
+      }).then((res) => {
+        console.log(res);
+        console.log(res.message);
+        // setFiles(...files, {'name': res.fileName, 'id': res.fileName, 'url': res.url});
+
+      })
 
     }
     console.log("handleFileOpen");
@@ -471,15 +490,12 @@ const EditorACE = () => {
       if (typeof event.data === 'string') {
         const res = JSON.parse(event.data);
         console.log(res);
+        setShowTerminal(true);
 
         if (res.event === 'output') {
-          setShowTerminal(true);
-          setTerminalOutput({ output: res.data, ws: provider.ws });
-          if (res.input) {
-            inputWantRef.current = true;
-          } else {
-            inputWantRef.current = false;
-          }
+          // inputWantRef.current = res.input;
+
+          setTerminalOutput({ output: res.data, ws: provider.ws, input: res.input });
         }
       }
     };
@@ -494,6 +510,15 @@ const EditorACE = () => {
     // });
 
   }
+
+  // const stylesChat = {
+  //   chat: {
+  //     position: 'absolute',
+  //     right: 0,
+  //     top: 0,
+  //     zIndex: 1000
+  //   },
+  // }
 
   useEffect(() => {
     // if (activeFile) {
@@ -518,7 +543,7 @@ const EditorACE = () => {
   return (
     <div style={styles.container}>
 
-      <div style={styles.menuBar}>
+      {/* <div style={styles.menuBar}>
         <div style={styles.menuItem} onClick={handleFileOpen}>
           <Menu size={16} style={{ marginRight: '8px' }} />
           File
@@ -558,65 +583,34 @@ const EditorACE = () => {
             {currentTheme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
           </div>
         </div>
-      </div>
+      </div> */}
 
-      <div style={styles.mainContent}>
-        <div style={styles.sideBar}>
-          <div
-            style={{
-              ...styles.sideBarIcon,
-              ...(isExplorerOpen ? styles.activeSideBarIcon : {})
-            }}
-            onClick={toggleExplorer}
-          >
-            <FileText size={24} color={theme.text} />
-          </div>
-          {/* <div
-            style={{
-              ...styles.sideBarIcon,
-              ...(showFileExplorer ? styles.activeSideBarIcon : {})
-            }}
-            onClick={toggleFileExplorer}
-          >
-            <Folder size={24} color={theme.text} />
-          </div> */}
-          <div
-            style={styles.sideBarIcon}
-          >
-            <Search size={24} color={theme.text} />
-          </div>
-          <div
-            style={styles.sideBarIcon}
-          >
-            <GitBranch size={24} color={theme.text} />
-          </div>
-          <div
-            style={styles.sideBarIcon}
-            onClick={toggleTerminal}
-          >
-            <Terminal size={24} color={theme.text} />
-          </div>
-          <div style={{ marginTop: 'auto' }}>
-            <div
-              style={styles.sideBarIcon}
-            >
-              <Settings size={24} color={theme.text} />
-            </div>
-          </div>
-        </div>
+      <MenuBar handleFileOpen={handleFileOpen} getOutput={getOutput} />
+      <div style={{
+        display: 'flex',
+        height: '100%',
+        position: 'relative'
+      }}>
+        <SidebarWithExplorer isExplorerOpen={isExplorerOpen}
+          toggleExplorer={toggleExplorer}
+          toggleTerminal={toggleTerminal}
+          theme={currentTheme}
+          files={files}
+          handleFile={handleFile} setIsChatOpen={setIsChatOpen} />
 
-        <div
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: isChatOpen ? '430px' : 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
           style={{
-            ...styles.explorer,
-            width: isExplorerOpen ? 280 : 0
+            ...styles.chat,
+            overflow: 'hidden'
           }}
         >
-          <FileExplorer isExplorerOpen={isExplorerOpen} files={files} handleFile={handleFile} />
-        </div>
-
-
+          <Chat />
+        </motion.div>
         {/* Main Editor Area */}
-        <div style={styles.main}>
+        {/* <div style={styles.main}>
           <div style={styles.tabBar}>
             {files.map(file => (
               <div
@@ -643,17 +637,26 @@ const EditorACE = () => {
             activeFile && <MonacoIDE activeFile={activeFile} />
           }
           {
-            showNewFile ? <NewFile fileOnClick={handleFileOpen} /> : <h1>Arul</h1>
+            showNewFile && <NewFile fileOnClick={handleFileOpen} />
           }
 
-        </div>
+        </div> */}
+
+        <TabInterface files={files}
+          activeFile={activeFile}
+          handleFile={handleFile}
+          closeFile={closeFile}
+          showNewFile={showNewFile}
+          handleFileOpen={handleFileOpen} />
+
       </div>
+
 
       {/* Terminal Panel */}
       <div
         style={{
           ...styles.terminalContainer,
-          height: showTerminal ? 250 : 0
+          height: showTerminal ? 500 : 0
         }}
       >
         <div style={styles.terminalHeader}>
@@ -666,10 +669,24 @@ const EditorACE = () => {
           </div>
         </div>
         <div style={styles.terminalContent}>
-          <Term terminalOutput={terminalOutput} inputWantRef={inputWantRef} />
+          {/* <ReactTerminal
+            // commands={commands}
+            themes={{
+              "my-custom-theme": {
+                themeBGColor: "#272B36",
+                themeToolbarColor: "#DBDBDB",
+                themeColor: "#FFFEFC",
+                themePromptColor: "#a917a8"
+              }
+            }}
+            theme="my-custom-theme"
+            prompt={`\n${user.user.username}@myapp: `}
+            welcomeMessage="Try 'whoami', 'cd dir', or 'setuser name'."
+          /> */}
+          <Term terminalOutput={terminalOutput} />
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

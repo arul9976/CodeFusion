@@ -1,4 +1,4 @@
-package com.ide.codefusion.service;
+package com.ide.codefusion.service.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ide.codefusion.dao.UserDAO;

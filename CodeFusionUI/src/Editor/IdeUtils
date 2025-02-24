@@ -197,7 +197,7 @@ const themeUtil = (curr, isExplorerOpen, showTerminal) => {
       position: 'relative',
     },
     terminalContainer: {
-      height: showTerminal ? '250px' : '0',
+      height: showTerminal ? '600px' : '0',
       backgroundColor: theme.base,
       borderTop: showTerminal ? `1px solid ${theme.surfaceLight}` : 'none',
       overflow: 'hidden',
@@ -245,6 +245,13 @@ const themeUtil = (curr, isExplorerOpen, showTerminal) => {
       marginLeft: '8px',
       cursor: 'pointer',
       transition: 'background-color 0.15s ease',
+    },
+    chat: {
+      position: 'absolute',
+      right: 0,
+      top: '40px',
+      zIndex: 1000,
+      height: 'calc(100% - 40px)'
     },
   };
 

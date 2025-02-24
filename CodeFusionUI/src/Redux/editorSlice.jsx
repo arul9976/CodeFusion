@@ -13,7 +13,8 @@ const initialState = {
   cursor: { row: 0, column: 0 },
   currentTheme: 'dark',
   activeFile: null,
-  editorTheme: 'twilight'
+  editorTheme: 'twilight',
+  workspaces: [],
 };
 
 const editorSlice = createSlice({
@@ -52,18 +53,34 @@ const editorSlice = createSlice({
 
     setUser: (state, action) => {
       console.log(action.payload);
-      const { username, email, isLoggedIn } = action.payload;
+      const { name, username, email, isLoggedIn } = action.payload;
+      state.user.name = name.charAt(0).toUpperCase() + name.substring(1);
       state.user.username = username;
       state.user.email = email;
       state.user.isLoggedIn = isLoggedIn;
       console.log(state.user.username);
+    },
 
+    setWorkspaces: (state, action) => {
+      state.workspaces = action.payload;
+    },
 
+    pushWorkspace: (state, action) => {
+      const { name, ownerEmail, techStack, dTime } = action.payload;
+      state.workspaces.push({
+        "workspaceName": name,
+        "techStack": techStack,
+        "lastAccess": dTime,
+        "ownerName": ownerEmail.split("@")[0]
+      });
     }
 
   },
 });
 
-export const { setCode, setLang, setOutput, setCursor, setCurrentTheme, setActiveFile, setEditorTheme, removeYdoc, setUser } = editorSlice.actions;
+export const {
+  setCode, setLang, setOutput, setCursor, setCurrentTheme, setActiveFile, setEditorTheme, removeYdoc, setUser,
+  setWorkspaces, pushWorkspace
+} = editorSlice.actions;
 
 export default editorSlice.reducer;
