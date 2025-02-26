@@ -181,7 +181,7 @@
 //               <div className="user-email">{user.email}</div>
 //             </div>
 //             <div className="action-buttons">
-//               {user.status === "accepted" ? (
+//               {user.isAccepted ? (
 //                 <div className="status-indicator accepted">
 //                   <FcCheckmark size={18} />
 //                 </div>
@@ -213,13 +213,18 @@
 
 
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { X, Search, Check, Crown, Shield } from "lucide-react";
 import { MdPending } from "react-icons/md";
 import "./Collabrators.css";
-import { searchUser } from "../utils/Fetch";
+import { addCollab, fetchCollaborators, searchUser } from "../utils/Fetch";
+import { ClientContext } from "../Editor/ClientContext";
+import { UserContext } from "../LogInPage/UserProvider";
 
-const Collaborators = ({ setIsCollabOpen }) => {
+const Collaborators = ({ setIsCollabOpen, workSpaceName }) => {
+
+
+  const { user } = useContext(UserContext);
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -232,35 +237,39 @@ const Collaborators = ({ setIsCollabOpen }) => {
 
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("http://localhost:8080/Collaborator", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
+    setIsLoading(true);
 
-        const data = await response.json();
-        setUsers(data);
-      } catch (error) {
-        console.error("Fetch error:", error);
-        setUsers([
-          { name: "John Doe", email: "john@example.com", status: "pending" },
-          { name: "Jane Smith", email: "jane@example.com", status: "accepted" },
-          { name: "Alice Johnson", email: "alice@example.com", status: "accepted" },
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // const fetchUsers = async () => {
+    //   try {
+    //     const response = await fetch(`${import.meta.env.VITE_SERVLET_URL}/getCollabs?wsName=${encodeURI(workSpaceName)}&email=${encodeURI(user.email)}`);
 
-    fetchUsers();
+    //     if (!response.ok) {
+    //       throw new Error(`HTTP error! Status: ${response.status}`);
+    //     }
+
+    //     return response.json();
+
+    //   } catch (error) {
+    //     console.error("Fetch error:", error);
+    
+    //   }
+    // };
+
+    fetchCollaborators(workSpaceName, user.email).then(data => {
+      setCollaborators(data);
+      console.log(data);
+    }).catch(err => {
+      console.error("Fetch error:", err);
+      // setUsers([
+      //   { name: "John Doe", email: "john@example.com", status: "pending" },
+      //   { name: "Jane Smith", email: "jane@example.com", status: "accepted" },
+      //   { name: "Alice Johnson", email: "alice@example.com", status: "accepted" },
+      // ]);
+    }).finally(() => {
+      setIsLoading(false);
+    })
+
   }, []);
 
   useEffect(() => {
@@ -273,6 +282,17 @@ const Collaborators = ({ setIsCollabOpen }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+
+  // useEffect(() => {
+  //   if (selectedUser) {
+  //     addCollaborator({
+  //       email: selectedUser.email,
+  //       name: user.name,
+  //       wsName: currWorkSpace.current
+  //     })
+  //   }
+  // }, [selectedUser])
 
   const handleSearch = (e) => {
     const query = e.target.value;
@@ -287,7 +307,7 @@ const Collaborators = ({ setIsCollabOpen }) => {
     } else {
       searchUser(query)
         .then(res => {
-          setFilteredUsers(res);
+          setFilteredUsers(res.filter(u => u.username !== user.username));
         }).catch(err => {
           console.error("Search error:", err);
         })
@@ -301,11 +321,33 @@ const Collaborators = ({ setIsCollabOpen }) => {
     setIsDropdownVisible(false);
   };
 
-  const addCollaborator = () => {
+  const addCollaborator = async () => {
     if (selectedUser && !collaborators.some((collab) => collab.email === selectedUser.email)) {
-      setCollaborators([...collaborators, { ...selectedUser, status: "pending" }]);
+      console.log({
+        collabEmail: selectedUser.email,
+        email: user.email,
+        wsName: workSpaceName,
+        accepted: true
+      });
+
+      const sendCollaborator = {
+        collabEmail: selectedUser.email,
+        email: user.email,
+        wsName: workSpaceName,
+        accepted: true
+
+      };
+
+      addCollab(sendCollaborator).then(res => {
+        console.log(res);
+        setCollaborators([...collaborators, selectedUser]);
+        setSelectedUser(null);
+
+      }).catch(err => {
+        console.error("Adding collaborator error:", err);
+      })
+
       setSearch("");
-      setSelectedUser(null);
     }
   };
 
@@ -407,12 +449,12 @@ const Collaborators = ({ setIsCollabOpen }) => {
           {collaborators.map((collaborator) => (
             <div
               key={collaborator.email}
-              className={`collaborator-item slide-in ${collaborator.status === "accepted" ? "accepted-item" : ""}`}
+              className={`collaborator-item slide-in ${collaborator.isAccepted ? "accepted-item" : ""}`}
               data-email={collaborator.email}
             >
               <div className="user-avatar-wrapper">
                 <div className="user-avatar glow-effect">{collaborator.username.charAt(0).toUpperCase()}</div>
-                {collaborator.status === "accepted" && (
+                {collaborator.isAccepted && (
                   <div className="status-badge">
                     <Shield className="status-icon" />
                   </div>
@@ -422,13 +464,13 @@ const Collaborators = ({ setIsCollabOpen }) => {
               <div className="user-info">
                 <div className="user-name">{collaborator.username}</div>
                 <div className="user-email">{collaborator.email}</div>
-                {collaborator.status === "accepted" && (
+                {collaborator.isAccepted && (
                   <div className="access-level">Full Access Granted</div>
                 )}
               </div>
 
               <div className="action-buttons">
-                {collaborator?.status === "accepted" ? (
+                {collaborator?.isAccepted ? (
                   <div className="status-indicator accepted">
                     <div className="success-ring">
                       <Check size={18} />
@@ -437,7 +479,7 @@ const Collaborators = ({ setIsCollabOpen }) => {
                 ) : (
                   <button
                     className="accept-button ripple-effect"
-                      onClick={() => acceptUser(collaborator.email)}
+                    onClick={() => acceptUser(collaborator.email)}
                   >
                     <MdPending size={20} />
                   </button>

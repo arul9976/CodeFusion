@@ -9,6 +9,12 @@ import { setWorkspaces } from '../Redux/editorSlice';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import './wsRow.css';
+import { getInitials } from '../utils/Utilies';
+import RenameWorkspace from './RenameWorkspace';
+import DeleteWorkspace from './DeleteWorkspace';
+import Profile from './Profile';
+import { ClientContext } from '../Editor/ClientContext';
+import EmptyState from './EmptyState';
 
 const DashboardPage = () => {
   const { user, dispatchUser } = useContext(UserContext);
@@ -17,11 +23,13 @@ const DashboardPage = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [ownerColumn, setOwnerColumn] = useState('block');
   const [showPage, setShowPage] = useState("Recent Workspace");
-  const [notifications, setNotifications] = useState(3);
   const [notificationPanel, setNotificationPanel] = useState(false);
   const [isProfileOn, setIsProfileOn] = useState(false);
   const [isCreateWorkspace, SetIsCreateWorkspace] = useState(false);
-  const [showMenu, setShowMenu] = useState(null);
+  const [showMenu, setShowMenu] = useState(-1);
+  const [filteredWorkspaces, setFilteredWorkspaces] = useState(false);
+  const { notifications } = useContext(UserContext);
+
 
   const handleNotify = () => {
     setNotificationPanel(!notificationPanel);
@@ -36,199 +44,82 @@ const DashboardPage = () => {
   }
 
 
-  // const styles = {
-  //   mainContainer: {
-  //     display: 'flex',
-  //     height: '100vh',
-  //     backgroundColor: '#0f172a',
-  //     color: '#fff',
-  //     overflow: 'hidden'
-  //   },
-  //   sidebar: {
-  //     width: '280px',
-  //     backgroundColor: '#1e293b',
-  //     display: 'flex',
-  //     flexDirection: 'column',
-  //     transition: 'width 0.3s ease',
-  //     boxShadow: '4px 0 10px rgba(0,0,0,0.1)'
-  //   },
-  //   logo: {
-  //     padding: '20px',
-  //     backgroundColor: '#2a3749',
-  //     display: 'flex',
-  //     alignItems: 'center',
-  //     gap: '10px'
-  //   },
-  //   logoText: {
-  //     fontSize: '24px',
-  //     background: 'linear-gradient(45deg, #60a5fa, #3b82f6)',
-  //     WebkitBackgroundClip: 'text',
-  //     WebkitTextFillColor: 'transparent',
-  //     fontWeight: 'bold'
-  //   },
-  //   navButton: {
-  //     display: 'flex',
-  //     alignItems: 'center',
-  //     padding: '12px 20px',
-  //     margin: '5px 10px',
-  //     border: 'none',
-  //     borderRadius: '10px',
-  //     cursor: 'pointer',
-  //     color: '#fff',
-  //     gap: '12px',
-  //     transition: 'all 0.3s ease',
-  //     backgroundColor: 'transparent',
-  //     fontSize: '16px'
-  //   },
-  //   activeNavButton: {
-  //     backgroundColor: '#3b82f6',
-  //     transform: 'translateX(5px)',
-  //     boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-  //   },
-  //   content: {
-  //     flex: 1,
-  //     padding: '20px 30px',
-  //     overflowY: 'auto'
-  //   },
-  //   header: {
-  //     display: 'flex',
-  //     justifyContent: 'space-between',
-  //     alignItems: 'center',
-  //     marginBottom: '30px'
-  //   },
-  //   searchContainer: {
-  //     position: 'relative',
-  //     flex: 1,
-  //     maxWidth: '500px'
-  //   },
-  //   searchInput: {
-  //     width: '100%',
-  //     padding: '12px 40px',
-  //     backgroundColor: '#1e293b',
-  //     border: '2px solid #374151',
-  //     borderRadius: '12px',
-  //     color: '#fff',
-  //     fontSize: '16px',
-  //     transition: 'all 0.3s ease'
-  //   },
-  //   createButton: {
-  //     display: 'flex',
-  //     alignItems: 'center',
-  //     gap: '8px',
-  //     padding: '12px 24px',
-  //     backgroundColor: '#3b82f6',
-  //     border: 'none',
-  //     borderRadius: '12px',
-  //     color: '#fff',
-  //     cursor: 'pointer',
-  //     transition: 'all 0.3s ease',
-  //     fontSize: '16px',
-  //     boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-  //   },
-  //   tableContainer: {
-  //     backgroundColor: '#1e293b',
-  //     borderRadius: '16px',
-  //     // overflow: 'hidden',
-  //     boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-  //     animation: 'slideUp 0.5s ease'
-  //   },
-  //   tableHeader: {
-  //     display: 'grid',
-  //     gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
-  //     padding: '20px',
-  //     backgroundColor: '#2a3749',
-  //     gap: '20px'
-  //   },
-  //   profileIcon: {
-  //     width: '36px',
-  //     height: '36px',
-  //     borderRadius: '50%',
-  //     display: 'flex',
-  //     alignItems: 'center',
-  //     justifyContent: 'center',
-  //     fontSize: '16px',
-  //     color: '#fff',
-  //     fontWeight: 'bold'
-  //   },
-  //   '@keyframes slideUp': {
-  //     from: { transform: 'translateY(20px)', opacity: 0 },
-  //     to: { transform: 'translateY(0)', opacity: 1 }
-  //   },
-  //   headerActions: {
-  //     display: 'flex',
-  //     alignItems: 'center',
-  //     gap: '20px'
-  //   },
-  //   notificationBadge: {
-  //     position: 'relative',
-  //     cursor: 'pointer',
-  //     top: '7px',
-  //     right: '-5px',
-  //     animation: 'pulse 2s infinite',
-  //     zIndex: 2
-
-  //   },
-  //   badge: {
-  //     position: 'absolute',
-  //     top: '-5px',
-  //     right: '-5px',
-  //     backgroundColor: '#ef4444',
-  //     color: '#fff',
-  //     borderRadius: '50%',
-  //     padding: '2px 6px',
-  //     fontSize: '12px'
-  //   },
-  //   '@keyframes pulse': {
-  //     '0%': { transform: 'scale(1)' },
-  //     '50%': { transform: 'scale(1.2)' },
-  //     '100%': { transform: 'scale(1)' },
-  //   },
-  // };
-
   const getRandomColor = () => {
     const colors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6'];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  const getInitials = (name) => {
-    console.log(name);
-    name.split(' ').map(n => n[0]).join('')
-  };
-
-  // const workspaces = {
-  //   "wid": ["Design System", "React", "2024-02-22", "John Doe"],
-  //   "wid1": ["Backend API", "Python", "2024-02-21", "Jane Smith"],
-  //   "wid2": ["Mobile App", "React Native", "2024-02-20", "Mike Johnson"],
-  //   "wid3": ["Analytics Dashboard", "Vue.js", "2024-02-19", "Sarah Wilson"]
-  // };
 
 
+  // useEffect(() => {
 
-
+  //   switch (activeTab) {
+  //     case 1:
+  //   }
+  // }, [activeTab])
 
   useEffect(() => {
     console.log(user);
 
-    getWorkSpaces(user.email).then((data) => {
-      console.log(data);
+    switch (activeTab) {
+      case 0:
+        getWorkSpaces(user.email, "1").then((data) => {
+          console.log(data);
 
-      if (data.length > 0) {
-        dispatchUser(setWorkspaces(data || []))
-        console.log("Workspaces updated");
+          if (data.length > 0) {
+            dispatchUser(setWorkspaces(data))
+            console.log("Workspaces updated");
 
-        console.log(workspaces);
+            console.log(workspaces);
 
-      }
-      else {
+          }
+          else {
+            console.log("No workspaces found");
+          }
+        });
+        break;
+      case 1:
+        getWorkSpaces(user.email, "0").then((data) => {
+          console.log(data);
+
+          if (data.length > 0) {
+            dispatchUser(setWorkspaces(data.filter(ws => ws.ownerName === user.username)))
+            console.log("Workspaces updated");
+
+            console.log(workspaces);
+
+          }
+          else {
+            console.log("No workspaces found");
+          }
+        });
+        break;
+      case 2:
+        getWorkSpaces(user.email, "0").then((data) => {
+          console.log(data);
+
+          if (data.length > 0) {
+            dispatchUser(setWorkspaces(data.filter(ws => ws.ownerName !== user.username)))
+            console.log("Workspaces updated");
+
+            console.log(workspaces);
+
+          }
+          else {
+            console.log("No workspaces found");
+          }
+        });
+        break;
+      default:
         console.log("No workspaces found");
-      }
-    });
-  }, [])
+
+    }
+  }, [user, activeTab])
 
   return (
-    <div className={'mainContainer'}>
+    <div className={'mainContainer'} >
 
-      <ProfileInfo user={user} isOpen={isProfileOn} onClose={handleProfileOpen} />
+      <ProfileInfo isOpen={isProfileOn} onClose={handleProfileOpen} />
 
       <div className={'sidebar'}>
         <div className={'logo'}>
@@ -253,28 +144,28 @@ const DashboardPage = () => {
 
         <div style={{ flex: 1 }} />
 
-        <button className={'navButton'}>
+        {/* <button className={'navButton'}>
           <Settings size={20} /> Settings
         </button>
         <button className={`navButton`} style={{ marginBottom: '20px' }}>
           <LogOut size={20} /> Logout
-        </button>
+        </button> */}
       </div>
 
 
       <div className={'content'}>
-        <Notification notificationPanel={notificationPanel} setNotificationPanel={setNotificationPanel} notifies={notifications} />
+        {/* <Notification notificationPanel={notificationPanel} setNotificationPanel={setNotificationPanel} /> */}
 
         <div className={'header'}>
           <h1 style={{ fontSize: '28px', fontWeight: 'bold' }}>{showPage}</h1>
 
           <div className={'headerActions'}>
             <div className={'notificationBadge'} onClick={handleNotify}>
-              <Bell size={20} />
+              {/* <Bell size={20} /> */}
 
 
-              {notifications > 0 && (
-                <span className={'badge'}>{notifications}</span>
+              {notifications?.length > 0 && (
+                <span className={'badge'}>{notifications?.length}</span>
               )}
             </div>
 
@@ -284,7 +175,7 @@ const DashboardPage = () => {
               zIndex: 1001,
               cursor: 'pointer'
             }}>
-              AD
+              {(user.profilePic && <Profile />) || getInitials(user.name) || "G"}
             </div>
 
           </div>
@@ -328,18 +219,18 @@ const DashboardPage = () => {
         }
 
         <div className={'tableContainer'}>
-          <div className={'tableHeader'}>
+          <div className={`tableHeader ${activeTab === 1 ? "own" : ""}`}>
             <div>Workspace Name</div>
             <div>Technology</div>
             <div>Last Accessed</div>
-            <div>Owner</div>
+            {activeTab !== 1 && < div > Owner</div>}
             <div></div>
           </div>
 
           {
             workspaces.length > 0 ?
               workspaces.map((data, idx) => (
-                // <div key={idx} onClick={(e) => handleWorkspaceClick(e, idx)}>
+
                 <WorkspaceRow
                   key={idx}
                   data={data}
@@ -348,68 +239,88 @@ const DashboardPage = () => {
                   idx={idx}
                   showMenu={showMenu}
                   setShowMenu={setShowMenu}
+                  activeTab={activeTab}
                 />
-              )) : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src={'https://img.freepik.com/free-vector/hand-drawn-no-data-concept_52683-127818.jpg'} alt="" />
-              </div>
+              )) :
+              <EmptyState />
           }
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
-const WorkspaceRow = ({ data, getRandomColor, getInitials, idx, showMenu, setShowMenu }) => {
+const WorkspaceRow = ({ data, getRandomColor, getInitials, idx, showMenu, setShowMenu, activeTab }) => {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
-
+  const [rename, setIsRename] = useState(false);
+  const [deleteWs, setIsDeleteWs] = useState(false);
+  const tMenu = useRef(5000);
+  const { user } = useContext(UserContext);
 
   const GoToIDE = () => {
-    navigate('/IDE');
+    console.log("Ide running");
+    navigate(`/IDE/${data.workspaceName}`);
+  }
+
+  const handleRename = () => {
+    setShowMenu(false);
+    setIsRename(() => !rename);
   }
 
 
-  useEffect(() => {
-    console.log("Data " + data);
+  const handleDelete = () => {
+    setShowMenu(false);
+    setIsDeleteWs(() => !deleteWs);
+  }
 
-  }, [])
+  useEffect(() => {
+    setTimeout(() => {
+      setShowMenu(false);
+    }, tMenu.current);
+  }, [showMenu]);
+
   return (
-    <div
-      className={`row ${isHovered ? 'hovered' : ''}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="nameAndNaviagator" onClick={GoToIDE}>
-        {data.workspaceName}
-      </div>
-      <div>{data.techStack}</div>
-      <div>{data.lastAccess}</div>
-      <div className="profile-container">
-        <div
-          className="profileIcon"
-          style={{ backgroundColor: getRandomColor() }}
-        >
-          {getInitials(data.ownerName)}
+    <>
+      {rename && <RenameWorkspace onClose={handleRename} currentWorkspace={data.workspaceName} />}
+      {deleteWs && <DeleteWorkspace onClose={handleDelete} currentWorkspace={data.workspaceName} />}
+      <div
+        className={`row ${isHovered ? 'hovered' : ''} ${activeTab === 1 ? "own" : ""}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div className="nameAndNaviagator" onClick={GoToIDE}>
+          {data.workspaceName}
         </div>
-        <span style={{ margin: 'auto 0' }}>{data.ownerName}</span>
-      </div>
-      <div className="menu-container">
-        <MoreVertical
-          size={20}
-          style={{ cursor: 'pointer' }}
-          onClick={() => setShowMenu((prev) => prev === idx ? null : idx)}
-        />
-        {showMenu === idx && (
-          <div className="menu">
-            <div className="menuItem">View Details</div>
-            <div className="menuItem">Share Access</div>
-            <div className="menuItem">Rename</div>
-            <div className="menuItem delete">Delete</div>
+        <div className='pl-5'>{data.techStack}</div>
+        <div>{data.lastAccess}</div>
+        {activeTab !== 1 && <div className="profile-container">
+          <div
+            className="profileIcon"
+            style={{ backgroundColor: getRandomColor() }}
+          >
+            {(user.profilePic && <Profile />) || getInitials(data.ownerName)}
           </div>
-        )}
-      </div>
-    </div>
+          <span style={{ margin: 'auto 0' }}>{data.ownerName}</span>
+        </div>}
+        <div className="menu-container">
+          <MoreVertical
+            size={20}
+            style={{ cursor: 'pointer' }}
+            onClick={() => setShowMenu((prev) => prev === idx ? -1 : idx)}
+          />
+          {showMenu === idx && (
+            <div className="menu">
+              <div className="menuItem">Share Access</div>
+              <div className="menuItem" onClick={handleRename}>Rename</div>
+              <div className="menuItem delete" onClick={handleDelete}>Delete</div>
+            </div>
+          )}
+        </div>
+      </div >
+    </>
   );
 };
+
 
 export default DashboardPage;

@@ -36,7 +36,7 @@
 //             <div className={`login-container ${isActive ? "active" : ""}`}>
 //                 {/* SIGN UP FORM */}
 //                 <div className="form-container sign-up-container">
-//                     <form onSubmit={handleSignUp}>
+//                     <form className="signForm" onSubmit={handleSignUp}>
 //                         <h1 className="logh1Font">Create Account</h1>
 //                         <input className="logInp" type="text" name="name" placeholder="Name" value={name} onChange={handleInputChange} required />
 //                         <input className="logInp" type="email" name="email" placeholder="Email" value={email} onChange={handleInputChange} required />
@@ -47,7 +47,7 @@
 
 //                 {/* LOGIN FORM */}
 //                 <div className="form-container sign-in-container">
-//                     <form onSubmit={handleLogin}>
+//                     <form className="signForm" onSubmit={handleLogin}>
 //                         <h1 className="logh1Font">Sign In</h1>
 //                         <input className="logInp" type="email" name="email" placeholder="Email" value={email} onChange={handleInputChange} required />
 //                         <input className="logInp paddingStyle" type="password" name="password" placeholder="Password" value={password} onChange={handleInputChange} required />
@@ -86,10 +86,12 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import "./signUpheader.css";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { FaGithub, FaGoogle } from 'react-icons/fa';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import GoogleAuth from "../Auth/GoogleAuth";
 import { UserContext } from "./UserProvider";
+import { capitalize } from "../utils/Utilies";
 
 function LoginRegister() {
     const { setUserLoginCredentials } = useContext(UserContext);
@@ -100,7 +102,7 @@ function LoginRegister() {
     const [isActive, setIsActive] = useState(false);
     const [token, setToken] = useState(null);
     const navigate = useNavigate();
-
+    const [error, setError] = useState(null);
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
@@ -113,22 +115,21 @@ function LoginRegister() {
     const handleSignUp = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post("http://172.17.22.225:8080/CodeFusion_war/signup", {
+            const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/signup`, {
                 username: name,
                 email: email,
                 password: password
             });
-            // const response = await axios.post("http://localhost:8080/CodeFusion_war/signup", {
-            //     username: name,
-            //     email: email,
-            //     password: password
-            // });
             console.log(response);
 
             if (response.status === 201) {
                 setUserLoginCredentials(response.data)
                 localStorage.setItem('token', response.data.token);
-                navigate("/IDE");
+                localStorage.setItem('username', response.data.username);
+                localStorage.setItem('email', response.data.email);
+                localStorage.setItem('name', capitalize(response.data.name));
+                navigate("/Dashboard");
+
             }
 
         } catch (error) {
@@ -139,33 +140,38 @@ function LoginRegister() {
 
     const handleLogin = async (event) => {
         event.preventDefault();
+        console.log(import.meta.env.VITE_SERVLET_URL);
+
         try {
-            const response = await axios.post("http://172.17.22.225:8080/CodeFusion_war/login", {
-                username: "",
-                email,
-                password
-            });
             // const response = await axios.post("http://localhost:8080/CodeFusion_war/login", {
             //     username: "",
             //     email,
             //     password
             // });
+            const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/login`, {
+                username: "",
+                email,
+                password
+            });
             console.log(response);
 
             if (response.status === 200) {
                 console.log(response.data);
                 console.log(response.data.token);
                 setUserLoginCredentials(response.data)
-
                 localStorage.setItem('token', response.data.token);
-                navigate("/IDE");
+                localStorage.setItem('username', response.data.username);
+                localStorage.setItem('email', response.data.email);
+                localStorage.setItem('name', capitalize(response.data.name));
+                localStorage.setItem('profilePic', response.data.profilePic);
+                navigate("/Dashboard");
 
             } else {
                 alert("Invalid credentials");
             }
         } catch (error) {
             console.log(error);
-            
+            setError(error.response?.data)
             // alert("Login Failed: " + error.response?.data?.error || "Server Error");
         }
     }
@@ -183,10 +189,14 @@ function LoginRegister() {
             }, 6000);
         };
 
+        const handleErrorRemove = () => {
+            setError(null);
+        }
 
+        window.addEventListener("click", handleErrorRemove);
 
         const interval = setInterval(createHalfCircle, 8000);
-        return () => clearInterval(interval);
+        return () => { clearInterval(interval); window.removeEventListener("click", handleErrorRemove); }
     }, []);
 
     const handleGitHubLogin = () => {
@@ -204,13 +214,25 @@ function LoginRegister() {
             <div className={`login-container ${isActive ? "active" : ""}`}>
 
                 <div className="form-container sign-up-container">
-                    <form onSubmit={handleSignUp}>
+                    <form className="signForm" onSubmit={handleSignUp}>
                         <h1 className="logh1Font">Create Account</h1>
                         <input className="logInp" type="text" name="name" placeholder="Name" value={name} onChange={handleInputChange} required />
                         <input className="logInp" type="email" name="email" placeholder="Email" value={email} onChange={handleInputChange} required />
                         <input className="logInp" type="password" name="password" placeholder="Password" value={password} onChange={handleInputChange} required />
+                        {error && (
+                            <motion.div
+                                initial={false}
+                                animate={{
+                                    opacity: 1,
+                                    scale: 1,
+                                }}
+                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                                className="flex items-center justify-start"
+                            >
+                                <p className="pt-5 text-red-500">{error || 'Email Exists'}</p>
+                            </motion.div>
+                        )}
                         <button className="logBtn" type="submit">Register</button>
-
                         <div className="social-container">
                             <p className="social-title">Or sign up with</p>
                             <div className="social-buttons">
@@ -225,7 +247,7 @@ function LoginRegister() {
 
 
                 <div className="form-container sign-in-container">
-                    <form onSubmit={handleLogin}>
+                    <form className="signForm" onSubmit={handleLogin}>
                         <h1 className="logh1Font">Sign In</h1>
                         <input className="logInp" type="email" name="email" placeholder="Email" value={email} onChange={handleInputChange} required />
                         <input className="logInp paddingStyle" type="password" name="password" placeholder="Password" value={password} onChange={handleInputChange} required />
@@ -234,6 +256,19 @@ function LoginRegister() {
                                 Forgot Password?
                             </a>
                         </div>
+                        {error && (
+                            <motion.div
+                                initial={false}
+                                animate={{
+                                    opacity: 1,
+                                    scale: 1,
+                                }}
+                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                                className="flex items-center justify-start"
+                            >
+                                <p className="pt-5 text-red-500">{error || 'Email Exists'}</p>
+                            </motion.div>
+                        )}
                         <button className="logBtn" type="submit">Log In</button>
 
                         <div className="social-container">

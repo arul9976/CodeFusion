@@ -92,6 +92,7 @@
 .search-wrapper {
   position: relative;
   flex: 1;
+  gap: 1em;
 }
 
 .search-icon {
@@ -111,6 +112,7 @@
   border-radius: 8px;
   color: #fff;
   font-size: 1rem;
+  text-indent: 2.5em;
   transition: all 0.3s ease;
 }
 

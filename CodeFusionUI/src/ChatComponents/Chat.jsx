@@ -1,11 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { FaChevronDown, FaUser, FaRobot, FaPaperPlane } from "react-icons/fa";
 import './Chat.css'
+import { fetchCollaborators } from "../utils/Fetch";
+import { useParams } from "react-router-dom";
+import { UserContext } from "../LogInPage/UserProvider";
 
-const Chat = () => {
+const Chat = ({ isChatOpen }) => {
+
+  const { workspace } = useParams();
+  const { user } = useContext(UserContext);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("Users");
-  const [isBotActive, setIsBotActive] = useState(false); // State to control bot's status indicator visibility
+  const [isBotActive, setIsBotActive] = useState(false); 
   const [messages, setMessages] = useState({
     "Bot": [
       {
@@ -20,10 +26,10 @@ const Chat = () => {
   
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [users, setUsers] = useState([]); // State to store users dynamically
+  const [users, setUsers] = useState([]);
+
   const messagesEndRef = useRef(null);
 
-  // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -33,11 +39,20 @@ const Chat = () => {
   }, [messages]);
 
   useEffect(() => {
-    // Fetch the list of users from your backend (for now, using mock data)
-    // Replace this with an actual API call to fetch users
-    const fetchedUsers = ["Manimekala", "Pravin", "ArulKumar"]; // Example of dynamic users
-    setUsers(fetchedUsers);
-  }, []);
+    if (isChatOpen) {
+      fetchCollaborators(workspace, user.email)
+        .then(data => {
+          console.log(data);
+
+          setUsers(data);
+        })
+        .catch((err) => {
+          console.log("Error fetching contributors " + err.message);
+        })
+    }
+    // const fetchedUsers = ["Manimekala", "Pravin", "ArulKumar"]; 
+    // setUsers(fetchedUsers);
+  }, [isChatOpen]);
 
   const getBotResponse = (userMessage) => {
     const responses = [
@@ -53,11 +68,11 @@ const Chat = () => {
   const handleOptionClick = (option) => {
     setSelectedOption(option);
     setIsDropdownOpen(false);
-    setIsBotActive(option === "Bot"); // Activate bot status indicator when "Bot" is selected
+    setIsBotActive(option === "Bot"); 
     setMessages({
       ...messages,
       "All": [],
-    }); // Clear the "All" conversation when switching to a specific user/chatbot
+    }); 
   };
 
 
@@ -66,13 +81,14 @@ const Chat = () => {
     if (inputMessage.trim()) {
       const userMessage = {
         text: inputMessage,
-        sender: selectedOption,
+        sender: user.username,
+        receiver: selectedOption,
         timestamp: new Date().toLocaleTimeString(),
         isBot: false,
       };
   
       if (selectedOption === "All") {
-        // Send message to all users except the bot
+       
         setMessages((prev) => {
           const updatedMessages = { ...prev };
           Object.keys(prev).forEach((user) => {
@@ -83,14 +99,13 @@ const Chat = () => {
           return updatedMessages;
         });
       } else {
-        // Normal behavior: send message to selected user
+     
         setMessages((prev) => ({
           ...prev,
           [selectedOption]: prev[selectedOption] ? [...prev[selectedOption], userMessage] : [userMessage],
         }));
       }
   
-      // Handle bot response if "Bot" is selected
       if (selectedOption === "Bot") {
         setIsTyping(true);
         setTimeout(() => {
@@ -109,7 +124,7 @@ const Chat = () => {
         }, 1500);
       }
   
-      setInputMessage(""); // Clear input field
+      setInputMessage(""); 
     }
   };
 
@@ -119,7 +134,6 @@ const Chat = () => {
     
     <div className="chat-container">
       <div className="chat-window">
-        {/* Header Section */}
         <div className="chat-header">
           <div className="header-left">
             <div className="dropdown-container">
@@ -133,10 +147,9 @@ const Chat = () => {
 
               {isDropdownOpen && (
                 <div className="dropdown-menu">
-                  {/* Render dynamically fetched users */}
-                  {users.map((name) => (
-                    <div key={name} className="dropdown-item" onClick={() => handleOptionClick(name)}>
-                      {name}
+                  {users.map((uinfo, idx) => (
+                    <div key={idx} className="dropdown-item" onClick={() => handleOptionClick(uinfo.email)}>
+                      {uinfo.username}
                     </div>
                   ))}
                   <div
@@ -156,20 +169,17 @@ const Chat = () => {
             </div>
           </div>
 
-          {/* Bot Status */}
           {selectedOption === "Bot" && (
             <div className="bot-status">
               <div className="bot-avatar">
                 <FaRobot />
               </div>
               <span>ChatBot</span>
-              {/* Conditional rendering of status indicator */}
               {isBotActive && <div className="status-indicator"></div>}
             </div>
           )}
         </div>
 
-        {/* Messages Section */}
         <div className="messages-container">
           {messages[selectedOption]?.map((message, index) => (
             <div key={index} className={`message-wrapper ${message.isBot ? "received" : "sent"}`}>
@@ -199,7 +209,6 @@ const Chat = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Section */}
         <form className="input-container" onSubmit={handleSendMessage}>
           <input
             type="text"

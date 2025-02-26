@@ -11,7 +11,7 @@ import {
 import './Cw.css';
 import { X } from 'lucide-react';
 import { UserContext } from '../LogInPage/UserProvider';
-import { createWorkspace } from '../utils/Fetch';
+import { checkws, createWorkspace } from '../utils/Fetch';
 import { pushWorkspace } from '../Redux/editorSlice';
 import { mysqlNow } from '../utils/Utilies';
 const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
@@ -50,34 +50,70 @@ const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
       "techStack": selectedTech,
       "ownerEmail": user.email,
     }
+    checkws(workspaceName, user.email).then((res) => {
+      console.log("Res -> " + res);
 
-    // await new Promise(resolve => setTimeout(resolve, 1500));
+      if (res) {
 
-    createWorkspace(workspace)
-      .then((res) => {
-        console.log('Workspace created:', res);
-        setWorkspaceName('');
-        setSelectedTech('');
-        workspace['dTime'] = mysqlNow();
-        dispatchUser(pushWorkspace(workspace));
+        createWorkspace(workspace)
+          .then((res) => {
+            console.log('Workspace created:', res);
+            setWorkspaceName('');
+            setSelectedTech('');
+            workspace['dTime'] = mysqlNow();
+            dispatchUser(pushWorkspace(workspace));
 
+            setIsCreating(false);
+
+          }).catch((err) => {
+            console.error('Error creating workspace:', err);
+          }).finally(() => {
+            setTimeout(() => {
+              setIsLoading(false);
+              if (!isCreating)
+                SetIsCreateWorkspace(false);
+            }, 1000);
+          })
+        // await new Promise(resolve => setTimeout(resolve, 1500));
+
+
+        console.log('Creating workspace:', workspace);
+      } else {
+        alert('Workspace name already exists. Please choose a different one.');
         setIsCreating(false);
+        setIsLoading(false);
+        // SetIsCreateWorkspace(false);
 
-      }).catch((err) => {
-        console.error('Error creating workspace:', err);
-      }).finally(() => {
-        setTimeout(() => {
-          setIsLoading(false);
-          if (!isCreating)
-            SetIsCreateWorkspace(false);
-        }, 1000);
-      })
+        // setWorkspaceName('');
+        // setSelectedTech('');
+      }
+    })
 
-    console.log('Creating workspace:', workspace);
+
+    // createWorkspace(workspace)
+    //   .then((res) => {
+    //     console.log('Workspace created:', res);
+    //     setWorkspaceName('');
+    //     setSelectedTech('');
+    //     workspace['dTime'] = mysqlNow();
+    //     dispatchUser(pushWorkspace(workspace));
+
+    //     setIsCreating(false);
+
+    //   }).catch((err) => {
+    //     console.error('Error creating workspace:', err);
+    //   }).finally(() => {
+    //     setTimeout(() => {
+    //       setIsLoading(false);
+    //       if (!isCreating)
+    //         SetIsCreateWorkspace(false);
+    //     }, 1000);
+    //   })
+
     // await new Promise(resolve => setTimeout(resolve, 1000));
-    // setIsCreating(false);
-    // setWorkspaceName('');
-    // setSelectedTech('');
+    setIsCreating(false);
+    setWorkspaceName('');
+    setSelectedTech('');
   };
 
 

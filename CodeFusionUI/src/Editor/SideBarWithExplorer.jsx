@@ -14,7 +14,8 @@ const SidebarWithExplorer = ({
   theme,
   files,
   handleFile,
-  setIsChatOpen
+  setIsChatOpen,
+  isFileCreated
 }) => {
 
 
@@ -95,13 +96,13 @@ const SidebarWithExplorer = ({
           <FileText size={24} color={theme.text} />
         </motion.div>
 
-        <motion.div {...iconProps} style={styles.sideBarIcon}>
+        {/* <motion.div {...iconProps} style={styles.sideBarIcon}>
           <Search size={24} color={theme.text} />
-        </motion.div>
-
+        </motion.div> */}
+{/* 
         <motion.div {...iconProps} style={styles.sideBarIcon}>
           <GitBranch size={24} color={theme.text} />
-        </motion.div>
+        </motion.div> */}
 
         <motion.div {...iconProps} style={styles.sideBarIcon} onClick={toggleTerminal}>
           <Terminal size={24} color={theme.text} />
@@ -111,11 +112,11 @@ const SidebarWithExplorer = ({
           <BiSolidMessageSquareDetail size={24} color={theme.text} />
         </motion.div>
 
-        <div style={{ marginTop: 'auto' }}>
+        {/* <div style={{ marginTop: 'auto' }}>
           <motion.div {...iconProps} style={styles.sideBarIcon}>
             <Settings size={24} color={theme.text} />
           </motion.div>
-        </div>
+        </div> */}
       </motion.div>
 
       <motion.div
@@ -132,6 +133,7 @@ const SidebarWithExplorer = ({
             isExplorerOpen={isExplorerOpen}
             files={files}
             handleFile={handleFile}
+            isFileCreated={isFileCreated}
           />
         </div>
       </motion.div>

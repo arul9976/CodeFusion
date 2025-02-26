@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serial;
 
-@WebServlet(name = "updateuserdetails", value = "/update")
+@WebServlet(name = "updateuserdetails", value = "/updatenkname")
 public class UpdateUserDetails extends HttpServlet {
 
     @Serial
@@ -27,9 +27,9 @@ public class UpdateUserDetails extends HttpServlet {
         ObjectMapper objectMapper = new ObjectMapper();
 
         UpdateUser updateData = objectMapper.readValue(req.getReader(), UpdateUser.class);
-
+        System.out.println(updateData.getProfilePic());
         if (!updateData.getEmail().isEmpty()) {
-            if (userDAO.update(updateData)) {
+            if (userDAO.updateNickName(updateData.getEmail(), updateData.getUpdated_name(), updateData.getProfilePic())) {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.getWriter().write("{\"success\":true,\"message\":\"updated successfully\"}");
                 return;

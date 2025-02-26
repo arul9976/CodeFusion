@@ -110,10 +110,10 @@ public class WorkspaceDAO {
     }
 
 
-    public static JSONArray getWorkspaces(String email) {
+    public static JSONArray getWorkspaces(String email, String isRecent) {
         JSONArray jsonArray = new JSONArray();
-        try (Connection conn = DataBaseUtil.getConnection()){
-            CallableStatement getWorkspaceStmt = conn.prepareCall("CALL getWorkspaces(?);");
+        try (Connection conn = DataBaseUtil.getConnection()) {
+            CallableStatement getWorkspaceStmt = conn.prepareCall(isRecent.equals("1") ? "CALL getRecentWorkspaces(?);" : "CALL getWorkspaces(?);");
             getWorkspaceStmt.setString(1, email);
 
             boolean isWorkspacesHas = getWorkspaceStmt.execute();
@@ -143,14 +143,55 @@ public class WorkspaceDAO {
     }
 
     public static boolean updateLastAccess(String wsName) {
-        try(Connection conn = DataBaseUtil.getConnection()){
+        try (Connection conn = DataBaseUtil.getConnection()) {
             CallableStatement updatels = conn.prepareCall("CALL updateLastAccess (?);");
             updatels.setString(1, wsName);
             int rowAffected = updatels.executeUpdate();
             return rowAffected > 0;
-        }catch (Exception e) {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
         return false;
+    }
+
+    public static boolean deleteWorkspace(String wsName, String email) {
+        boolean result = false;
+        try (Connection conn = DataBaseUtil.getConnection()) {
+            CallableStatement deleteWorkspaceStmt = conn.prepareCall("CALL deleteWorkspace(?, ?)");
+            deleteWorkspaceStmt.setString(1, wsName);
+            deleteWorkspaceStmt.setString(2, email);
+            boolean rowAffected = deleteWorkspaceStmt.execute();
+
+            if (rowAffected) {
+                ResultSet rs = deleteWorkspaceStmt.getResultSet();
+                if (rs.next()) {
+                    String status = rs.getString(1);
+                    System.out.println(status);
+                    result = status.equals("Workspace deleted successfully.");
+                }
+
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return result;
+    }
+
+    public static boolean isWorkspaceExist(String wsName, String email) {
+        boolean result = false;
+        try (Connection connection = DataBaseUtil.getConnection()) {
+            CallableStatement existStmt = connection.prepareCall("CALL isWorkspaceExists(?, ?)");
+            existStmt.setString(1, wsName);
+            existStmt.setString(2, email);
+            ResultSet resultSet = existStmt.executeQuery();
+            if (resultSet.next()) {
+                String str = resultSet.getString(1);
+                System.out.println("ws Message " + str);
+                return str.equals(wsName);
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return result;
     }
 }

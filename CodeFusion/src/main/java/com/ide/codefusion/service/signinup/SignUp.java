@@ -73,7 +73,8 @@ public class SignUp extends HttpServlet {
         jsonResponse.put("email", user.getEmail());
         jsonResponse.put("username", user.getEmail().split("@")[0]);
         jsonResponse.put("name", user.getUserName());
-
+        jsonResponse.put("profilePic", user.getProfilePic());
+        System.out.println(jsonResponse.toString());
         response.getWriter().write(jsonResponse.toString());
     }
 }

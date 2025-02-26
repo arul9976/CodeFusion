@@ -30,7 +30,7 @@ public class JwtAuthFilter implements Filter {
         System.out.println("Auth " + request.getHeader("Authorization"));
         System.out.println("Email " + request.getParameter("email"));
 
-        if (true) {
+        if (isPublicUrl(request.getRequestURI()) || true) {
             filterChain.doFilter(request, response);
             return;
         }

@@ -13,10 +13,10 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
   const [inputValue, setInputValue] = useState("")
   const [error, setError] = useState("")
   const [selectedOption, setSelectedOption] = useState(".html")
-  const [path, setPath] = useState(currentPath)
+  const [path, setPath] = useState(null)
   const [isPathDropdownOpen, setIsPathDropdownOpen] = useState(false)
 
-  const folderStructureRef = useRef([]);
+  const folderStructureRef = useRef(['/']);
 
   const fileType = (event) => {
     setSelectedOption(event.target.value)
@@ -36,7 +36,7 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
 
   const handleFinalName = () => {
     if (inputValue !== "" && error === "") {
-      const resultantFileName = path + "/" + inputValue.split(".")[0] + selectedOption
+      const resultantFileName = (path ? path + "/" : "/") + inputValue.split(".")[0] + selectedOption
       console.log(resultantFileName)
       fileOnClick(resultantFileName)
       return
@@ -50,10 +50,10 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
   }
 
   useEffect(() => {
-    getFolders(user.username).then(res => {
+    getFolders(user.username, currentPath).then(res => {
       console.log(res);
       if (res.length > 0) {
-        folderStructureRef.current = ['/', ...res];
+        folderStructureRef.current = ["/", ...res];
       }
       // folderStructure = res;
 

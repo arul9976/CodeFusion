@@ -113,6 +113,11 @@
   border-radius: 16px;
 }
 
+.tableHeader.own, .row.own {
+  grid-template-columns: 1.5fr 1fr 1fr auto;
+
+}
+
 .profileIcon {
   width: 36px;
   height: 36px;
@@ -180,7 +185,6 @@
 
 .row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr auto;
   padding: 20px;
   align-items: center;
   gap: 20px;
@@ -189,7 +193,12 @@
   transition: all 0.3s ease;
   border-radius: 16px;
   margin-top: 3px;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
 }
+
+/* .row.own {
+  grid-template-columns: 2fr 1fr 1fr auto !important;
+} */
 
 .row:hover {
   background-color: #2a3749;
@@ -211,7 +220,7 @@
   position: relative;
 }
 
-.profile-container{
+.profile-container {
   display: flex;
   gap: 1em;
   /* align-items: center; */

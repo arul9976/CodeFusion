@@ -1,24 +1,26 @@
 
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Folder, ChevronRight, ChevronDown } from 'lucide-react';
+import React, { useContext, useEffect, useState } from 'react';
+import { Folder, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion"
 import { getFileIcon } from '../utils/GetIcon';
 import { UserContext } from '../LogInPage/UserProvider';
-
-const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
+import Profile from '../WorkSpace/Profile';
+import { useParams } from 'react-router-dom';
+const FileExplorer = ({ isExplorerOpen, files, handleFile, isFileCreated }) => {
   const { user } = useContext(UserContext);
   const [fileData, setFileData] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState({});
-  const idxRef = useRef(0);
-
+  const { workspace } = useParams();
   useEffect(() => {
     const fetchFiles = async () => {
+      console.log(workspace);
+      
       try {
-        const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user.username}`);
-        // const response = await fetch(`http://localhost:3000/list-all-files/${user.username}`);
-        const data = await response?.json();
+        // const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user.username}`);
+        const response = await fetch(`${import.meta.env.VITE_RUNNER_URL}/list-all-files/${user.username}/${workspace}`);
 
         if (response.status === 200) {
+          const data = await response?.json();
           setFileData(data[user.username]);
         } else {
           setFileData([]);
@@ -28,7 +30,7 @@ const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
       }
     };
     fetchFiles();
-  }, [user, isExplorerOpen]);
+  }, [user, isExplorerOpen, isFileCreated]);
 
   const toggleFolder = (folderPath) => {
     setExpandedFolders(prev => ({
@@ -44,6 +46,7 @@ const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
   }, [isExplorerOpen]);
 
   useEffect(() => {
+    console.log("In File Explorer");
 
   }, [files])
 
@@ -213,7 +216,7 @@ const FileExplorer = ({ isExplorerOpen, files, handleFile }) => {
           color: "white",
           fontWeight: "bold"
         }}>
-          {user.username.slice(0, 1).toUpperCase()}
+          {(user.profilePic && <Profile />) || user.username.slice(0, 1).toUpperCase()}
         </div>
         <h1 style={{
           margin: 0,

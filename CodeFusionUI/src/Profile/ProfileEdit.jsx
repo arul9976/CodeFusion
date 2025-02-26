@@ -41,14 +41,14 @@
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-  
+
 //     const updatedProfile = {
 //       originalEmail: user.email, 
 //       name: formData.name,
 //       email: formData.email,
 //       password: formData.password, 
 //     };
-  
+
 //     try {
 //       const response = await fetch("http://localhost:8080/CodeFusionUI/EditProfileServlet", {
 //         method: "POST",
@@ -57,7 +57,7 @@
 //         },
 //         body: JSON.stringify(updatedProfile),
 //       });
-  
+
 //       const result = await response.json();
 //       if (result.status === "success") {
 //         setUser((prev) => ({ ...prev, ...formData }));
@@ -126,18 +126,25 @@
 
 // export default ProfileEdit;
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext, useEffect } from 'react';
 import { X, UserCircle, Camera, Save } from 'lucide-react';
+import { UserContext } from '../LogInPage/UserProvider';
+import { updateNkname } from '../Redux/editorSlice';
 
 const ProfileEdit = ({ isOpen, onClose, user, setUser }) => {
+
+  const { dispatchUser } = useContext(UserContext);
+
   const [formData, setFormData] = useState({
     name: user?.name || "Leo",
     profilePic: user?.profilePic || null,
   });
   const fileInputRef = useRef(null);
-
+  const fileRef = useRef(null);
   const handleImageUpload = (event) => {
     const file = event.target.files?.[0];
+    console.log(file);
+
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
@@ -147,30 +154,53 @@ const ProfileEdit = ({ isOpen, onClose, user, setUser }) => {
         }));
       };
       reader.readAsDataURL(file);
+      fileRef.current = file;
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const updatedProfile = {
-      originalEmail: user.email,
-      name: formData.name,
+      email: user.email,
+      updated_name: formData.name,
+      updated_password: "",
     };
 
+    console.log(updatedProfile, fileRef.current);
+    const formDataToSubmit = new FormData();
+    formDataToSubmit.append('name', formData.name);
+    formDataToSubmit.append('profilePic', fileRef.current);
+
     try {
-      const response = await fetch("http://localhost:8080/CodeFusionUI/EditProfileServlet", {
+      
+      const picResult = await fetch(`${import.meta.env.VITE_RUNNER_URL}/uploadProficPic/${user.username}`, {
+        method: 'POST',
+        body: formDataToSubmit
+      });
+
+      updatedProfile['profilePic'] = user.profilePic;
+
+      if (picResult.status === 200) {
+        const uploadedImg = await picResult.json();
+        updatedProfile['profilePic'] = uploadedImg.fileUrl;
+      }
+      const response = await fetch(`${import.meta.env.VITE_SERVLET_URL}/updatenkname`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedProfile),
       });
-      const result = await response.json();
-      if (result.status === "success") {
-        setUser(prev => ({ ...prev, ...formData }));
-        alert("Profile updated successfully!");
+      if (response.status === 200) {
+        dispatchUser(updateNkname({
+          name: updatedProfile.updated_name,
+          email: user.email,
+          profilePic: updatedProfile.profilePic,
+        }))
         onClose();
       } else {
         alert("Failed to update profile: " + result.message);
       }
+
     } catch (error) {
       console.error("Error updating profile:", error);
       alert("An error occurred. Please try again.");
@@ -261,6 +291,10 @@ const ProfileEdit = ({ isOpen, onClose, user, setUser }) => {
       gap: '8px',
     },
   };
+
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, name: user.name }));
+  }, [user])
 
   return (
     <div style={modalStyles.overlay}>

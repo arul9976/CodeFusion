@@ -23,32 +23,58 @@ import DashPage from "./WorkSpace/Dashboard";
 import Notification from "./WorkSpace/Notification";
 import CreateWorkspace from "./WorkSpace/CwTemplate";
 import Collaborators from "./Collab/Collabrators";
+import Term from "./Terminal/Terminal";
+import { useDispatch } from "react-redux";
+import { setUser } from "./Redux/editorSlice";
+import RenameWorkspace from "./WorkSpace/RenameWorkspace";
+import FileMenu from "./Editor/File/FIleMenu";
 
 const App = () => {
-  
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const user = useContext(UserContext);
 // const userinfo = useState()
-  
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    
-  })
+  // const user = useContext(UserContext);
+  const {user, initWebSocketConnection } = useContext(UserContext);
   
   useEffect(() => {
-    const token = localStorage.getItem("token");
 
-    if (user?.user?.username) {
-      console.log("In App", user.user , user);
-       navigate("/Dashboard")
+    const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username");
+    const name = localStorage.getItem("name");
+    const email = localStorage.getItem("email");
+
+    if (token) {
+      dispatch(setUser({
+        name: name,
+        username: username,
+        email: email,
+        isLoggedIn: true,
+        token: token,
+        profilePic: localStorage.getItem("profilePic") 
+      }));
+
+      // console.log("In App", user.user, user);
+      console.log(window.location.pathname.split("/").at(-1));
+      
+      if (window.location.pathname.split('/').at(-1).toLowerCase() === 'loginregister') {
+        console.log("navigated to Dashboard");
+        navigate("/Dashboard")
+      }
     }
     else {
       navigate("/loginRegister")
     }
-  }, [user]);
+  }, []);
+
+
+  useEffect(() => {
+    if (user.username) {
+      console.log("Websocket initialized");
       
+      // initWebSocketConnection(user.username, user.username + "$ABC");
+    }
+  }, [user])
+
   return (
 
     <Routes>
@@ -57,12 +83,12 @@ const App = () => {
       <Route path="/forgotPassword" Component={ForgotPassword} />
       <Route path="/resetPassword" Component={ResetPassword} />
       <Route path="/File" Component={FileExplorer} />
-      <Route path="/IDE" Component={IDE} /> 
+      <Route path="/IDE/:workspace" Component={IDE} /> 
        {/* <Route path="/IDE1" Component={CodeEditor} /> */}
       <Route path="/Google" Component={GoogleAuth} />
-      <Route path="/Chat" Component={Chat} />
+      <Route path="/Chat" element={<Term/>} />
     {/* <Route path="/NewFile" Component={NewFileComp} /> */}
-      <Route path="/Edit" element={<ProfileEdit />} />
+      <Route path="/Edit" element={<FileMenu/>} />
       <Route path="/Dashboard" element={<DashPage />} />
       {/* <Route path="/Collab" element={<Collaborators />} /> */}
       {/* <Route path="/Tech" element={<CreateWorkspace />} /> */}

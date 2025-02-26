@@ -18,4 +18,14 @@ function mysqlNow() {
 //   navigator('/loginsignup');
 // }
 
-export { mysqlNow };
+const getInitials = (name) => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase();
+};
+
+const capitalize = (name) => {
+  console.log("Capitalize : " + name);
+
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+export { mysqlNow, getInitials, capitalize };

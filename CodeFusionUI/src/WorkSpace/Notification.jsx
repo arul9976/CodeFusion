@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Bell, X, Check, AlertCircle, Info, MessageSquare } from 'lucide-react';
+import { UserContext } from '../LogInPage/UserProvider';
+import { pushNotifications, setNotifications } from '../Redux/editorSlice';
 
-const Notification = ({ notificationPanel, setNotificationPanel, notifies }) => {
-  const [notifications, setNotifications] = useState([]);
+const Notification = ({ notificationPanel, setNotificationPanel }) => {
+  // const [notifications, setNotifications] = useState([]);
   // const [notificationPanel, setNotificationPanel] = useState(false);
-
+  const { notifications, dispatchUser } = useContext(UserContext);
   const styles = {
     container: {
       position: 'fixed',
@@ -127,7 +129,6 @@ const Notification = ({ notificationPanel, setNotificationPanel, notifies }) => 
     },
   };
 
-  // Sample notifications
   const demoNotifications = [
     {
       id: 1,
@@ -135,7 +136,7 @@ const Notification = ({ notificationPanel, setNotificationPanel, notifies }) => 
       title: 'Project Created',
       message: 'Your new workspace "Design System" has been created successfully.',
       time: '2 minutes ago',
-      icon: Check,
+      // icon: Check,
       color: '#22c55e',
     },
     {
@@ -144,7 +145,7 @@ const Notification = ({ notificationPanel, setNotificationPanel, notifies }) => 
       title: 'Storage Warning',
       message: 'Your workspace is approaching storage limit. Consider upgrading.',
       time: '15 minutes ago',
-      icon: AlertCircle,
+      // icon: AlertCircle,
       color: '#f59e0b',
     },
     {
@@ -153,7 +154,7 @@ const Notification = ({ notificationPanel, setNotificationPanel, notifies }) => 
       title: 'New Feature Available',
       message: 'Try out our new collaborative coding feature!',
       time: '1 hour ago',
-      icon: Info,
+      // icon: Info,
       color: '#3b82f6',
     },
     {
@@ -162,16 +163,17 @@ const Notification = ({ notificationPanel, setNotificationPanel, notifies }) => 
       title: 'New Comment',
       message: 'John Doe commented on your recent commit.',
       time: '2 hours ago',
-      icon: MessageSquare,
+      // icon: MessageSquare,
       color: '#8b5cf6',
     },
   ];
 
   useEffect(() => {
-    setNotifications(demoNotifications);
-    console.log("Hiiiii");
+    // setNotifications(demoNotifications);
+    dispatchUser(setNotifications(demoNotifications));
+    // console.log("Hiiiii");
     // setNotificationPanel(() => notificationPanel);
-  }, [notificationPanel]);
+  }, []);
 
   const addNotification = (type) => {
     const newNotification = {
@@ -183,15 +185,17 @@ const Notification = ({ notificationPanel, setNotificationPanel, notifies }) => 
       icon: type === 'success' ? Check : AlertCircle,
       color: type === 'success' ? '#22c55e' : '#f59e0b',
     };
-    setNotifications(prev => [newNotification, ...prev]);
+    // setNotifications(prev => [newNotification, ...prev]);
+    dispatchUser(pushNotifications(newNotification));
   };
 
   const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
+    dispatchUser(setNotifications(notifications.filter(notif => notif.id !== id)))
+    // setNotifications(prev => prev.filter(notif => notif.id !== id));
   };
 
   const clearAll = () => {
-    setNotifications([]);
+    dispatchUser(setNotifications([]))
     setNotificationPanel(() => false);
   };
 
@@ -247,7 +251,7 @@ const Notification = ({ notificationPanel, setNotificationPanel, notifies }) => 
                 ...styles.iconWrapper,
                 backgroundColor: `${notification.color}20`,
               }}>
-                <notification.icon size={20} color={notification.color} />
+                {/* <notification.icon size={20} color={notification.color} /> */}
               </div>
               <div style={styles.content}>
                 <div style={styles.notificationTitle}>{notification.title}</div>

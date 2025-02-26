@@ -6,8 +6,8 @@ const getFileContent = async (path) => {
 
   try {
     // const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user}`);
-    // const response = await fetch(`http://localhost:3000/getFileContent/${encodeURIComponent(path)}`);
-    const response = await fetch(`http://172.17.22.225:3000/getFileContent/${encodeURIComponent(path)}`);
+    const response = await fetch(`${import.meta.env.VITE_RUNNER_URL}/getFileContent/${encodeURIComponent(path)}`);
+    // const response = await fetch(`http://172.17.22.225:3000/getFileContent/${encodeURIComponent(path)}`);
     const data = await response.json();
     console.log("FileContent " + data);
 
@@ -20,10 +20,10 @@ const getFileContent = async (path) => {
   return null;
 }
 
-const createFile = async (username, fileData) => {
+const createFile = async (username, fileData, wsName) => {
   console.log(username, fileData);
-  // const response = await fetch(`http://localhost:3000/createOrUpdateFile/${encodeURIComponent(username)}`, {
-    const response = await fetch(`http://172.17.22.225:3000/createOrUpdateFile/${encodeURIComponent(username)}`, {
+  const response = await fetch(`${import.meta.env.VITE_RUNNER_URL}/createOrUpdateFile/${encodeURIComponent(username)}/${encodeURIComponent(wsName)}`, {
+    // const response = await fetch(`http://172.17.22.225:3000/createOrUpdateFile/${encodeURIComponent(username)}`, {
     method: "POST",
     body: JSON.stringify(fileData),
   });
@@ -36,11 +36,11 @@ const createFile = async (username, fileData) => {
 }
 
 
-const getFolders = async (username) => {
+const getFolders = async (username, currentPath) => {
   console.log("---> " + username);
 
-  // const response = await fetch(`http://localhost:3000/getFolders/${username}`);
-  const response = await fetch(`http://172.17.22.225:3000/getFolders/${username}`);
+  const response = await fetch(`${import.meta.env.VITE_RUNNER_URL}/getFolders/${username}/${currentPath}`);
+  // const response = await fetch(`http://172.17.22.225:3000/getFolders/${username}`);
   console.log(response);
 
   if (response.status == 200) {
@@ -50,14 +50,31 @@ const getFolders = async (username) => {
 }
 
 
+const fetchCollaborators = async (wsName, email) => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SERVLET_URL}/getCollabs?wsName=${encodeURI(wsName)}&email=${encodeURI(email)}`);
 
-const getWorkSpaces = async (email) => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    return response.json();
+
+  } catch (error) {
+    console.error("Fetch error:", error);
+
+  }
+};
+
+
+
+const getWorkSpaces = async (email, recent) => {
   console.log("---> " + email);
   const token = localStorage.getItem("token");
   console.log("Token " + token);
   try {
-    // const response = await axios.get(`http://localhost:8080/CodeFusion_war/getwslist?email=${email}`, {
-    const response = await axios.get(`http://172.17.22.225:8080/CodeFusion_war/getwslist?email=${email}`, {
+    const response = await axios.get(`${import.meta.env.VITE_SERVLET_URL}/getwslist?email=${email}&recent=${recent}`, {
+      // const response = await axios.get(`http://172.17.22.225:8080/CodeFusion_war/getwslist?email=${email}`, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -77,8 +94,8 @@ const createWorkspace = async (workspace) => {
   const token = localStorage.getItem("token");
   console.log("Token " + token);
   try {
-    // const response = await axios.post(`http://localhost:8080/CodeFusion_war/createworkspace`, workspace);
-    const response = await axios.post(`http://172.17.22.225:8080/CodeFusion_war/createworkspace`, workspace);
+    const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/createworkspace`, workspace);
+    // const response = await axios.post(`http://172.17.22.225:8080/CodeFusion_war/createworkspace`, workspace);
     console.log(response);
 
     if (response.status === 201) {
@@ -95,8 +112,8 @@ const createWorkspace = async (workspace) => {
 
 const searchUser = async (username) => {
   console.log("---> " + username);
-  const response = await axios.get(`http://172.17.22.225:8080/CodeFusion_war/collabsearch?username=${username}`);
-  // const response = await axios.get(`http://localhost:8080/CodeFusion_war/collabsearch?username=${username}`);
+  // const response = await axios.get(`http://172.17.22.225:8080/CodeFusion_war/collabsearch?username=${username}`);
+  const response = await axios.get(`${import.meta.env.VITE_SERVLET_URL}/collabsearch?username=${username}`);
   console.log(response);
   if (response.status === 200) {
     return response?.data || [];
@@ -104,5 +121,56 @@ const searchUser = async (username) => {
   return null;
 }
 
-export { getFileContent, createFile, getFolders, getWorkSpaces, createWorkspace, searchUser }
+const addCollab = async (collab) => {
+  // const response = await axios.post(`http://172.17.22.225:8080/CodeFusion_war/addcollab`, {
+  console.log(collab);
+
+  const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/addcollab`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: collab,
+  });
+  console.log(response);
+  if (response.status === 200) {
+    return response?.data;
+  }
+  return null;
+}
+
+const checkws = async (wsName, email) => {
+  try {
+    const response = await axios.get(`${import.meta.env.VITE_SERVLET_URL}/checkws?wsName=${encodeURIComponent(wsName)}&email=${encodeURI(email)}`);
+    console.log(response);
+
+    return response?.data.error === "Workspace does not exist";
+  } catch (e) {
+    console.error("Error checking ws:", e.message);
+  }
+  return false;
+
+}
+
+
+const saveFile = async (fileId, code) => {
+  console.log(fileId, code);
+
+  const response = await axios.post(`${import.meta.env.VITE_RUNNER_URL}/saveFile`, { fileId, code });
+
+  if (response.status === 200) {
+    console.log("Save Success: " + response.data);
+
+    return response?.data;
+  }
+  console.log("Save failed: " + response.status);
+
+  return null;
+}
+export {
+  getFileContent, createFile, getFolders,
+  getWorkSpaces, createWorkspace, searchUser,
+  addCollab, fetchCollaborators, saveFile,
+  checkws
+}
 

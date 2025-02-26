@@ -6,6 +6,7 @@ public class User {
     private int id;
     private String email;
     private String username;
+    private String nickname;
     private String password;
     private Role role;
     private String authProvider; // GOOGLE, GITHUB, LOCAL
@@ -13,6 +14,7 @@ public class User {
     private String dateJoined;
     private String lastLogin;
     private boolean isActive;
+    private String profilePic;
 
 
     public User() {
@@ -26,6 +28,7 @@ public class User {
         this.email = email;
         this.username = username;
         this.password = password;
+
     }
 
     public User(int id, LoginUser loginUser) {
@@ -118,6 +121,20 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public String getProfilePic() {
+        return profilePic;
+    }
+    public void setProfilePic(String profilePic) {
+        this.profilePic = profilePic;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 
     @Override

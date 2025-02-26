@@ -339,12 +339,16 @@
 // export default ProfileInfo;
 
 
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, UserCircle, LogOut, Edit, Mail, User, Camera } from 'lucide-react';
 import ProfileEdit from './ProfileEdit';
+import { UserContext } from '../LogInPage/UserProvider';
 
-const ProfileInfo = ({ user, setUser, isOpen, onClose }) => {
+const ProfileInfo = ({ setUser, isOpen, onClose }) => {
+
+    const { user } = useContext(UserContext);
+
     const navigate = useNavigate();
     const [isHovered, setIsHovered] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -560,6 +564,11 @@ const ProfileInfo = ({ user, setUser, isOpen, onClose }) => {
         }
     };
 
+
+    // useEffect(() => {
+    //     console.log(user);
+
+    // }, [user])
     return (
         <>
             <div style={styles.overlay} onClick={onClose} />
@@ -628,7 +637,7 @@ const ProfileInfo = ({ user, setUser, isOpen, onClose }) => {
                                 />
                             ) : (
                                 <>
-                                    <span style={styles.value}>{formData.name}</span>
+                                        <span style={styles.value}>{user?.name}</span>
                                     {/* <button
                                         className="edit-button"
                                         style={styles.editButton}
@@ -669,7 +678,7 @@ const ProfileInfo = ({ user, setUser, isOpen, onClose }) => {
                                 />
                             ) : (
                                 <>
-                                    <span style={styles.value}>{formData.username}</span>
+                                        <span style={styles.value}>{user.username}</span>
                                     {/* <button
                                         className="edit-button"
                                         style={styles.editButton}

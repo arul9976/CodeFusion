@@ -22,12 +22,14 @@ public class UpdateWorkspace extends HttpServlet {
         String workspaceName = req.getParameter("workspaceName");
         String newWsName = req.getParameter("newWsName");
 
+        System.out.println("userEmail " + userEmail + " workspaceName " + workspaceName + " newWsName " + newWsName);
         boolean result = WorkspaceDAO.updateWorkspace(userEmail, workspaceName, newWsName);
         JSONObject jsonResponse = new JSONObject();
         if (result) {
             resp.setStatus(200);
             jsonResponse.put("status", "success");
             jsonResponse.put("message", "Workspace Updated Successfully");
+//            return;
         } else {
             resp.setStatus(400);
             jsonResponse.put("status", "error");

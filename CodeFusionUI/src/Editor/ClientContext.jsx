@@ -176,6 +176,9 @@ const ClientProvider = ({ children }) => {
   const yTextRef = useRef(null);
 
   const providersRef = useRef(new Map());
+  const currentProvider = useRef(null);
+
+  const currWorkSpace = useRef(null);
 
   const initAndGetProvider = (path) => {
     console.log(providersRef.current);
@@ -193,26 +196,21 @@ const ClientProvider = ({ children }) => {
 
     if (!providersRef.current.has(path)) {
       const ydoc = ydocsRef.current.get(path);
-      // const provider = new WebsocketProvider(
-      //   `ws://localhost:3000?username=${user.username}&filePath=${path}&`,
-      //   path,
-      //   ydoc,
-      //   {
-      //     maxPayloadSize: 1024 * 1024,
-      //     connect: true,
-      //     awareness: true,
-      //     WebSocketPolyfill: WebSocket,
-      //     resyncInterval: 10000
-      //   }
-      // );
+
 
       const provider = new WebsocketProvider(
-        `ws://172.17.22.225:3000?username=${user.username}&filePath=${path}&`,
+        `ws://localhost:3000?username=${user.username}&filePath=${path}&`,
         path,
-        ydoc,
-        
+        ydoc
       );
 
+      // const provider = new WebsocketProvider(
+      //   `ws://172.17.22.225:3000?username=${user.username}&filePath=${path}&`,
+      //   path,
+      //   ydoc,
+
+      // );
+      currentProvider.current = provider;
       providersRef.current.set(path, provider);
       console.log(`Initialized provider for ${path}`);
     }
@@ -247,12 +245,16 @@ const ClientProvider = ({ children }) => {
   }
 
 
+  const setCurrentWorkSpace = (wsName) => {
+    currWorkSpace.current = wsName;
+  }
+
   return (
     <ClientContext.Provider value={{
       dispatch, currentTheme, language, code,
       editorTheme, activeFile, cursor, output, ydocRef, getYtext,
       initAndGetProvider, editorsRef, getBindings, bindings,
-      providersRef
+      providersRef, currentProvider, setCurrentWorkSpace, currWorkSpace
 
 
     }}>

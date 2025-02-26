@@ -44,6 +44,9 @@ public class GoogleAuth extends HttpServlet {
                 GoogleIdToken.Payload payload = idToken.getPayload();
 
                 String email = payload.getEmail();
+                String picture = (String) payload.get("picture");
+                System.out.println("Picture : " + picture);
+//                String profilePic = payload.get
                 // Get user's Google ID, name, profile picture etc.
                 String userId = payload.getSubject();
 
@@ -53,6 +56,7 @@ public class GoogleAuth extends HttpServlet {
                     user = new User();
                     user.setEmail(email);
                     user.setUserName((String) payload.get("name"));
+                    user.setProfilePic(picture);
                     user.setPassword("GOOGLE");
                     user.setAuthProvider("GOOGLE");
                     user.setAuthProviderId(userId);
@@ -63,12 +67,13 @@ public class GoogleAuth extends HttpServlet {
                 }
                 response.setContentType("application/json");
                 String token = jwtUtil.generateToken(email);
-
+                String nkName = user.getUserName().split(" ")[0];
                 JSONObject jsonResponse = new JSONObject();
                 jsonResponse.put("token", token);
                 jsonResponse.put("email", user.getEmail());
                 jsonResponse.put("username", user.getEmail().split("@")[0]);
-                jsonResponse.put("name", user.getUserName());
+                jsonResponse.put("profilePic", user.getProfilePic());
+                jsonResponse.put("name", (nkName.charAt(0) + "").toUpperCase() + nkName.substring(1));
 
                 response.getWriter().write(jsonResponse.toString());
             } else {

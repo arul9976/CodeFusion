@@ -1,17 +1,20 @@
 import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
   server: {
     host: '0.0.0.0',
-    // host: 'codefusion.com',
     port: 3001,
     cors: {
-      origin: 'http://localhost:3001',
-      // origin: 'http://codefusion.com:3001',
-      methods: ['GET', 'POST'],
+      origin: 'http://localhost:8080',
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
     },
     proxy: {
       '/socket.io': {
@@ -22,7 +25,7 @@ export default defineConfig({
       '/CodeFusion_war': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false,
+        secure: true,
         rewrite: (path) => path.replace(/^\/CodeFusion_war/, ''),
       },
     }

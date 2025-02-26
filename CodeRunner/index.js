@@ -56,6 +56,7 @@ const Y = require('yjs');
 const { WebsocketProvider } = require('y-websocket');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 const bodyParser = require('body-parser');
 const { spawn } = require('child_process');
 const { setupWSConnection } = require('y-websocket/bin/utils');
@@ -70,8 +71,57 @@ app.use(bodyParser.text());
 
 app.use(cors())
 app.use('/codefusion', express.static(path.join(__dirname, 'codefusion')));
+app.use('/codefusion/:username/profile/', (req, res, next) => {
+  const { username } = req.params;
+  const imagePath = path.join(__dirname, 'codefusion', username, 'profile', req.path);
+  console.log(imagePath);
 
+  // Check if the file exists
+  res.sendFile(imagePath, (err) => {
+    if (err) {
+      res.status(404).send('Image not found');
+    }
+  });
+});
 app.use(express.json());
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const userId = req.params.userId || req.body.userId;
+
+    const uploadPath = path.join(__dirname, 'codefusion', userId, "profile");
+    console.log(uploadPath);
+
+
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const fileExtension = path.extname(file.originalname);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${fileExtension}`);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only JPEG, PNG, and GIF images are allowed'), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  }
+});
 
 const wss = new WebSocket.Server({
   server: server,
@@ -94,64 +144,149 @@ const wss = new WebSocket.Server({
 });
 
 
+const languages = (name, lang) => {
+  const langs = {
+    c: `#include <stdio.h>
+
+void sayHello() {
+    printf("Hello, World!\\n");
+}
+
+int main() {
+    sayHello();
+    return 0;
+}`,
+
+    cpp: `#include <iostream>
+
+void sayHello() {
+    std::cout << "Hello, World!" << std::endl;
+}
+
+int main() {
+    sayHello();
+    return 0;
+}`,
+
+    py: `# Function to print Hello, World!
+def say_hello():
+    print("Hello, World!")
+
+# Call the function
+say_hello()`,
+
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello, World!</title>
+    <script>
+        function sayHello() {
+            alert("Hello, World!");
+        }
+    </script>
+</head>
+<body>
+    <h1>Click the button to see the message!</h1>
+    <button onclick="sayHello()">Say Hello</button>
+</body>
+</html>`,
+
+    css: `/* Define a CSS class */
+.hello-world {
+    font-size: 24px;
+    color: green;
+    text-align: center;
+}`,
+
+    rb: `# Function to print Hello, World!
+def say_hello
+  puts "Hello, World!"
+end
+
+# Call the function
+say_hello`,
+
+    go: `package main
+
+import "fmt"
+
+// Function to print Hello, World!
+func sayHello() {
+    fmt.Println("Hello, World!")
+}
+
+func main() {
+    sayHello()
+}`,
+
+
+    java: (name) => `public class ${name} {
+    // Function to print Hello, World!
+    public static void sayHello() {
+        System.out.println("Hello, World!");
+    }
+
+    public static void main(String[] args) {
+        sayHello();
+    }
+}`,
+
+    js: `// Function to print Hello, World!
+function sayHello() {
+    console.log("Hello, World!");
+}
+
+// Call the function
+sayHello();`
+  }
+
+  if (lang === 'java') {
+    return langs[lang](name);
+  }
+  return langs[lang]
+};
 
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.post('/createOrUpdateFile/:userId', (req, res) => {
-  const userId = req.params.userId;
+app.post('/createOrUpdateFile/:userId/:wsName', (req, res) => {
+  const { userId, wsName } = req.params;
   console.log(req.body);
+  console.log(userId, wsName);
 
   const { fileName, fileContent } = JSON.parse(req.body);
-  // const { fileName, fileContent } = req.body;
 
+  let filePath = path.join(__dirname, 'codefusion', userId, wsName);
 
-  let filePath = path.join(__dirname, 'codefusion');
+  try {
 
-  console.log(userId, fileName, fileContent);
-  console.log("1 " + filePath);
-
-  if (!fs.existsSync(filePath)) {
     fs.mkdirSync(path.join(filePath), { recursive: true });
-  }
-  filePath = path.join(filePath, userId);
-  console.log("2 " + filePath);
+    filePath = path.join(filePath, fileName);
+    console.log(filePath);
 
-  if (!fs.existsSync(filePath)) {
-    fs.mkdirSync(path.join(filePath), { recursive: true });
-  }
-  console.log("3 " + filePath);
-
-  const Folders = fileName.split("/").filter(i => i);
-  const endFile = Folders.pop();
-  console.log(Folders);
-  console.log(endFile);
-
-  Folders.forEach(fName => {
-    filePath = path.join(filePath, fName)
-    if (!fs.existsSync(filePath)) {
-      fs.mkdirSync(filePath, { recursive: true });
+    if (fileName.split(".").length > 1) {
+      let nameFile = fileName.split(".");
+      fs.writeFileSync(filePath, (fileContent || languages(nameFile[0].substr(1), nameFile[1])), 'utf8')
     }
-  });
-  filePath = path.join(filePath, endFile);
-  console.log("4 " + filePath);
-
-  fs.writeFile(filePath, fileContent, (err) => {
-    if (err) {
-      return res.status(500).send('Error creating/updating file');
+    else {
+      fs.mkdirSync(filePath, { recursive: true });
     }
     console.log(`File '/${userId}/${fileName}' created/updated successfully with the provided content.`);
 
     res.status(201).send(JSON.stringify({
       userId,
       fileName,
-      message: 'File created successfully',
+      message: `${fileName.split(".").length > 1 ? 'File' : 'Folder'} created successfully`,
       url: filePath.split(`/${userId}/`)[0]
     }));
+  } catch (err) {
+    return res.status(500).send('Error creating/updating file');
 
-  });
+  };
 });
 
 app.post('/deleteFile', (req, res) => {
@@ -253,6 +388,31 @@ function getFileContent(path) {
 
 }
 
+const saveFile = (path, code) => {
+  console.log(path, code);
+
+  if (fs.statSync(path).isFile) {
+    fs.writeFileSync(path, code, 'utf8');
+  }
+  else {
+    throw new Error('File not found: ' + path);
+  }
+}
+
+app.post('/saveFile', (req, res) => {
+  const { fileId, code } = req.body;
+  const filePath = path.join(__dirname, fileId);
+  console.log("File Path: " + filePath + " " + code);
+
+  try {
+    saveFile(filePath, code);
+    res.status(200).send({ message: 'File saved successfully', statusCode: 200 });
+  } catch (e) {
+    console.log(e);
+    res.status(500).send('Error saving file');
+  }
+})
+
 app.get('/getFileContent/:filePath', (req, res) => {
   const filePath = req.params.filePath;
   const fileContent = getFileContent(filePath);
@@ -284,15 +444,38 @@ function getFolders(directory, userId, Folders = []) {
   return Folders;
 }
 
-app.get('/getFolders/:userId', (req, res) => {
-  const userId = req.params.userId;
-  const directoryPath = path.join(__dirname, 'codefusion', userId);
+
+
+app.post('/uploadProficPic/:userId', upload.single('profilePic'), (req, res) => {
+  try {
+    console.log(req.file);
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image uploaded' });
+    }
+
+    const fileUrl = `${req.protocol}://${req.get('host')}/codefusion/${req.params.userId}/profile/${req.file.filename}`;
+
+    res.status(200).json({
+      message: 'Image uploaded successfully',
+      fileUrl: fileUrl,
+      filePath: req.file.path,
+      filename: req.file.filename
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Upload failed: ' + error.message });
+  }
+});
+
+app.get('/getFolders/:userId/:wsName', (req, res) => {
+  const { userId, wsName } = req.params;
+  const directoryPath = path.join(__dirname, 'codefusion', userId, wsName);
 
   if (!fs.existsSync(directoryPath)) {
     return res.status(404).send('No files found');
   }
 
-  const fileList = getFolders(directoryPath, userId);
+  const fileList = getFolders(directoryPath, wsName);
 
   res.send(fileList);
 })
@@ -309,7 +492,7 @@ function listFilesInDirectory(directory, fileList = [], result = {}) {
       result[dName] = listFilesInDirectory(fullPath);
       fileList.push(result);
       result = {};
-    } else {
+    } else if (isProgramicFile(file.split(".")[1])) {
       fileList.push({
         "file": file,
         "url": `/${relativePath}`
@@ -324,6 +507,46 @@ function listFilesInDirectory(directory, fileList = [], result = {}) {
   return fileList;
 }
 
+const isProgramicFile = (extension) => {
+  switch (extension) {
+    case 'js':
+    case 'jsx':
+      return 'javascript';
+    case 'ts':
+    case 'tsx':
+      return 'typescript';
+    case 'css':
+    case 'scss':
+    case 'less':
+      return 'css';
+    case 'html':
+      return 'html';
+    case 'py':
+    case 'pyw':
+      return 'python';
+    case 'java':
+      return 'java';
+    case 'php':
+      return 'php';
+    case 'c':
+    case 'cpp':
+    case 'h':
+    case 'hpp':
+      return 'c_cpp';
+    case 'rb':
+      return 'ruby';
+    case 'go':
+      return 'golang';
+    case 'json':
+      return 'json';
+    case 'md':
+    case 'markdown':
+      return 'markdown';
+    default:
+      return false;
+  }
+
+}
 // function listFilesJSON(directory) {
 //   const result = {};
 
@@ -337,10 +560,10 @@ function listFilesInDirectory(directory, fileList = [], result = {}) {
 //   return result;
 // }
 
-app.get('/list-all-files/:userId', (req, res) => {
-  const { userId } = req.params;
+app.get('/list-all-files/:userId/:ws', (req, res) => {
+  const { userId, ws } = req.params;
   try {
-    const uploadsDirectory = path.join(__dirname, 'codefusion', userId);
+    const uploadsDirectory = path.join(__dirname, 'codefusion', userId, ws);
     const fileList = listFilesInDirectory(uploadsDirectory);
     let result = {};
     result[userId] = fileList;
@@ -383,7 +606,7 @@ function getOrUpdateYtext(filePath) {
   }
 
   const yt = docs.get(filePath).getText(filePath);
-  yt.delete(0, yt.length); // Clear existing content
+  yt.delete(0, yt.length);
   console.log(`Cleared Y.Text for ${filePath}`);
   return docs.get(filePath);
 }
@@ -392,6 +615,7 @@ const processes = new Map();
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const username = url.searchParams.get('username');
+  const wsName = url.searchParams.get('wsName');
   const filePath = url.searchParams.get('filePath');
 
   if (!username || !filePath) {
@@ -408,14 +632,15 @@ wss.on('connection', (ws, req) => {
 
   const currUser = {
     username: username,
-    filePath: filePath
+    filePath: filePath,
+    wsName: wsName
   };
 
   connectedUsers.add(currUser);
 
   // console.log(connectedUsers, doc.get("monaco").toString() + " END");
 
-  setupWSConnection(ws, req, { doc });
+  // setupWSConnection(ws, req, { doc });
 
   // console.log(doc);
 
@@ -439,65 +664,79 @@ wss.on('connection', (ws, req) => {
       return;
     }
 
-    const { language, code } = data;
+    if (data) {
 
-    if (!language || !code) {
-      return;
+      switch (data.event) {
+
+        case 'chat':
+
+          break;
+
+        case 'compile':
+          const { language, code } = data;
+
+          if (!language || !code) {
+            return;
+          }
+
+          console.log("Code : " + code + "\nLanguage : " + language);
+
+          let command = '';
+          let args = [];
+          let process;
+          let tempFileName;
+
+          switch (language) {
+            case 'python':
+              command = 'python3';
+              args = ['-c', code];
+              process = spawn(command, args);
+              break;
+            case 'javascript':
+              command = 'node';
+              args = ['-e', code];
+              process = spawn(command, args);
+              break;
+            case 'java':
+              tempFileName = filePath.split('/').at(-1).split('.')[0];
+              console.log("File Name : " + tempFileName);
+
+              let fileNameWithPath = "." + filePath;
+              fs.writeFileSync(fileNameWithPath, code);
+              command = 'javac';
+              args = [fileNameWithPath];
+              process = spawn(command, args);
+              break;
+            case 'go':
+              command = 'go';
+              args = ['run', '-'];
+              process = spawn(command, args);
+              break;
+            case 'ruby':
+              command = 'ruby';
+              args = ['-e', code];
+              process = spawn(command, args);
+              break;
+            case 'c':
+              command = 'gcc';
+              args = ['-x', 'c', '-o', 'a.out', '-'];
+              process = spawn(command, args);
+              break;
+            case 'cpp':
+              command = 'g++';
+              args = ['-x', 'c++', '-o', 'a.out', '-'];
+              process = spawn(command, args);
+              break;
+            default:
+              sendToRoom(wss, filePath, { event: 'codeResult', data: 'Unsupported language' });
+              return;
+          }
+
+          processes.set(ws, process);
+          processHeader(ws, process, language, tempFileName, filePath);
+          break;
+      }
     }
-
-    console.log("Code : " + code + "\nLanguage : " + language);
-
-    let command = '';
-    let args = [];
-    let process;
-    let tempFileName;
-
-    switch (language) {
-      case 'python':
-        command = 'python3';
-        args = ['-c', code];
-        process = spawn(command, args);
-        break;
-      case 'javascript':
-        command = 'node';
-        args = ['-e', code];
-        process = spawn(command, args);
-        break;
-      case 'java':
-        tempFileName = 'TempCode';
-        let fileNameWithPath = `./${tempFileName}.java`;
-        fs.writeFileSync(fileNameWithPath, code);
-        command = 'javac';
-        args = [fileNameWithPath];
-        process = spawn(command, args);
-        break;
-      case 'go':
-        command = 'go';
-        args = ['run', '-'];
-        process = spawn(command, args);
-        break;
-      case 'ruby':
-        command = 'ruby';
-        args = ['-e', code];
-        process = spawn(command, args);
-        break;
-      case 'c':
-        command = 'gcc';
-        args = ['-x', 'c', '-o', 'a.out', '-'];
-        process = spawn(command, args);
-        break;
-      case 'cpp':
-        command = 'g++';
-        args = ['-x', 'c++', '-o', 'a.out', '-'];
-        process = spawn(command, args);
-        break;
-      default:
-        sendToRoom(wss, filePath, { event: 'codeResult', data: 'Unsupported language' });
-        return;
-    }
-
-    processes.set(ws, process); 
-    processHeader(ws, process, language, tempFileName, filePath);
   });
 
   // ws.on('message', (message) => {
@@ -538,15 +777,17 @@ const processHeader = (ws, pss, lang, fn, roomId) => {
 
     const lines = strData.split('\n').filter(line => line.trim() !== "");
 
-    lines.forEach(line => {
-      output = line + '\n';
-      sendToRoom(wss, roomId, { event: 'output', data: output, input: true });
-    });
+    // lines.forEach(line => {
+    //   output = line + '\n';
+    // });
+
+    sendToRoom(wss, roomId, { event: 'output', data: lines, input: true });
+
   });
 
   pss.stderr.on('data', (data) => {
     errorOutput += data.toString();
-    sendToRoom(wss, roomId, { event: 'output', data: errorOutput, input: false });
+    sendToRoom(wss, roomId, { event: 'error', data: errorOutput, input: false });
   });
 
   pss.on('uncaughtException', (error) => {
@@ -565,25 +806,28 @@ const processHeader = (ws, pss, lang, fn, roomId) => {
   pss.on('exit', (code) => {
     if (code !== 0) {
       sendToRoom(wss, roomId, {
-        event: 'output',
+        event: 'error',
         data: `Error: ${errorOutput || 'Unknown error occurred'}`
       });
       return;
     }
     if (lang === 'java') {
       console.log("=== Compilation Success ===");
-      setTimeout(() => {
-        sendToRoom(wss, roomId, { event: 'output', data: "=== Compilation Success ===" });
-      }, 500);
+      // setTimeout(() => {
+      //   sendToRoom(wss, roomId, { event: 'output', data: "=== Compilation Success ===" });
+      // }, 500);
 
       if (fn) {
-        pss = spawn('java', [fn], { cwd: './' });
+        console.log(fn + " --- " + roomId.split('/').filter((v, i, a) => i !== a.length - 1).join('/')) + '/';
+        let newpath = roomId.split('/').filter((v, i, a) => i !== a.length - 1).join('/') + '/';
+
+        pss = spawn('java', [fn], { cwd: ('.' + newpath) });
         processes.set(ws, pss);
         processHeader(ws, pss, '', fn, roomId);
       }
       return;
     }
-    sendToRoom(wss, roomId, { event: 'output', data: "=== Code Execution Completed ===" });
+    sendToRoom(wss, roomId, { event: 'output', data: ["=== Code Execution Completed ==="], input: false });
   });
 
   ws.on('message', (message) => {
@@ -612,6 +856,23 @@ function sendToRoom(wss, roomId, message) {
     }
   });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 server.listen(3000, () => {
   console.log('Server is running on port 3000');

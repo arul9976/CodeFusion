@@ -1,316 +1,3 @@
-// import React, { useState, useRef } from 'react';
-// import AceEditor from 'react-ace';
-// import { FileText, X, Code, Image, Folder, FolderOpen, File, Settings, Search, Terminal, GitBranch } from 'lucide-react';
-
-// // Import ace modes and themes
-// import 'ace-builds/src-noconflict/mode-javascript';
-// import 'ace-builds/src-noconflict/mode-html';
-// import 'ace-builds/src-noconflict/mode-css';
-// import 'ace-builds/src-noconflict/theme-monokai';
-
-// const getFileIcon = (filename) => {
-//   const extension = filename.split('.').pop().toLowerCase();
-//   switch (extension) {
-//     case 'js':
-//     case 'jsx':
-//     case 'ts':
-//     case 'tsx':
-//       return <Code size={16} color="#e6a23c" />;
-//     case 'css':
-//     case 'scss':
-//     case 'less':
-//       return <Code size={16} color="#409eff" />;
-//     case 'html':
-//     case 'xml':
-//       return <Code size={16} color="#f56c6c" />;
-//     case 'png':
-//     case 'jpg':
-//     case 'jpeg':
-//     case 'gif':
-//     case 'svg':
-//       return <Image size={16} color="#a972cc" />;
-//     default:
-//       return <FileText size={16} color="#909399" />;
-//   }
-// };
-
-// const getFileMode = (filename) => {
-//   const extension = filename.split('.').pop().toLowerCase();
-//   switch (extension) {
-//     case 'js':
-//     case 'jsx':
-//       return 'javascript';
-//     case 'ts':
-//     case 'tsx':
-//       return 'typescript';
-//     case 'css':
-//       return 'css';
-//     case 'html':
-//       return 'html';
-//     default:
-//       return 'text';
-//   }
-// };
-
-// const EditorACE = () => {
-//   const [files, setFiles] = useState([
-//     { id: '1', name: 'index.js', content: '// Write your JavaScript here' },
-//     { id: '2', name: 'styles.css', content: '/* Add your styles here */' },
-//     { id: '3', name: 'index.html', content: '<!DOCTYPE html>\n<html>\n<body>\n\n</body>\n</html>' },
-//   ]);
-//   const [activeFileId, setActiveFileId] = useState('1');
-//   const [expandedFolders, setExpandedFolders] = useState({ 'src': true });
-
-//   const handleFileChange = (newContent) => {
-//     setFiles(files.map(file =>
-//       file.id === activeFileId ? { ...file, content: newContent } : file
-//     ));
-//   };
-
-//   const closeFile = (fileId, e) => {
-//     e.stopPropagation();
-//     const newFiles = files.filter(file => file.id !== fileId);
-//     if (newFiles.length > 0 && fileId === activeFileId) {
-//       setActiveFileId(newFiles[0].id);
-//     }
-//     setFiles(newFiles);
-//   };
-
-//   const toggleFolder = (folderName) => {
-//     setExpandedFolders(prev => ({
-//       ...prev,
-//       [folderName]: !prev[folderName]
-//     }));
-//   };
-
-//   const activeFile = files.find(file => file.id === activeFileId) || files[0];
-
-//   // Base styles
-//   const styles = {
-//     container: {
-//       display: 'flex',
-//       height: '100vh',
-//       backgroundColor: '#1e1e1e',
-//       color: '#d4d4d4',
-//       fontFamily: 'Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
-//     },
-//     sideBar: {
-//       width: '48px',
-//       backgroundColor: '#333333',
-//       display: 'flex',
-//       flexDirection: 'column',
-//       alignItems: 'center',
-//       padding: '8px 0',
-//     },
-//     sideBarIcon: {
-//       padding: '12px',
-//       cursor: 'pointer',
-//       borderLeft: '2px solid transparent',
-//     },
-//     activeSideBarIcon: {
-//       borderLeft: '2px solid #007acc',
-//       backgroundColor: '#2a2d2e',
-//     },
-//     explorer: {
-//       width: '250px',
-//       backgroundColor: '#252526',
-//       display: 'flex',
-//       flexDirection: 'column',
-//       overflowY: 'auto',
-//     },
-//     explorerHeader: {
-//       padding: '8px 16px',
-//       fontWeight: 'bold',
-//       fontSize: '11px',
-//       textTransform: 'uppercase',
-//       letterSpacing: '1px',
-//     },
-//     folderItem: {
-//       display: 'flex',
-//       alignItems: 'center',
-//       padding: '4px 8px',
-//       cursor: 'pointer',
-//       userSelect: 'none',
-//     },
-//     fileItem: {
-//       display: 'flex',
-//       alignItems: 'center',
-//       padding: '4px 8px 4px 28px',
-//       cursor: 'pointer',
-//       userSelect: 'none',
-//     },
-//     folderName: {
-//       marginLeft: '8px',
-//     },
-//     fileName: {
-//       marginLeft: '8px',
-//     },
-//     main: {
-//       flexGrow: 1,
-//       display: 'flex',
-//       flexDirection: 'column',
-//     },
-//     tabBar: {
-//       display: 'flex',
-//       overflowX: 'auto',
-//       backgroundColor: '#252526',
-//       borderBottom: '1px solid #333333',
-//     },
-//     tab: (isActive) => ({
-//       display: 'flex',
-//       alignItems: 'center',
-//       padding: '8px 16px',
-//       minWidth: 0,
-//       cursor: 'pointer',
-//       userSelect: 'none',
-//       backgroundColor: isActive ? '#1e1e1e' : '#252526',
-//     }),
-//     tabContent: {
-//       display: 'flex',
-//       alignItems: 'center',
-//       maxWidth: '200px',
-//     },
-//     tabFileName: {
-//       marginLeft: '8px',
-//       whiteSpace: 'nowrap',
-//       overflow: 'hidden',
-//       textOverflow: 'ellipsis',
-//     },
-//     closeButton: {
-//       marginLeft: '8px',
-//       padding: '4px',
-//       borderRadius: '50%',
-//       border: 'none',
-//       background: 'transparent',
-//       cursor: 'pointer',
-//       color: '#d4d4d4',
-//       display: 'flex',
-//       alignItems: 'center',
-//       justifyContent: 'center',
-//     },
-//     editorContainer: {
-//       flexGrow: 1,
-//       position: 'relative',
-//     },
-//   };
-
-//   return (
-//     <div style={styles.container}>
-//       {/* Left Sidebar with Icons */}
-//       <div style={styles.sideBar}>
-//         <div style={{ ...styles.sideBarIcon, ...styles.activeSideBarIcon }}>
-//           <FileText size={24} color="#d4d4d4" />
-//         </div>
-//         <div style={styles.sideBarIcon}>
-//           <Search size={24} color="#d4d4d4" />
-//         </div>
-//         <div style={styles.sideBarIcon}>
-//           <GitBranch size={24} color="#d4d4d4" />
-//         </div>
-//         <div style={styles.sideBarIcon}>
-//           <Terminal size={24} color="#d4d4d4" />
-//         </div>
-//         <div style={{ marginTop: 'auto', ...styles.sideBarIcon }}>
-//           <Settings size={24} color="#d4d4d4" />
-//         </div>
-//       </div>
-
-//       {/* Explorer Panel */}
-//       <div style={styles.explorer}>
-//         <div style={styles.explorerHeader}>Explorer</div>
-
-//         {/* Folder structure */}
-//         <div style={styles.folderItem} onClick={() => toggleFolder('src')}>
-//           {expandedFolders['src'] ?
-//             <FolderOpen size={16} color="#dcb67a" /> :
-//             <Folder size={16} color="#dcb67a" />
-//           }
-//           <span style={styles.folderName}>src</span>
-//         </div>
-
-//         {expandedFolders['src'] && files.map(file => (
-//           <div
-//             key={file.id}
-//             style={{
-//               ...styles.fileItem,
-//               backgroundColor: activeFileId === file.id ? '#37373d' : 'transparent'
-//             }}
-//             onClick={() => setActiveFileId(file.id)}
-//           >
-//             {getFileIcon(file.name)}
-//             <span style={styles.fileName}>{file.name}</span>
-//           </div>
-//         ))}
-
-//         <div style={styles.folderItem} onClick={() => toggleFolder('public')}>
-//           {expandedFolders['public'] ?
-//             <FolderOpen size={16} color="#dcb67a" /> :
-//             <Folder size={16} color="#dcb67a" />
-//           }
-//           <span style={styles.folderName}>public</span>
-//         </div>
-
-//         {expandedFolders['public'] && (
-//           <div style={styles.fileItem}>
-//             <File size={16} color="#909399" />
-//             <span style={styles.fileName}>index.html</span>
-//           </div>
-//         )}
-//       </div>
-
-//       {/* Main Editor Area */}
-//       <div style={styles.main}>
-//         <div style={styles.tabBar}>
-//           {files.map(file => (
-//             <div
-//               key={file.id}
-//               onClick={() => setActiveFileId(file.id)}
-//               style={styles.tab(activeFileId === file.id)}
-//             >
-//               <div style={styles.tabContent}>
-//                 {getFileIcon(file.name)}
-//                 <span style={styles.tabFileName}>{file.name}</span>
-//               </div>
-//               <button
-//                 onClick={(e) => closeFile(file.id, e)}
-//                 style={styles.closeButton}
-//               >
-//                 <X size={12} />
-//               </button>
-//             </div>
-//           ))}
-//         </div>
-
-//         {activeFile && (
-//           <div style={styles.editorContainer}>
-//             <AceEditor
-//               mode={getFileMode(activeFile.name)}
-//               theme="monokai"
-//               onChange={handleFileChange}
-//               value={activeFile.content}
-//               name="ace-editor"
-//               width="100%"
-//               height="100%"
-//               fontSize={14}
-//               showPrintMargin={false}
-//               showGutter={true}
-//               highlightActiveLine={true}
-//               setOptions={{
-//                 enableBasicAutocompletion: true,
-//                 enableLiveAutocompletion: true,
-//                 enableSnippets: true,
-//                 showLineNumbers: true,
-//                 tabSize: 2,
-//               }}
-//             />
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default EditorACE;
 
 
 import React, { useState, useEffect, useContext, useRef } from 'react';
@@ -322,7 +9,7 @@ import { themeUtil } from './IdeUtils';
 import FileExplorer from '../FileExpo/FileExplorer';
 import { getFileIcon, getFileMode } from '../utils/GetIcon';
 import { ClientContext } from './ClientContext';
-import { setCurrentTheme } from '../Redux/editorSlice';
+import { emptyTerminalHistory, setCurrentTheme, setInputWant, setTerminalHistory } from '../Redux/editorSlice';
 import MonacoIDE from './MonacoIDE';
 import { UserContext } from '../LogInPage/UserProvider';
 import NewFile from './NewFile';
@@ -333,24 +20,37 @@ import MenuBar from './MenuBar';
 import Chat from '../ChatComponents/Chat';
 // import { useSelector } from 'react-redux';
 import { motion } from "framer-motion";
+import { useNavigate, useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 
 
 
 // const socket = io('http://localhost:3000');
 
-
-
-
 const EditorACE = () => {
 
-  const { currentTheme, dispatch, initAndGetProvider, editorsRef, getBindings, providersRef, getYtext, language } = useContext(ClientContext);
-  const user = useContext(UserContext);
+  const {
+    currentTheme, dispatch, initAndGetProvider, editorsRef,
+    getBindings, providersRef, getYtext, language,
+    code, setCurrentWorkSpace
+  } = useContext(ClientContext);
+
+  const { user } = useContext(UserContext);
+  const { workspace } = useParams();
+
+  const workspaces = useSelector(state => state.editor.workspaces);
+  const navigate = useNavigate();
 
   const [files, setFiles] = useState([]);
   const [activeFile, setActiveFile] = useState(null);
   const [showTerminal, setShowTerminal] = useState(false);
   const [showNewFile, setShowNewFile] = useState(false);
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
+  const [isFileCreated, setIsFileCreated] = useState(false);
+  const [unsavedFiles, setUnsavedFiles] = useState(new Map());
+
 
   const [terminalOutput, setTerminalOutput] = useState({});
 
@@ -386,6 +86,8 @@ const EditorACE = () => {
     const newFiles = files.filter(file => file.id !== fileId);
     if (newFiles.length > 0 && fileId === activeFile.id) {
       setActiveFile(files[fileIdx - 1]);
+    } else if (newFiles.length === 0) {
+      setActiveFile(null);
     }
     setFiles(newFiles);
   };
@@ -438,12 +140,21 @@ const EditorACE = () => {
       return;
     }
     e['name'] = e.file;
-    e['binding'] = null;
+    e['isSaved'] = true;
     console.log(e);
     setActiveFile(e);
     setFiles([...files, e]);
 
 
+  }
+
+  const handleFileMenuOpen = () => {
+    console.log("File Menu Triggered!");
+    if (!isFileMenuOpen) {
+      setShowNewFile(false);
+      setShowNewFolder(false);
+    }
+    setIsFileMenuOpen(!isFileMenuOpen);
   }
 
   const handleFileOpen = (val) => {
@@ -453,21 +164,36 @@ const EditorACE = () => {
       console.log(user);
 
       console.log("Creating " + val);
-      createFile(user.user.username, {
+      createFile(user.username, {
         fileName: val,
         fileContent: ""
-      }).then((res) => {
+      }, workspace).then((res) => {
         console.log(res);
         console.log(res.message);
         // setFiles(...files, {'name': res.fileName, 'id': res.fileName, 'url': res.url});
+        setIsFileCreated(prev => !prev);
 
       })
 
     }
     console.log("handleFileOpen");
-    setShowNewFile(!showNewFile);
+    setShowNewFile((prev) => !prev);
   }
 
+  const handleFolderOpen = (val) => {
+    console.log(val);
+
+    createFile(user.username, {
+      fileName: val,
+    }, workspace).then((res) => {
+      console.log(res);
+      console.log(res.message);
+      // setFiles(...files, {'name': res.folderName, 'id': res.folderName, 'url': res.url});
+      setIsFileCreated(prev => !prev);
+    })
+
+    setShowNewFolder((prev) => !prev);
+  }
 
   const getOutput = () => {
     if (!activeFile) {
@@ -475,12 +201,22 @@ const EditorACE = () => {
       return;
     }
     const provider = initAndGetProvider(activeFile.url);
-    const yText = getYtext(activeFile.url);
-    console.log(language, yText.toString());
+    // const yText = getYtext(activeFile.url);
+    dispatch(emptyTerminalHistory());
+
+    console.log(language, code);
+
+    // [{
+    //   "chatInfo": {
+    //     "senderId": "ar@gmail.com",
+    //     "recipientId": "All",
+    //   }
+    // }]
 
     provider.ws.send(JSON.stringify({
       "language": language,
-      "code": yText.toString(),
+      "code": code,
+      "event": "compile"
     }));
 
 
@@ -489,13 +225,25 @@ const EditorACE = () => {
 
       if (typeof event.data === 'string') {
         const res = JSON.parse(event.data);
-        console.log(res);
+        console.log(res.data);
         setShowTerminal(true);
-
         if (res.event === 'output') {
           // inputWantRef.current = res.input;
+          let data = res.data;
+          console.log(data, data.length);
 
-          setTerminalOutput({ output: res.data, ws: provider.ws, input: res.input });
+          if (data.length > 21) {
+            data = res.data.splice(Math.max(res.data.length - 20, 0), 20);
+          }
+          dispatch(setInputWant({ isWant: res.input }));
+          dispatch(setTerminalHistory([{ content: data.join("\n"), type: res.input ? 'input' : 'output' }]));
+        }
+        else if (res.event === 'error') {
+          // inputWantRef.current = res.input;
+          let response = res.data;
+          console.log(response, response.length);
+          dispatch(setInputWant({ isWant: res.input }));
+          dispatch(setTerminalHistory([{ content: response, type: 'error' }]));
         }
       }
     };
@@ -520,25 +268,36 @@ const EditorACE = () => {
   //   },
   // }
 
+  // useEffect(() => {
+  //   if (files.length === 0) {
+  //     const bind = getBindings(activeFile.url);
+  //     console.log(bind);
+
+  //     if (bind) {
+  //       const provider = initAndGetProvider(activeFile.url);
+  //       console.log(provider);
+
+  //       bind.destroy();
+  //       if (provider) {
+  //         provider.destroy();
+  //       }
+  //     }
+  //     console.log("Current User --> " + user);
+  //   }
+
+  // }, [files]);
+
+
+
   useEffect(() => {
-    // if (activeFile) {
-    //   const bind = getBindings(activeFile.url);
-    //   console.log(bind);
+    console.log(workspace);
 
-    //   if (bind) {
-    //     const provider = initAndGetProvider(activeFile.url);
-    //     console.log(provider);
-
-    //     bind.destroy();
-    //     if (provider) {
-    //       provider.destroy();
-    //     }
-    //   }
-    console.log("Current User --> " + user);
-    // }
-
-  }, [user]);
-
+    if (!workspaces.some(ws => ws.workspaceName === workspace)) {
+      navigate('/notfound');
+    } else {
+      setCurrentWorkSpace(workspace);
+    }
+  }, [])
 
   return (
     <div style={styles.container}>
@@ -585,7 +344,16 @@ const EditorACE = () => {
         </div>
       </div> */}
 
-      <MenuBar handleFileOpen={handleFileOpen} getOutput={getOutput} />
+      <MenuBar
+        handleFileOpen={handleFileOpen}
+        setShowTerminal={setShowTerminal}
+        getOutput={getOutput}
+        handleFileMenuOpen={handleFileMenuOpen}
+        isFileMenuOpen={isFileMenuOpen}
+        isFileOpen={showNewFile}
+        handleFolderOpen={handleFolderOpen}
+      />
+
       <div style={{
         display: 'flex',
         height: '100%',
@@ -596,7 +364,7 @@ const EditorACE = () => {
           toggleTerminal={toggleTerminal}
           theme={currentTheme}
           files={files}
-          handleFile={handleFile} setIsChatOpen={setIsChatOpen} />
+          handleFile={handleFile} setIsChatOpen={setIsChatOpen} isFileCreated={isFileCreated} />
 
         <motion.div
           initial={{ width: 0 }}
@@ -607,7 +375,7 @@ const EditorACE = () => {
             overflow: 'hidden'
           }}
         >
-          <Chat />
+          <Chat isChatOpen={isChatOpen} />
         </motion.div>
         {/* Main Editor Area */}
         {/* <div style={styles.main}>
@@ -647,12 +415,17 @@ const EditorACE = () => {
           handleFile={handleFile}
           closeFile={closeFile}
           showNewFile={showNewFile}
-          handleFileOpen={handleFileOpen} />
+          showNewFolder={showNewFolder}
+          handleFileOpen={handleFileOpen}
+          handleFolderOpen={handleFolderOpen}
+          cPath={workspace}
+          unsavedFiles={unsavedFiles}
+          setUnsavedFiles={setUnsavedFiles}
+        />
 
       </div>
 
 
-      {/* Terminal Panel */}
       <div
         style={{
           ...styles.terminalContainer,
@@ -668,23 +441,8 @@ const EditorACE = () => {
             {showTerminal ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
           </div>
         </div>
-        <div style={styles.terminalContent}>
-          {/* <ReactTerminal
-            // commands={commands}
-            themes={{
-              "my-custom-theme": {
-                themeBGColor: "#272B36",
-                themeToolbarColor: "#DBDBDB",
-                themeColor: "#FFFEFC",
-                themePromptColor: "#a917a8"
-              }
-            }}
-            theme="my-custom-theme"
-            prompt={`\n${user.user.username}@myapp: `}
-            welcomeMessage="Try 'whoami', 'cd dir', or 'setuser name'."
-          /> */}
-          <Term terminalOutput={terminalOutput} />
-        </div>
+
+        <Term />
       </div>
     </div >
   );

@@ -60,11 +60,13 @@ public class Login extends HttpServlet {
 
 
             JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("profilePic", user.getProfilePic());
             jsonResponse.put("token", token);
             jsonResponse.put("email", user.getEmail());
-            jsonResponse.put("username", user.getEmail().split("@")[0]);
-            jsonResponse.put("name", user.getUserName());
+            jsonResponse.put("username", user.getUserName());
+            jsonResponse.put("name", user.getNickname());
 
+            System.out.println("OBJ --> " + jsonResponse.toString());
             response.setHeader("Authorization", "Bearer " + token);
 
             response.getWriter().write(jsonResponse.toString());

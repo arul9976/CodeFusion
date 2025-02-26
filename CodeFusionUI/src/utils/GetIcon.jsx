@@ -4,6 +4,7 @@ import { TbBrandGolang, TbBrandJavascript } from 'react-icons/tb';
 import { PiFileCppBold } from 'react-icons/pi';
 import { LuCodeXml } from 'react-icons/lu';
 import { BiLogoTypescript } from 'react-icons/bi';
+import { FileText } from 'lucide-react';
 
 
 const getFileIcon = (filename) => {

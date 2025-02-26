@@ -1,4 +1,6 @@
 import React, { useContext, useState } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
+
 import {
   Menu,
   Save,
@@ -22,10 +24,22 @@ import {
 } from 'lucide-react';
 import Collaborators from '../Collab/Collabrators';
 import { UserContext } from '../LogInPage/UserProvider';
+import { MdSpaceDashboard } from 'react-icons/md';
+import Profile from '../WorkSpace/Profile';
+import { useParams } from 'react-router-dom';
+import FileMenu from './File/FIleMenu';
+import NewFile from './NewFile';
 
-const MenuBar = ({ handleFileOpen, getOutput }) => {
+const MenuBar = ({
+  handleFileOpen, getOutput, setShowTerminal,
+  handleFileMenuOpen, isFileMenuOpen, isFileOpen,
+  handleFolderOpen
+
+}) => {
 
   const { user } = useContext(UserContext);
+  const { workspace } = useParams();
+
 
   const [currentTheme, setCurrentTheme] = useState('dark');
   const [isSaving, setIsSaving] = useState(false);
@@ -381,9 +395,9 @@ const MenuBar = ({ handleFileOpen, getOutput }) => {
 
   const menuItems = [
     { icon: <Menu size={16} />, label: 'File' },
-    { icon: <Edit3 size={16} />, label: 'Edit' },
-    { icon: <Eye size={16} />, label: 'View' },
-    { icon: <FolderOpen size={16} />, label: 'Project' },
+    // { icon: <Edit3 size={16} />, label: 'Edit' },
+    // { icon: <Eye size={16} />, label: 'View' },
+    // { icon: <FolderOpen size={16} />, label: 'Project' },
     { icon: <Terminal size={16} />, label: 'Terminal' },
     { icon: <HelpCircle size={16} />, label: 'Help' },
   ];
@@ -391,9 +405,10 @@ const MenuBar = ({ handleFileOpen, getOutput }) => {
   const actionButtons = [
     { icon: isSaving ? <RefreshCw size={16} style={styles.savingIcon} /> : <Save size={16} />, tooltip: 'Save', onClick: simulateSave },
     { icon: <Play size={16} />, tooltip: 'Run' },
-    { icon: <Download size={16} />, tooltip: 'Download' },
+    { icon: <MdSpaceDashboard onClick={() => window.open('/CodeFusion/Dashboard', '_blank')} />, tooltip: 'Dashboard' },
+    // { icon: <Download size={16} />, tooltip: 'Download' },
     // { icon: <GitHub size={16} />, tooltip: 'Repository' },
-    { icon: <Share2 size={16} />, tooltip: 'Share' },
+    // { icon: <Share2 size={16} />, tooltip: 'Share' Dashboard},
     { icon: <Settings size={16} />, tooltip: 'Settings' },
     { icon: currentTheme === 'dark' ? <Moon size={16} /> : <Sun size={16} />, tooltip: 'Toggle theme', onClick: toggleTheme },
   ];
@@ -442,22 +457,8 @@ const MenuBar = ({ handleFileOpen, getOutput }) => {
         <Users size={20} />
         Collaboration
       </div>
-      {/* <div style={styles.inviteLink}>
-        <span>https://workspace/share/abc123</span>
-        <button
-          style={styles.copyButton}
-          onClick={simulateCopyLink}
-        >
-          {copySuccess ? 'Copied!' : (
-            <>
-              <Copy size={14} />
-              Copy
-            </>
-          )}
-        </button>
-      </div> */}
       <div style={{ ...styles.collaborator, marginBottom: '8px' }}>
-        <div style={styles.avatar}>{user?.user?.username?.chatAt(0)}</div>
+        <div style={styles.avatar}>{(user.profilePic && <Profile />) || user?.user?.username?.chatAt(0)}</div>
         <div>
           <div style={{ color: '#fff' }}>{user.username}</div>
           <div style={{ fontSize: '12px', color: '#9ca3af' }}>Owner</div>
@@ -489,7 +490,7 @@ const MenuBar = ({ handleFileOpen, getOutput }) => {
             }}
             onMouseEnter={() => setActiveItem(index)}
             onMouseLeave={() => setActiveItem(null)}
-            onClick={index === 0 ? handleFileOpen : null}
+            onClick={index === 0 ? handleFileMenuOpen : index === 1 ? () => setShowTerminal((prev) => !prev) : null}
           >
             <div style={{ marginRight: '8px', opacity: activeItem === index ? 1 : 0.7 }}>
               {item.icon}
@@ -541,8 +542,39 @@ const MenuBar = ({ handleFileOpen, getOutput }) => {
         {isCollabOpen && <CollabPopup />}
       </div> */}
       </div>
+
+
+      {isFileMenuOpen && (
+        <FileMenu
+          handleFileMenuOpen={handleFileMenuOpen} handleFolderOpen={handleFolderOpen}
+          isFileOpen={isFileOpen} handleFileOpen={handleFileOpen}
+        />
+      )}
+
+      {/* {isFileOpen &&
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          <NewFile />
+        </motion.div>
+
+      } */}
+      {/* {
+
+        isFileMenuOpen && (
+          <FileMenu />
+        )
+      } */}
       {isCollabModifyOpen &&
-        <Collaborators setIsCollabOpen={setIsCollabModifyOpen} />}
+        <Collaborators setIsCollabOpen={setIsCollabModifyOpen} workSpaceName={workspace} />}
     </>
   );
 };

@@ -16,7 +16,7 @@ const GoogleAuth = () => {
     console.log("Google Token --> " + token);
 
     try {
-      const response = await axios.post(`http://localhost:8080/CodeFusion_war/oauth/google`, { token: token });
+      const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/oauth/google`, { token: token });
       console.log(response);
 
       if (response.status === 201 || response.status === 200) {
@@ -26,7 +26,11 @@ const GoogleAuth = () => {
 
         if (success) {
           localStorage.setItem('token', response.data.token);
-          // navigate("/IDE");
+          localStorage.setItem('username', response.data.username);
+          localStorage.setItem('email', response.data.email);
+          localStorage.setItem('name', capitalize(response.data.name));
+          navigate("/Dashboard");
+
         }
       }
     } catch (error) {
