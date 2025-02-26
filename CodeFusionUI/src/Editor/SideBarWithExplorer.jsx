@@ -15,7 +15,9 @@ const SidebarWithExplorer = ({
   files,
   handleFile,
   setIsChatOpen,
-  isFileCreated
+  isFileCreated,
+  setIsFileCreated,
+  renameHandle
 }) => {
 
 
@@ -57,7 +59,8 @@ const SidebarWithExplorer = ({
       backgroundColor: '#1E293B',
       overflow: 'hidden',
       transition: 'width 0.3s ease',
-      borderRight: '1px solid #374151'
+      borderRight: '1px solid #374151',
+      height: '100%'
     },
     chat: {
       position: 'absolute',
@@ -99,7 +102,7 @@ const SidebarWithExplorer = ({
         {/* <motion.div {...iconProps} style={styles.sideBarIcon}>
           <Search size={24} color={theme.text} />
         </motion.div> */}
-{/* 
+        {/* 
         <motion.div {...iconProps} style={styles.sideBarIcon}>
           <GitBranch size={24} color={theme.text} />
         </motion.div> */}
@@ -128,12 +131,14 @@ const SidebarWithExplorer = ({
           overflow: 'hidden'
         }}
       >
-        <div style={{ width: 280 }}>
+        <div style={{ width: 280, height: '100%' }}>
           <FileExplorer
             isExplorerOpen={isExplorerOpen}
             files={files}
             handleFile={handleFile}
             isFileCreated={isFileCreated}
+            setIsFileCreated={setIsFileCreated}
+            renameHandle={renameHandle}
           />
         </div>
       </motion.div>

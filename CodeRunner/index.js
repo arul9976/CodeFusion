@@ -255,7 +255,7 @@ app.get('/', (req, res) => {
 
 app.post('/createOrUpdateFile/:userId/:wsName', (req, res) => {
   const { userId, wsName } = req.params;
-  console.log(req.body);
+  // console.log(req.body);
   console.log(userId, wsName);
 
   const { fileName, fileContent } = JSON.parse(req.body);
@@ -284,27 +284,29 @@ app.post('/createOrUpdateFile/:userId/:wsName', (req, res) => {
       url: filePath.split(`/${userId}/`)[0]
     }));
   } catch (err) {
+    console.log(err.message);
+
     return res.status(500).send('Error creating/updating file');
 
   };
 });
 
-app.post('/deleteFile', (req, res) => {
-  const { deleteFileName } = req.body;
+// app.post('/deleteFile', (req, res) => {
+//   const { deleteFileName } = req.body;
 
-  const filePath = path.join(__dirname, 'codefusion', deleteFileName);
+//   const filePath = path.join(__dirname, 'codefusion', deleteFileName);
 
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).send('File not found');
-  }
+//   if (!fs.existsSync(filePath)) {
+//     return res.status(404).send('File not found');
+//   }
 
-  fs.unlink(filePath, (err) => {
-    if (err) {
-      return res.status(500).send('Error deleting file');
-    }
-    res.send(`File '${deleteFileName}' deleted successfully.`);
-  });
-});
+//   fs.unlink(filePath, (err) => {
+//     if (err) {
+//       return res.status(500).send('Error deleting file');
+//     }
+//     res.send(`File '${deleteFileName}' deleted successfully.`);
+//   });
+// });
 
 
 app.get('/viewFile/:userId', (req, res) => {
@@ -560,9 +562,200 @@ const isProgramicFile = (extension) => {
 //   return result;
 // }
 
+function deleteFileSync(path, type) {
+  console.log("Delete Path --> " + path);
+
+  try {
+    if (!fs.existsSync(path)) {
+      return {
+        success: true,
+        message: `${type} not exists`
+      }
+    }
+    if (type === 'folder') {
+      fs.rmSync(path, { recursive: true, force: true })
+    } else if (type === 'file') {
+      fs.unlinkSync(path);
+    }
+    console.log(`${type} ${path} deleted successfully`);
+    return {
+      success: true,
+      message: `${type} deleted successfully`
+    }
+  } catch (error) {
+    console.error(`Error deleting ${type} ${path}:`, error);
+    return {
+      success: false,
+      message: `${type} deleted failed`
+    }
+  }
+}
+
+function renameFileSync(path, newName) {
+  try {
+
+    if (!fs.existsSync(path)) {
+      throw new Error(`Source file '${path}' does not exist`);
+    }
+
+    const stats = fs.statSync(path);
+    if (!stats.isFile()) {
+      throw new Error(`Source path '${path}' is not a file`);
+    }
+
+    if (fs.existsSync(newName)) {
+      throw new Error(`Destination file '${newName}' already exists`);
+    }
+
+    fs.renameSync(path, newName);
+    console.log(`File renamed from ${path} to ${newName} successfully`);
+    return {
+      success: true,
+      message: `File renamed successfully`
+    }
+  } catch (error) {
+    console.error(`Error renaming file from ${path} to ${newName}:`, error);
+    return {
+      success: false,
+      message: error.message
+    }
+  }
+}
+
+const renameFolder = (sourcePath, newName, itemType) => {
+  console.log(sourcePath + "\n" + newName);
+
+  try {
+
+    const stats = fs.statSync(sourcePath);
+    if ((itemType === 'file' && !stats.isFile()) ||
+      (itemType === 'folder' && !stats.isDirectory())) {
+      throw new Error(`Path '${sourcePath}' is not a ${itemType}`);
+    }
+
+    if (fs.existsSync(newName)) {
+      throw new Error(`'${newName}' already exists`);
+    }
+
+    fs.renameSync(sourcePath, newName);
+    return {
+      success: true,
+      message: `Folder renamed successfully`
+    }
+  } catch (e) {
+    console.error(`Error renaming ${itemType} from ${sourcePath} to ${newName}:`, e.message);
+    return {
+      success: false,
+      message: error.message
+    }
+  }
+}
+
+
+app.post("/rename", (req, res) => {
+  const { url, newName, type } = req.body;
+
+  try {
+    const oldPath = path.join(__dirname, url);
+    const newPath = path.join(__dirname, newName);
+    console.log("---> " + oldPath + "\n---> " + newPath + "\n---> " + type);
+    let result;
+    switch (type) {
+      case 'file':
+        result = renameFileSync(oldPath + "", newPath + "")
+        console.log(result);
+        break;
+
+      case 'folder':
+        result = renameFolder(oldPath + "", newPath + "", type);
+        break;
+
+      default:
+        result = {
+          success: false,
+          message: 'Type is Not Permitted'
+        }
+    }
+    console.log(result);
+    res.status(200).send(result);
+  } catch (error) {
+    result = {
+      success: false,
+      message: error.message
+    }
+  }
+})
+
+function pasteToFolder(pathToCopy, fileToCopy, type) {
+  try {
+    const sourcePath = path.resolve(fileToCopy);
+    const destPath = path.resolve(path.join(pathToCopy, path.basename(fileToCopy)));
+
+    console.log("---> " + sourcePath + "\n---> " + destPath);
+
+    if (!fs.existsSync(sourcePath)) {
+      throw new Error('Source file does not exist');
+    }
+
+    const destDir = path.dirname(destPath);
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    fs.copyFileSync(sourcePath, destPath);
+
+    if (type.toLowerCase() === 'cut') {
+      fs.unlinkSync(sourcePath);
+    }
+
+    return {
+      success: true,
+      message: `File ${type.toLowerCase() === 'cut' ? 'moved' : 'copied'} successfully`
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: `Error: ${error.message}`
+    };
+  }
+}
+
+app.post('/pasteFile', (req, res) => {
+  const { pastePath, file, type } = req.body;
+  const pasteToPath = path.join(__dirname, 'codefusion', pastePath);
+  const fromPath = path.join(__dirname, file);
+
+  console.log(pasteToPath + "\n" + fromPath + "\n" + type);
+
+  const result = pasteToFolder(pasteToPath, fromPath, type);
+  res.json(result);
+
+
+});
+
+app.post("/deletefile", (req, res) => {
+
+
+  try {
+    const { url, type } = req.body;
+    const filePath = path.join(__dirname, url);
+    console.log("---> " + filePath);
+    const result = deleteFileSync(filePath, type);
+    console.log(result);
+    res.status(200).send(result);
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message
+    })
+  }
+})
+
 app.get('/list-all-files/:userId/:ws', (req, res) => {
   const { userId, ws } = req.params;
   try {
+    console.log(userId, ws);
+
     const uploadsDirectory = path.join(__dirname, 'codefusion', userId, ws);
     const fileList = listFilesInDirectory(uploadsDirectory);
     let result = {};
@@ -707,7 +900,8 @@ wss.on('connection', (ws, req) => {
               args = [fileNameWithPath];
               process = spawn(command, args);
               break;
-            case 'go':
+            case 'golang':
+              console.log("golang --> " + language);
               command = 'go';
               args = ['run', '-'];
               process = spawn(command, args);

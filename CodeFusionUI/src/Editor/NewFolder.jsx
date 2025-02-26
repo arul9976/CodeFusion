@@ -13,7 +13,7 @@ const NewFolder = ({ fileOnClick, currentPath = "/" }) => {
   const [inputValue, setInputValue] = useState("")
   const [error, setError] = useState("")
   const [selectedOption, setSelectedOption] = useState(".html")
-  const [path, setPath] = useState("/")
+  const [path, setPath] = useState(null)
   const [isPathDropdownOpen, setIsPathDropdownOpen] = useState(false)
 
   const folderStructureRef = useRef(['/']);
@@ -36,7 +36,7 @@ const NewFolder = ({ fileOnClick, currentPath = "/" }) => {
 
   const handleFinalName = () => {
     if (inputValue !== "" && error === "") {
-      const resultantFileName = path + inputValue.split(".")[0]
+      const resultantFileName = (path ? path + "/" : "/") + inputValue.split(".")[0]
       console.log(resultantFileName)
       fileOnClick(resultantFileName)
       return

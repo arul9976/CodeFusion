@@ -167,10 +167,63 @@ const saveFile = async (fileId, code) => {
 
   return null;
 }
+
+
+
+const pasteFileToPath = async (fileObj) => {
+  console.log(fileObj);
+  try {
+    const response = await axios.post(`${import.meta.env.VITE_RUNNER_URL}/pasteFile`, fileObj);
+    if (response.status === 200) {
+      console.log("Pasting Success: " + response.data);
+      return response?.data;
+    }
+  } catch (e) {
+
+    console.error("Error pasting file:", e.message);
+  }
+
+}
+
+
+const reNameFile = async (file) => {
+  console.log("Rename File");
+
+  try {
+    const response = await axios.post(`${import.meta.env.VITE_RUNNER_URL}/rename`, file);
+    if (response.status === 200) {
+      console.log("Rename Success: " + response.data);
+      return response?.data;
+    }
+    console.log("Rename failed: " + response.status);
+    return response?.data;
+  } catch (e) {
+    console.error("Error renaming file:", e.message);
+  }
+  return null;
+
+}
+
+
+
+const deleteFileOrFolder = async (file) => {
+  console.log("file --> " + file);
+  const response = await axios.post(`${import.meta.env.VITE_RUNNER_URL}/deletefile`, file);
+  if (response.status === 200) {
+    console.log("Delete Success: " + response.data);
+    return response?.data;
+  }
+  console.log("Delete failed: " + response.status);
+  return null;
+}
+
+
+
 export {
   getFileContent, createFile, getFolders,
   getWorkSpaces, createWorkspace, searchUser,
   addCollab, fetchCollaborators, saveFile,
-  checkws
+  checkws, pasteFileToPath, reNameFile,
+  deleteFileOrFolder
 }
 

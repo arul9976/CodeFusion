@@ -10,6 +10,7 @@ import NewFolder from './NewFolder';
 import FileMenu from './File/FIleMenu';
 import { ClientContext } from './ClientContext';
 import { saveFile } from '../utils/Fetch';
+import Rename from '../FileExpo/Rename';
 
 const TabInterface = ({
   files,
@@ -22,7 +23,9 @@ const TabInterface = ({
   handleFolderOpen,
   cPath,
   unsavedFiles,
-  setUnsavedFiles
+  setUnsavedFiles,
+  isRename,
+  handleRename
 }) => {
 
 
@@ -121,6 +124,24 @@ const TabInterface = ({
             >
               <NewFolder fileOnClick={handleFolderOpen} currentPath={cPath} />
             </motion.div>}
+
+          {
+            isRename &&
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                backdropFilter: 'blur(4px)'
+              }}
+            >
+              <Rename isRename={isRename} fileOnClick={handleRename} currentPath={cPath} />
+            </motion.div>
+          }
+
         </AnimatePresence>
       </div>
     </motion.div>

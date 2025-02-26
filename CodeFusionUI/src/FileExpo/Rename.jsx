@@ -6,14 +6,14 @@ import { ChevronDown, FolderIcon, FileIcon, XIcon } from "lucide-react"
 import { getFolders } from "../utils/Fetch"
 import { UserContext } from "../LogInPage/UserProvider"
 
-const NewFile = ({ fileOnClick, currentPath = "/" }) => {
+const Rename = ({ isRename, fileOnClick, currentPath = "/" }) => {
 
   const { user } = useContext(UserContext);
 
   const [inputValue, setInputValue] = useState("")
   const [error, setError] = useState("")
   const [selectedOption, setSelectedOption] = useState(".html")
-  const [path, setPath] = useState(null)
+  const [path, setPath] = useState("/")
   const [isPathDropdownOpen, setIsPathDropdownOpen] = useState(false)
 
   const folderStructureRef = useRef(['/']);
@@ -36,9 +36,17 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
 
   const handleFinalName = () => {
     if (inputValue !== "" && error === "") {
-      const resultantFileName = (path ? path + "/" : "/") + inputValue.split(".")[0] + selectedOption
-      console.log(resultantFileName)
-      fileOnClick(resultantFileName)
+      const oldFile = isRename?.oldName;
+      console.log(oldFile);
+      // if (!oldFile?.url) {
+      //   oldFile['url'] = isRename.
+      // }
+      let oldUrl = oldFile.url.split('/');
+      let oldOne = oldUrl.pop();
+      oldFile['newName'] = oldUrl.join('/') + '/' + inputValue + (oldOne.split('.').length > 1 ? "." + oldOne.split('.')[1] : "");
+      console.log(oldFile);
+
+      fileOnClick(oldFile);
       return
     }
     fileOnClick(null)
@@ -49,17 +57,17 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
     setIsPathDropdownOpen(false)
   }
 
-  useEffect(() => {
-    getFolders(user.username, currentPath).then(res => {
-      console.log(res);
-      if (res.length > 0) {
-        folderStructureRef.current = ["/", ...res];
-      }
-      // folderStructure = res;
+  // useEffect(() => {
+  //   getFolders(user.username, currentPath).then(res => {
+  //     console.log(res);
+  //     if (res.length > 0) {
+  //       folderStructureRef.current = ["/", ...res];
+  //     }
+  //     // folderStructure = res;
 
-    })
+  //   })
 
-  }, [])
+  // }, [])
 
   return (
     <div style={{
@@ -101,7 +109,7 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
             color: "#E2E8F0"
           }}
         >
-          <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>New File</h1>
+          <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: "bold" }}>Rename {isRename.type === 'file' ? 'FIle' : 'Folder'}</h1>
           <motion.div
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -113,7 +121,7 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
         </motion.div>
 
         <div style={{ padding: "20px" }}>
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -192,6 +200,62 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
                 </motion.div>
               )}
             </AnimatePresence>
+          </motion.div> */}
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            style={{ marginBottom: "20px" }}
+          >
+            <label
+              style={{
+                display: "block",
+                marginBottom: "8px",
+                color: "#94A3B8",
+                fontSize: "0.875rem"
+              }}
+            >
+              Old Name
+            </label>
+            <div style={{ position: "relative" }}>
+              <FileIcon
+                size={18}
+                style={{
+                  position: "absolute",
+                  left: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#64748B"
+                }}
+              />
+              <input
+                type="text"
+                value={isRename?.oldName?.file}
+                disabled
+                style={{
+                  padding: "10px 10px 10px 36px",
+                  fontSize: "14px",
+                  border: "1px solid #334155",
+                  borderRadius: "8px",
+                  outline: "none",
+                  width: "100%",
+                  backgroundColor: "#1E293B",
+                  color: "#E2E8F0",
+                  boxSizing: "border-box"
+                }}
+                placeholder="Enter Folder name"
+              />
+            </div>
+            {error && (
+              <p style={{
+                color: "#EF4444",
+                marginTop: "4px",
+                fontSize: "0.75rem"
+              }}>
+                {error}
+              </p>
+            )}
           </motion.div>
 
           <motion.div
@@ -208,7 +272,7 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
                 fontSize: "0.875rem"
               }}
             >
-              Name
+              New Name
             </label>
             <div style={{ position: "relative" }}>
               <FileIcon
@@ -236,7 +300,7 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
                   color: "#E2E8F0",
                   boxSizing: "border-box"
                 }}
-                placeholder="Enter file name"
+                placeholder={`Enter ${isRename.type === 'file' ? 'File' : 'Folder'} name`}
               />
             </div>
             {error && (
@@ -250,51 +314,7 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
             )}
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            style={{ marginBottom: "20px" }}
-          >
-            <label
-              style={{
-                display: "block",
-                marginBottom: "8px",
-                color: "#94A3B8",
-                fontSize: "0.875rem"
-              }}
-            >
-              Type
-            </label>
-            <select
-              value={selectedOption}
-              onChange={fileType}
-              style={{
-                padding: "10px",
-                fontSize: "14px",
-                border: "1px solid #334155",
-                borderRadius: "8px",
-                outline: "none",
-                width: "100%",
-                backgroundColor: "#1E293B",
-                color: "#E2E8F0",
-                appearance: "none",
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 10px center",
-                backgroundSize: "20px"
-              }}
-            >
-              <option value=".html">.html</option>
-              <option value=".css">.css</option>
-              <option value=".js">.js</option>
-              <option value=".java">.java</option>
-              <option value=".py">.py</option>
-              <option value=".rb">.rb</option>
-              <option value=".go">.go</option>
-              {/* <option value=".jsx">.jsx</option> */}
-            </select>
-          </motion.div>
+
 
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -318,7 +338,7 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
             onMouseEnter={e => e.currentTarget.style.backgroundColor = "#2563EB"}
             onMouseLeave={e => e.currentTarget.style.backgroundColor = "#3B82F6"}
           >
-            Create File
+            Rename
           </motion.button>
         </div>
       </motion.div>
@@ -326,4 +346,4 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
   )
 }
 
-export default NewFile
+export default Rename

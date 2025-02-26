@@ -13,7 +13,7 @@ import { emptyTerminalHistory, setCurrentTheme, setInputWant, setTerminalHistory
 import MonacoIDE from './MonacoIDE';
 import { UserContext } from '../LogInPage/UserProvider';
 import NewFile from './NewFile';
-import { createFile } from '../utils/Fetch';
+import { createFile, reNameFile } from '../utils/Fetch';
 import SidebarWithExplorer from './SideBarWithExplorer';
 import TabInterface from './TabInterface';
 import MenuBar from './MenuBar';
@@ -50,7 +50,7 @@ const EditorACE = () => {
   const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
   const [isFileCreated, setIsFileCreated] = useState(false);
   const [unsavedFiles, setUnsavedFiles] = useState(new Map());
-
+  const [isRename, setIsRename] = useState(null);
 
   const [terminalOutput, setTerminalOutput] = useState({});
 
@@ -104,10 +104,33 @@ const EditorACE = () => {
     setShowFileExplorer(!showFileExplorer);
   };
 
-  const simulateSave = () => {
-    setIsSaving(true);
-    setTimeout(() => setIsSaving(false), 800);
-  };
+  const renameHandle = (oldName) => {
+    if (oldName) {
+      if (oldName?.newName) {
+        console.log(oldName.newName);
+        reNameFile(oldName)
+          .then(res => {
+            console.log(res);
+            if (res.success) {
+              setIsRename(false);
+              setIsFileCreated(prev => !prev);
+            }
+          })
+      }
+      else {
+        console.log(""+oldName?.oldName, oldName?.type);
+
+        setIsRename({
+          oldName,
+          newName: '',
+          type: oldName?.type || 'file',
+        });
+      }
+      console.log("Old name: " + oldName);
+    } else
+      setIsRename(false);
+
+  }
 
   const handleFile = (e) => {
 
@@ -364,7 +387,11 @@ const EditorACE = () => {
           toggleTerminal={toggleTerminal}
           theme={currentTheme}
           files={files}
-          handleFile={handleFile} setIsChatOpen={setIsChatOpen} isFileCreated={isFileCreated} />
+          handleFile={handleFile}
+          setIsChatOpen={setIsChatOpen}
+          isFileCreated={isFileCreated}
+          setIsFileCreated={setIsFileCreated}
+          renameHandle={renameHandle} />
 
         <motion.div
           initial={{ width: 0 }}
@@ -421,6 +448,8 @@ const EditorACE = () => {
           cPath={workspace}
           unsavedFiles={unsavedFiles}
           setUnsavedFiles={setUnsavedFiles}
+          isRename={isRename}
+          handleRename={renameHandle}
         />
 
       </div>
