@@ -4,11 +4,15 @@ import './Chat.css'
 import { fetchCollaborators } from "../utils/Fetch";
 import { useParams } from "react-router-dom";
 import { UserContext } from "../LogInPage/UserProvider";
+import { useWebSocket } from "../Websocket/WebSocketProvider";
 
 const Chat = ({ isChatOpen }) => {
 
-  const { workspace } = useParams();
+  const { ownername, workspace } = useParams();
   const { user } = useContext(UserContext);
+
+  const { socket } = useWebSocket();
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("Users");
   const [isBotActive, setIsBotActive] = useState(false); 
@@ -27,7 +31,7 @@ const Chat = ({ isChatOpen }) => {
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [users, setUsers] = useState([]);
-
+  const websocket = useRef(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -40,11 +44,11 @@ const Chat = ({ isChatOpen }) => {
 
   useEffect(() => {
     if (isChatOpen) {
-      fetchCollaborators(workspace, user.email)
+      fetchCollaborators(workspace, ownername+"@gmail.com")
         .then(data => {
           console.log(data);
 
-          setUsers(data);
+          setUsers([{username:ownername}, ...data.filter(u => u.username !== user.username)]);
         })
         .catch((err) => {
           console.log("Error fetching contributors " + err.message);
@@ -85,10 +89,22 @@ const Chat = ({ isChatOpen }) => {
         receiver: selectedOption,
         timestamp: new Date().toLocaleTimeString(),
         isBot: false,
+        roomId: (ownername+"$"+workspace)
       };
   
-      if (selectedOption === "All") {
+       console.log(socket);
        
+        if(socket){
+          console.log("Client Send Message to ");
+          
+          socket.send(JSON.stringify({
+            event: "chat",
+            message: userMessage,
+          }));
+        }
+
+      if (selectedOption === "All") {
+
         setMessages((prev) => {
           const updatedMessages = { ...prev };
           Object.keys(prev).forEach((user) => {
@@ -129,6 +145,69 @@ const Chat = ({ isChatOpen }) => {
   };
 
 
+  // useEffect(() => {
+  //   if (user) {
+  //     let roomId = (ownername + "$" + workspace);
+  //     const provider = initWebSocketConnection(user.username, roomId);
+  //     if (provider) {
+  //       console.log(provider);
+  //       websocket.current = provider;
+  //       // provider.ws.onopen = () => {
+  //       //   console.log("WebSocket connected!");
+  //       //   provider.ws.send(JSON.stringify({
+  //       //     "event": 'joinRoom',
+  //       //     "message": "Hii From Client " + user.username
+  //       //   }));
+  //       // };
+     
+        // provider.ws.onmessage = (event) => {
+        //   console.log(event, typeof event.data);
+
+        //   if (typeof event.data === 'string') {
+        //     const res = JSON.parse(event.data);
+        //     if (res.event === 'chat'){
+        //       console.log(res);
+        //       if(res.message.receiver === 'All'){
+        //         setMessages((prev) => ({
+        //           ...prev,
+        //           "All": prev["All"] ? [...prev["All"], res.message] : [res.message],
+        //         }));
+        //       }
+        //     }
+        //    }
+        // }
+  //     }
+
+
+  //   }
+  // }, [user])
+
+  useEffect(() => {
+    if (socket) {
+      socket.onmessage = (event) => {
+        console.log(event, typeof event.data);
+
+        if (typeof event.data === 'string') {
+          const res = JSON.parse(event.data);
+          if (res.event === 'chat') {
+            console.log(res);
+            if (res.message.receiver === 'All') {
+              setMessages((prev) => ({
+                ...prev,
+                "All": prev["All"] ? [...prev["All"], res.message] : [res.message],
+              }));
+            }else {
+            setMessages((prev) => ({
+              ...prev,
+              [res.message.receiver]: prev[res.message.receiver] ? [...prev[res.message.receiver], res.message] : [res.message],
+            }));
+          }
+          }
+        }
+      }
+    }
+  },[socket])
+
 
   return (
     
@@ -148,7 +227,7 @@ const Chat = ({ isChatOpen }) => {
               {isDropdownOpen && (
                 <div className="dropdown-menu">
                   {users.map((uinfo, idx) => (
-                    <div key={idx} className="dropdown-item" onClick={() => handleOptionClick(uinfo.email)}>
+                    <div key={idx} className="dropdown-item" onClick={() => handleOptionClick(uinfo.username)}>
                       {uinfo.username}
                     </div>
                   ))}
@@ -182,11 +261,12 @@ const Chat = ({ isChatOpen }) => {
 
         <div className="messages-container">
           {messages[selectedOption]?.map((message, index) => (
-            <div key={index} className={`message-wrapper ${message.isBot ? "received" : "sent"}`}>
+            <div key={index} className={`message-wrapper ${message.sender !== user.username ? "received" : "sent"}`}>
               <div className="avatar">
                 {message.isBot ? <FaRobot /> : <FaUser />}
               </div>
               <div className="message-content">
+                <div className="messageSender text-[12px] text-[#228afa] bg-[#262f45] p-1 rounded-md">{message.sender}</div>
                 <div className="messageBot">{message.text}</div>
                 <div className="message-timestamp">{message.timestamp}</div>
               </div>

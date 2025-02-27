@@ -3,6 +3,7 @@ import React, { createContext, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser } from '../Redux/editorSlice';
 import { WebsocketProvider } from 'y-websocket';
+import * as Y from 'yjs';
 
 // Create a Context for the user data
 const UserContext = createContext(null);
@@ -16,8 +17,9 @@ const UserProvider = ({ children }) => {
   const inputWant = useSelector(state => state.editor.inputWant);
   const isLoggedIn = useSelector(state => state.editor.user.isLoggedIn);
   const notifications = useSelector(state => state.editor.notifications);
-  const webSocketRef = useRef(null);
+  const webSocketRef = useRef(new Map());
   const yDocRef = useRef(null);
+
   const setUserLoginCredentials = (userInfo) => {
     console.log(user);
 
@@ -39,31 +41,36 @@ const UserProvider = ({ children }) => {
     }
   }
 
-  const initWebSocketConnection = (username, roodId) => {
-    if (webSocketRef.current) {
-      if (webSocketRef.current.wsId === roodId) {
-        return webSocketRef;
+  const initWebSocketConnection = (username, roomId) => {
+
+    if (!username || !roomId) {
+      console.log("Not Username or Room ID Valid");
+      return;
+    }
+    if (webSocketRef.current.size > 0) {
+      if (webSocketRef.current.has(roomId)) {
+        return webSocketRef.current.get(roomId);
       }
 
-      webSocketRef.current.websoc.destroy();
-      webSocketRef.current = null;
+      webSocketRef.current.get.destroy();
+      webSocketRef.current = new Map();
     }
 
-    const provider = makeProvider(username, roodId);
+    const provider = makeProvider(username, roomId);
+    console.log("In Initializing Provider");
 
-    webSocketRef.current = {
-      wsId: roodId,
-      websoc: provider,
-    }
+
+    webSocketRef.current.set(roomId, provider);
+    return provider;
   }
 
-  const makeProvider = (username, roodId) => {
-    console.log('Making provider for', username, roodId);
-    // yDocRef.c
+  const makeProvider = (username, roomId) => {
+    console.log('Making provider for', username, roomId);
+    yDocRef.current = new Y.Doc();
     return new WebsocketProvider(
-      `ws://localhost:3000?username=${username}&roodId=${roodId}&`,
-      roodId,
-      ""
+      `ws://localhost:3000?username=${username}&roomId=${roomId}&`,
+      roomId,
+      yDocRef.current
     );
   }
 

@@ -83,7 +83,7 @@ const App = () => {
       <Route path="/forgotPassword" Component={ForgotPassword} />
       <Route path="/resetPassword" Component={ResetPassword} />
       <Route path="/File" Component={FileExplorer} />
-      <Route path="/IDE/:workspace" Component={IDE} /> 
+      <Route path="/IDE/:ownername/:workspace" Component={IDE} /> 
        {/* <Route path="/IDE1" Component={CodeEditor} /> */}
       <Route path="/Google" Component={GoogleAuth} />
       <Route path="/Chat" element={<Term/>} />

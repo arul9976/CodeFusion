@@ -277,9 +277,12 @@ import { getFileIcon } from '../utils/GetIcon';
 import { UserContext } from '../LogInPage/UserProvider';
 import Profile from '../WorkSpace/Profile';
 import { useParams } from 'react-router-dom';
-import {  deleteFileOrFolder, pasteFileToPath } from '../utils/Fetch';
+import { deleteFileOrFolder, pasteFileToPath } from '../utils/Fetch';
 
 const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated, setIsFileCreated }) => {
+
+  const { ownername } = useParams();
+
   const { user } = useContext(UserContext);
   const [fileData, setFileData] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState({});
@@ -318,11 +321,11 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
       console.log(workspace);
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_RUNNER_URL}/list-all-files/${user.username}/${workspace}`);
+        const response = await fetch(`${import.meta.env.VITE_RUNNER_URL}/list-all-files/${ownername}/${workspace}`);
 
         if (response.status === 200) {
           const data = await response?.json();
-          setFileData(data[user.username]);
+          setFileData(data[ownername]);
         } else {
           setFileData([]);
         }
@@ -389,7 +392,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
     e.stopPropagation();
 
     if (type === 'folder')
-      item = `${user.username}/${workspace}${item}`
+      item = `${ownername}/${workspace}${item}`
     console.log("Path --> " + item);
 
     // Calculate position relative to the explorer container
@@ -1024,7 +1027,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
             fontWeight: "bold"
           }}
         >
-          {user.username.length > 9 ? user.username.substring(0, 9) + "..." : user.username}'s Files
+          {ownername.length > 9 ? ownername.substring(0, 9) + "..." : ownername}'s Files
         </motion.h1>
       </div>
 

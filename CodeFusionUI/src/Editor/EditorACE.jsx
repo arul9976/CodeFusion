@@ -36,8 +36,9 @@ const EditorACE = () => {
     code, setCurrentWorkSpace
   } = useContext(ClientContext);
 
-  const { user } = useContext(UserContext);
-  const { workspace } = useParams();
+
+  const { user, initWebSocketConnection } = useContext(UserContext);
+  const { ownername, workspace } = useParams();
 
   const workspaces = useSelector(state => state.editor.workspaces);
   const navigate = useNavigate();
@@ -118,7 +119,7 @@ const EditorACE = () => {
           })
       }
       else {
-        console.log(""+oldName?.oldName, oldName?.type);
+        console.log("" + oldName?.oldName, oldName?.type);
 
         setIsRename({
           oldName,
@@ -311,6 +312,29 @@ const EditorACE = () => {
   // }, [files]);
 
 
+  // useEffect(() => {
+  //   if (user) {
+  //     let roomId = (ownername + "$" + workspace);
+  //     const provider = initWebSocketConnection(user.username, roomId);
+  //     if (provider) {
+  //       console.log(provider);
+  //       provider.ws.onopen = () => {
+  //         console.log("WebSocket connected!");
+  //         provider.ws.send(JSON.stringify({
+  //           "event": 'joinRoom',
+  //           "message": "Hii From Client " + user.username
+  //         })); 
+  //       };
+  //       // provider.ws.send(JSON.stringify({
+  //       //   "event": 'joinRoom',
+  //       //   "message": "Hii From Client " + user.username
+  //       // }))
+  //     }
+
+
+  //   }
+  // }, [user])
+
 
   useEffect(() => {
     console.log(workspace);
@@ -320,6 +344,7 @@ const EditorACE = () => {
     } else {
       setCurrentWorkSpace(workspace);
     }
+
   }, [])
 
   return (

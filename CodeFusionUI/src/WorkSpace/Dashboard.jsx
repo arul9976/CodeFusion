@@ -66,7 +66,7 @@ const DashboardPage = () => {
         getWorkSpaces(user.email, "1").then((data) => {
           console.log(data);
 
-          if (data.length > 0) {
+          if (data && data.length > 0) {
             dispatchUser(setWorkspaces(data))
             console.log("Workspaces updated");
 
@@ -95,7 +95,7 @@ const DashboardPage = () => {
         });
         break;
       case 2:
-        getWorkSpaces(user.email, "0").then((data) => {
+        getWorkSpaces(user.email, "1").then((data) => {
           console.log(data);
 
           if (data.length > 0) {
@@ -260,7 +260,7 @@ const WorkspaceRow = ({ data, getRandomColor, getInitials, idx, showMenu, setSho
 
   const GoToIDE = () => {
     console.log("Ide running");
-    navigate(`/IDE/${data.workspaceName}`);
+    navigate(`/IDE/${data.ownerName}/${data.workspaceName}`);
   }
 
   const handleRename = () => {

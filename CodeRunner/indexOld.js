@@ -61,7 +61,6 @@ const bodyParser = require('body-parser');
 const { spawn } = require('child_process');
 const { setupWSConnection } = require('y-websocket/bin/utils');
 
-const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 const server = http.createServer(app);
@@ -809,38 +808,25 @@ const processes = new Map();
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const username = url.searchParams.get('username');
-  const roomId = url.searchParams.get('roomId');
+  const wsName = url.searchParams.get('wsName');
+  const filePath = url.searchParams.get('filePath');
 
-  if (!username || !roomId) {
-    ws.send(JSON.stringify({ event: "Connection Error", error: 'Missing username or file path' }));
+  if (!username || !filePath) {
+    ws.send(JSON.stringify({ error: 'Missing username or file path' }));
     ws.close();
     return;
   }
 
-  ws.id = uuidv4();
-
-  console.log("ID ------> ", ws.id);
-
-  if (username) {
-    ws.username = username;
-  }
-  console.log("--> Room " + username + "\nID" + roomId);
+  console.log("| " + username, filePath);
   // const awareness = new Aware
-  if (!clientRooms.has(roomId)) {
-    console.log("Room Added");
+  clientRooms.set(ws, filePath);
 
-    clientRooms.set(roomId, new Set());
-  }
-  clientRooms.get(roomId).add(ws);
-
-  console.log("Client Room Created ");
-
-
-  // const doc = getOrUpdateYtext(filePath);
+  const doc = getOrUpdateYtext(filePath);
 
   const currUser = {
     username: username,
-    roomId: roomId
+    filePath: filePath,
+    wsName: wsName
   };
 
   connectedUsers.add(currUser);
@@ -851,10 +837,9 @@ wss.on('connection', (ws, req) => {
 
   // console.log(doc);
 
-  // console.log("Text -> " + doc.getText(filePath).toString());
+  console.log("Text -> " + doc.getText(filePath).toString());
 
   const userList = Array.from(connectedUsers);
-  console.log(userList, clientRooms.get(roomId).size);
 
   const message = {
     type: 'users',
@@ -877,33 +862,6 @@ wss.on('connection', (ws, req) => {
       switch (data.event) {
 
         case 'chat':
-          console.log("Message From Client ", data.message);
-          const { message } = data;
-          clientRooms.get(message.roomId).forEach(client => {
-            console.log(message.receiver);
-            if (message.receiver === 'All' && (message.sender !== client.username) && client.readyState === WebSocket.OPEN) {
-              console.log("Message send to all clients ", client.username, client.id);
-
-              client.send(JSON.stringify({
-                event: 'chat',
-                message: message
-              }));
-            } else {
-              console.log(client.username , message.receiver);
-              if (message.receiver == client.username && client.readyState === WebSocket.OPEN) {
-                console.log("Message send to all clients ", client.username, client.id);
-
-                client.send(JSON.stringify({
-                  event: 'chat',
-                  message: message
-                }));
-              }
-            }
-          })
-          break;
-
-        case 'joinRoom':
-          console.log("<<<<<<---> ", data.message);
 
           break;
 
@@ -985,7 +943,6 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', () => {
     connectedUsers.delete(currUser);
-    clientRooms.get(roomId).delete(ws);
     const disconnectMessage = {
       type: 'users',
       users: Array.from(connectedUsers),

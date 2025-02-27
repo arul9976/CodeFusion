@@ -113,7 +113,7 @@ public class WorkspaceDAO {
     public static JSONArray getWorkspaces(String email, String isRecent) {
         JSONArray jsonArray = new JSONArray();
         try (Connection conn = DataBaseUtil.getConnection()) {
-            CallableStatement getWorkspaceStmt = conn.prepareCall(isRecent.equals("1") ? "CALL getRecentWorkspaces(?);" : "CALL getWorkspaces(?);");
+            CallableStatement getWorkspaceStmt = conn.prepareCall(isRecent.equals("1") ? "CALL getAllWorkspaces(?);" : "CALL getWorkspaces(?);");
             getWorkspaceStmt.setString(1, email);
 
             boolean isWorkspacesHas = getWorkspaceStmt.execute();
@@ -127,11 +127,13 @@ public class WorkspaceDAO {
 
             while (resultJSON.next()) {
                 JSONObject jsonUser = new JSONObject();
+                System.out.println("Lets get the ws Data");
                 jsonUser.put("workspaceName", resultJSON.getString("wName"));
                 jsonUser.put("lastAccess", resultJSON.getString("lastAccess"));
                 jsonUser.put("isActive", resultJSON.getBoolean("isActive"));
                 jsonUser.put("techStack", resultJSON.getString("techStack"));
                 jsonUser.put("ownerName", resultJSON.getString("username"));
+                System.out.println(jsonUser);
                 jsonArray.put(jsonUser);
             }
         } catch (Exception e) {

@@ -162,6 +162,7 @@ const ClientProvider = ({ children }) => {
   const { user } = useContext(UserContext);
   const dispatch = useDispatch();
   const userRef = useRef(0);
+
   const currentTheme = useSelector(state => state.editor.currentTheme);
   const language = useSelector(state => state.editor.language);
   const code = useSelector(state => state.editor.code);

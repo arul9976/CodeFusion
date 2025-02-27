@@ -21,7 +21,7 @@ public class GetWorkspaces extends HttpServlet {
 
         String userEmail = req.getParameter("email");
         String isRecent = req.getParameter("recent");
-        System.out.println("--> " + userEmail);
+        System.out.println("------> " + userEmail);
         JSONArray jsonArrayRes = WorkspaceDAO.getWorkspaces(userEmail, isRecent);
         JSONObject jsonObject = new JSONObject();
         if (jsonArrayRes != null) {
