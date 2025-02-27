@@ -33,7 +33,7 @@ import NewFile from './NewFile';
 const MenuBar = ({
   handleFileOpen, getOutput, setShowTerminal,
   handleFileMenuOpen, isFileMenuOpen, isFileOpen,
-  handleFolderOpen
+  handleFolderOpen, setIsHelpOpen
 
 }) => {
 
@@ -399,18 +399,18 @@ const MenuBar = ({
     // { icon: <Eye size={16} />, label: 'View' },
     // { icon: <FolderOpen size={16} />, label: 'Project' },
     { icon: <Terminal size={16} />, label: 'Terminal' },
-    { icon: <HelpCircle size={16} />, label: 'Help' },
+    // { icon: <HelpCircle size={16} />, label: 'Help' },
   ];
 
   const actionButtons = [
-    { icon: isSaving ? <RefreshCw size={16} style={styles.savingIcon} /> : <Save size={16} />, tooltip: 'Save', onClick: simulateSave },
+    // { icon: isSaving ? <RefreshCw size={16} style={styles.savingIcon} /> : <Save size={16} />, tooltip: 'Save', onClick: simulateSave },
     { icon: <Play size={16} />, tooltip: 'Run' },
     { icon: <MdSpaceDashboard onClick={() => window.open('/CodeFusion/Dashboard', '_blank')} />, tooltip: 'Dashboard' },
     // { icon: <Download size={16} />, tooltip: 'Download' },
     // { icon: <GitHub size={16} />, tooltip: 'Repository' },
     // { icon: <Share2 size={16} />, tooltip: 'Share' Dashboard},
-    { icon: <Settings size={16} />, tooltip: 'Settings' },
-    { icon: currentTheme === 'dark' ? <Moon size={16} /> : <Sun size={16} />, tooltip: 'Toggle theme', onClick: toggleTheme },
+    // { icon: <Settings size={16} />, tooltip: 'Settings' },
+    // { icon: currentTheme === 'dark' ? <Moon size={16} /> : <Sun size={16} />, tooltip: 'Toggle theme', onClick: toggleTheme },
   ];
 
   const handleModifyCollab = () => {
@@ -490,7 +490,7 @@ const MenuBar = ({
             }}
             onMouseEnter={() => setActiveItem(index)}
             onMouseLeave={() => setActiveItem(null)}
-            onClick={index === 0 ? handleFileMenuOpen : index === 1 ? () => setShowTerminal((prev) => !prev) : null}
+            onClick={index === 0 ? handleFileMenuOpen : index === 1 ? () => setShowTerminal((prev) => !prev) : index === 2 ? () => setIsHelpOpen(prev => !prev) : null}
           >
             <div style={{ marginRight: '8px', opacity: activeItem === index ? 1 : 0.7 }}>
               {item.icon}

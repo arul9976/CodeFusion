@@ -54,7 +54,7 @@ const WebSocket = require('ws');
 const cors = require('cors');
 const Y = require('yjs');
 const { WebsocketProvider } = require('y-websocket');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const multer = require('multer');
 const bodyParser = require('body-parser');
@@ -687,6 +687,77 @@ app.post("/rename", (req, res) => {
   }
 })
 
+const pasteFolder = (sPath, dPath, type) => {
+  try {
+    const sourcePath = path.resolve(sPath);
+    const destPath = path.resolve(dPath);
+
+    console.log("-> " + sourcePath + "\n-> " + destPath);
+
+    if (!fs.existsSync(sourcePath)) {
+      throw new Error('Source folder does not exist');
+    }
+
+    if (!fs.existsSync(destPath)) {
+      fs.mkdirSync(destPath, { recursive: true });
+    }
+
+    fs.copySync(sourcePath, destPath, { recursive: true });
+
+    if (type === 'cut') {
+      fs.unlinkSync(sourcePath);
+    }
+    return {
+      success: true,
+      message: 'Folder copied successfully'
+    };
+
+  }
+  catch (error) {
+    return {
+      success: false,
+      message: `Error: ${error.message}`
+    };
+  }
+}
+
+function copyDirSync(sourcePath, destPath, type) {
+  try {
+
+    if (!fs.existsSync(destPath)) {
+      fs.mkdirSync(destPath, { recursive: true });
+    }
+
+    const items = fs.readdirSync(sourcePath, { withFileTypes: true });
+
+    for (const item of items) {
+      const srcPath = path.join(sourcePath, item.name);
+      const dstPath = path.join(destPath, item.name);
+
+      if (item.isDirectory()) {
+        copyDirSync(srcPath, dstPath);
+      } else {
+        fs.copyFileSync(srcPath, dstPath);
+      }
+    }
+    if (type === 'cut') {
+      fs.rmSync(sourcePath, { recursive: true, force: true })
+    }
+
+    return {
+      success: true,
+      message: 'Folder copied successfully'
+    };
+
+  }
+  catch (error) {
+    return {
+      success: false,
+      message: `Error: ${error.message}`
+    };
+  }
+}
+
 function pasteToFolder(pathToCopy, fileToCopy, type) {
   try {
     const sourcePath = path.resolve(fileToCopy);
@@ -703,7 +774,7 @@ function pasteToFolder(pathToCopy, fileToCopy, type) {
       fs.mkdirSync(destDir, { recursive: true });
     }
 
-    fs.copyFileSync(sourcePath, destPath);
+    fs.copyFileSync(sourcePath, destPath, { overwrite: true });
 
     if (type.toLowerCase() === 'cut') {
       fs.unlinkSync(sourcePath);
@@ -722,15 +793,23 @@ function pasteToFolder(pathToCopy, fileToCopy, type) {
 }
 
 app.post('/pasteFile', (req, res) => {
-  const { pastePath, file, type } = req.body;
+  const { pastePath, file, type, fileType } = req.body;
   const pasteToPath = path.join(__dirname, 'codefusion', pastePath);
   const fromPath = path.join(__dirname, file);
 
-  console.log(pasteToPath + "\n" + fromPath + "\n" + type);
+  console.log(pasteToPath + "\n" + fromPath + "\n" + type + "\n" + fileType);
 
-  const result = pasteToFolder(pasteToPath, fromPath, type);
-  res.json(result);
-
+  switch (fileType) {
+    case 'file':
+      res.json(pasteToFolder(pasteToPath, fromPath, type));
+      break;
+    case 'folder':
+      // let src = pasteToPath.split('/');
+      let dest = pasteToPath + '/' + file.split('/').pop();
+      res.json(copyDirSync(fromPath, dest, type));
+      break;
+    default:
+  }
 
 });
 
@@ -809,7 +888,9 @@ const processes = new Map();
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const username = url.searchParams.get('username');
-  const roomId = url.searchParams.get('roomId');
+  let roomId = url.searchParams.get('roomId') || url.searchParams.get('filePath');
+
+  console.log("ROOM ID: " + roomId);
 
   if (!username || !roomId) {
     ws.send(JSON.stringify({ event: "Connection Error", error: 'Missing username or file path' }));
@@ -889,7 +970,7 @@ wss.on('connection', (ws, req) => {
                 message: message
               }));
             } else {
-              console.log(client.username , message.receiver);
+              console.log(client.username, message.receiver);
               if (message.receiver == client.username && client.readyState === WebSocket.OPEN) {
                 console.log("Message send to all clients ", client.username, client.id);
 
@@ -908,13 +989,13 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'compile':
-          const { language, code } = data;
+          const { language, code, fpath } = data;
 
           if (!language || !code) {
             return;
           }
 
-          console.log("Code : " + code + "\nLanguage : " + language);
+          console.log("Code : " + code + "\nLanguage : " + language + "\nFpath : " + fpath);
 
           let command = '';
           let args = [];
@@ -933,10 +1014,10 @@ wss.on('connection', (ws, req) => {
               process = spawn(command, args);
               break;
             case 'java':
-              tempFileName = filePath.split('/').at(-1).split('.')[0];
+              tempFileName = fpath.split('/').at(-1).split('.')[0];
               console.log("File Name : " + tempFileName);
 
-              let fileNameWithPath = "." + filePath;
+              let fileNameWithPath = "." + fpath;
               fs.writeFileSync(fileNameWithPath, code);
               command = 'javac';
               args = [fileNameWithPath];
@@ -964,12 +1045,12 @@ wss.on('connection', (ws, req) => {
               process = spawn(command, args);
               break;
             default:
-              sendToRoom(wss, filePath, { event: 'codeResult', data: 'Unsupported language' });
+              sendToRoom(wss, roomId, { event: 'codeResult', data: 'Unsupported language' });
               return;
           }
 
           processes.set(ws, process);
-          processHeader(ws, process, language, tempFileName, filePath);
+          processHeader(ws, process, language, tempFileName, roomId, fpath);
           break;
       }
     }
@@ -1004,7 +1085,7 @@ wss.on('connection', (ws, req) => {
 
 
 
-const processHeader = (ws, pss, lang, fn, roomId) => {
+const processHeader = (ws, pss, lang, fn, roomId, filePath) => {
   let output = '';
   let errorOutput = '';
 
@@ -1055,8 +1136,8 @@ const processHeader = (ws, pss, lang, fn, roomId) => {
       // }, 500);
 
       if (fn) {
-        console.log(fn + " --- " + roomId.split('/').filter((v, i, a) => i !== a.length - 1).join('/')) + '/';
-        let newpath = roomId.split('/').filter((v, i, a) => i !== a.length - 1).join('/') + '/';
+        console.log(fn + " --- " + filePath.split('/').filter((v, i, a) => i !== a.length - 1).join('/')) + '/';
+        let newpath = filePath.split('/').filter((v, i, a) => i !== a.length - 1).join('/') + '/';
 
         pss = spawn('java', [fn], { cwd: ('.' + newpath) });
         processes.set(ws, pss);
@@ -1084,14 +1165,22 @@ function sendToRoom(wss, roomId, message) {
   const msg = JSON.stringify(message);
   console.log("Send Msg :" + msg);
 
-  wss.clients.forEach((client) => {
-    const clientRoom = clientRooms.get(client);
-    console.log("CR --> " + clientRoom, roomId);
+  console.log("CR --> " + msg, roomId);
 
-    if (clientRoom === roomId && client.readyState === WebSocket.OPEN) {
+  clientRooms.get(roomId).forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
       client.send(msg);
     }
-  });
+  })
+
+  // wss.clients.forEach((client) => {
+  //   const clientRoom = clientRooms.get(client);
+  // console.log("CR --> " + clientRoom, roomId);
+
+  //   if (clientRoom === roomId && client.readyState === WebSocket.OPEN) {
+  //     client.send(msg);
+  //   }
+  // });
 }
 
 

@@ -29,7 +29,7 @@ public class CORSFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
-        resp.setHeader("Access-Control-Allow-Origin", "http://localhost:3001");
+        resp.setHeader("Access-Control-Allow-Origin", "http://172.17.22.225:3001");
 //        resp.setHeader("Access-Control-Allow-Origin", "http://172.17.22.225:3001");
         resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");

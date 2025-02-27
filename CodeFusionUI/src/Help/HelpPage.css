@@ -1,0 +1,195 @@
+.help-container {
+  width: 450px;
+  height: 500px;
+  background-color: #1B2434;
+  background-image: url('/api/placeholder/450/500');
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: overlay;
+  border-radius: 10px;
+  border: 1px solid #151B24;
+  position: absolute;
+  top: 200px;
+  left: 650px;
+  color: #fff;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.help-header {
+  padding: 15px 20px;
+  background-color: rgba(27, 36, 52, 0.9);
+  border-bottom: 1px solid #2A3649;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.help-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #8A94A6;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+}
+
+.close-button:hover {
+  color: #fff;
+}
+
+.help-tabs {
+  display: flex;
+  background-color: rgba(23, 30, 44, 0.8);
+  border-bottom: 1px solid #2A3649;
+}
+
+.help-tabs button {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #8A94A6;
+  padding: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.help-tabs button:hover {
+  background-color: rgba(42, 54, 73, 0.5);
+}
+
+.help-tabs button.active {
+  color: #fff;
+  background-color: rgba(42, 54, 73, 0.8);
+  border-bottom: 2px solid #4B8BF5;
+}
+
+.help-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.shortcuts-section,
+.interface-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: rgba(27, 36, 52, 0.7);
+  border-radius: 6px;
+  border-left: 3px solid #4B8BF5;
+  transition: transform 0.2s;
+}
+
+.shortcut-item:hover {
+  transform: translateX(5px);
+  background-color: rgba(42, 54, 73, 0.7);
+}
+
+.shortcut-key {
+  min-width: 100px;
+  font-family: monospace;
+}
+
+kbd {
+  background-color: #2A3649;
+  border-radius: 3px;
+  border: 1px solid #3A465A;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  padding: 2px 5px;
+}
+
+.shortcut-desc {
+  font-size: 14px;
+  color: #B8C4D8;
+}
+
+.interface-item {
+  display: flex;
+  gap: 15px;
+  padding: 12px;
+  background-color: rgba(27, 36, 52, 0.7);
+  border-radius: 6px;
+  transition: transform 0.2s;
+}
+
+.interface-item:hover {
+  transform: translateX(5px);
+  background-color: rgba(42, 54, 73, 0.7);
+}
+
+.interface-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #4B8BF5;
+  min-width: 40px;
+}
+
+.interface-desc h4 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.interface-desc p {
+  margin: 0;
+  font-size: 13px;
+  color: #B8C4D8;
+  line-height: 1.4;
+}
+
+.help-footer {
+  padding: 12px 20px;
+  background-color: rgba(23, 30, 44, 0.8);
+  border-top: 1px solid #2A3649;
+  text-align: center;
+  font-size: 13px;
+}
+
+.help-footer a {
+  color: #4B8BF5;
+  text-decoration: none;
+}
+
+.help-footer a:hover {
+  text-decoration: underline;
+}

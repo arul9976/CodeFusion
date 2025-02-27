@@ -30,7 +30,7 @@ const MonacoIDE = ({ activeFile }) => {
 
     editorsRef.current.get(file.id);
 
-    const provider = initAndGetProvider(file.url);
+    // const provider = initAndGetProvider(file.url);
 
     console.log("Commit");
     const model = editorRef.current.getModel();

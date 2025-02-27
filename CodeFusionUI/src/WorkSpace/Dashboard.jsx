@@ -64,22 +64,39 @@ const DashboardPage = () => {
     switch (activeTab) {
       case 0:
         getWorkSpaces(user.email, "1").then((data) => {
-          console.log(data);
-
           if (data && data.length > 0) {
             dispatchUser(setWorkspaces(data))
-            console.log("Workspaces updated");
+            console.log("Workspaces updated 1");
 
             console.log(workspaces);
+            getWorkSpaces(user.email, "0").then((data) => {
+              if (data.length > 0) {
+                dispatchUser(setWorkspaces([...workspaces, ...data]))
+                console.log("Workspaces updated 2");
+                console.log(workspaces);
+              }
 
+            });
           }
           else {
+            dispatchUser(setWorkspaces([]));
             console.log("No workspaces found");
+            getWorkSpaces(user.email, "0").then((data) => {
+              if (data.length > 0) {
+                dispatchUser(setWorkspaces([...workspaces, ...data]))
+                console.log("Workspaces updated 2");
+                console.log(workspaces);
+              }
+
+            });
           }
         });
+
+
+
         break;
       case 1:
-        getWorkSpaces(user.email, "0").then((data) => {
+        getWorkSpaces(user.email, "1").then((data) => {
           console.log(data);
 
           if (data.length > 0) {
@@ -90,12 +107,13 @@ const DashboardPage = () => {
 
           }
           else {
+            dispatchUser(setWorkspaces([]));
             console.log("No workspaces found");
           }
         });
         break;
       case 2:
-        getWorkSpaces(user.email, "1").then((data) => {
+        getWorkSpaces(user.email, "0").then((data) => {
           console.log(data);
 
           if (data.length > 0) {
@@ -106,6 +124,7 @@ const DashboardPage = () => {
 
           }
           else {
+            dispatchUser(setWorkspaces([]));
             console.log("No workspaces found");
           }
         });
@@ -130,7 +149,7 @@ const DashboardPage = () => {
           { text: 'Recent Workspaces', icon: Home },
           { text: 'My Workspaces', icon: Folder },
           { text: 'Shared with me', icon: Share2 },
-          { text: 'Chat', icon: MessageSquare }
+          // { text: 'Chat', icon: MessageSquare }
         ].map((item, index) => (
           <button
             key={index}
@@ -311,7 +330,7 @@ const WorkspaceRow = ({ data, getRandomColor, getInitials, idx, showMenu, setSho
           />
           {showMenu === idx && (
             <div className="menu">
-              <div className="menuItem">Share Access</div>
+              {/* <div className="menuItem">Share Access</div> */}
               <div className="menuItem" onClick={handleRename}>Rename</div>
               <div className="menuItem delete" onClick={handleDelete}>Delete</div>
             </div>

@@ -18,7 +18,7 @@ export const WebSocketProvider = ({ children, roomId }) => {
       return;
 
     }
-    const ws = new WebSocket(`ws://localhost:3000?username=${user.username}&roomId=${roomId}`);
+    const ws = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_URL}?username=${user.username}&roomId=${roomId}`);
 
     ws.onopen = () => {
       console.log(`Connected to Global WebSocket for room ${roomId} as ${user.username}`);

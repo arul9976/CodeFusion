@@ -199,9 +199,9 @@ function LoginRegister() {
         return () => { clearInterval(interval); window.removeEventListener("click", handleErrorRemove); }
     }, []);
 
-    const handleGitHubLogin = () => {
-        window.location.href = 'http://localhost:8080/CodeFusionUI/auth/github';
-    };
+    // const handleGitHubLogin = () => {
+    //     window.location.href = 'http://localhost:8080/CodeFusionUI/auth/github';
+    // };
 
     // useEffect(() => {
     //     if (localStorage.getItem('token')) {
@@ -237,9 +237,9 @@ function LoginRegister() {
                             <p className="social-title">Or sign up with</p>
                             <div className="social-buttons">
                                 <GoogleAuth />
-                                <button type="button" className="social-button github-btn" onClick={handleGitHubLogin}>
+                                {/* <button type="button" className="social-button github-btn" onClick={handleGitHubLogin}>
                                     <FaGithub />
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     </form>
@@ -275,9 +275,9 @@ function LoginRegister() {
                             <p className="social-title">Or log in with</p>
                             <div className="social-buttons">
                                 <GoogleAuth />
-                                <button type="button" className="social-button github-btn" onClick={handleGitHubLogin}>
+                                {/* <button type="button" className="social-button github-btn" onClick={handleGitHubLogin}>
                                     <FaGithub />
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     </form>

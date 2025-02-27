@@ -183,6 +183,7 @@ const ClientProvider = ({ children }) => {
 
   const initAndGetProvider = (path) => {
     console.log(providersRef.current);
+    console.log("Initializing PRovider YDOC");
 
     if (!path) {
       console.error('No file path provided');

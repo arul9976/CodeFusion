@@ -51,7 +51,7 @@ const GoogleAuth = () => {
 
   useEffect(() => {
     const rescheck = async () => {
-      const res = await axios.post('http://localhost:8080/CodeFusion_war/', {}).then((res) => {
+      const res = await axios.post(import.meta.env.VITE_SERVLET_URL, {}).then((res) => {
         console.log(res.status);
       }).catch((error) => {
         console.error(error);

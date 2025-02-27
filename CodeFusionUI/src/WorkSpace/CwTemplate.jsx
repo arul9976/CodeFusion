@@ -34,10 +34,10 @@ const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
       { name: 'CPP', icon: <SiCplusplus /> },
       { name: 'Go', icon: <SiGo /> }
     ],
-    frameworks: [
-      { name: 'React', icon: <FaReact /> },
-      { name: 'Tomcat Servlet', icon: <SiApachetomcat /> }
-    ]
+    // frameworks: [
+    //   { name: 'React', icon: <FaReact /> },
+    //   { name: 'Tomcat Servlet', icon: <SiApachetomcat /> }
+    // ]
   };
 
   const handleSubmit = async (e) => {
@@ -159,7 +159,7 @@ const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
                 ))}
               </div>
 
-              <h3 className="section-title">
+              {/* <h3 className="section-title">
                 <FaServer /> Frameworks
               </h3>
               <div className="tech-grid">
@@ -174,7 +174,7 @@ const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
                     <div className="shimmer"></div>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             <button

@@ -14,7 +14,7 @@ const Chat = ({ isChatOpen }) => {
   const { socket } = useWebSocket();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("Users");
+  const [selectedOption, setSelectedOption] = useState("All");
   const [isBotActive, setIsBotActive] = useState(false); 
   const [messages, setMessages] = useState({
     "Bot": [
@@ -43,17 +43,17 @@ const Chat = ({ isChatOpen }) => {
   }, [messages]);
 
   useEffect(() => {
-    if (isChatOpen) {
-      fetchCollaborators(workspace, ownername+"@gmail.com")
-        .then(data => {
-          console.log(data);
+    // if (isChatOpen) {
+    //   fetchCollaborators(workspace, ownername+"@gmail.com")
+    //     .then(data => {
+    //       console.log(data);
 
-          setUsers([{username:ownername}, ...data.filter(u => u.username !== user.username)]);
-        })
-        .catch((err) => {
-          console.log("Error fetching contributors " + err.message);
-        })
-    }
+    //       setUsers([{username:ownername}, ...data.filter(u => u.username !== user.username)]);
+    //     })
+    //     .catch((err) => {
+    //       console.log("Error fetching contributors " + err.message);
+    //     })
+    // }
     // const fetchedUsers = ["Manimekala", "Pravin", "ArulKumar"]; 
     // setUsers(fetchedUsers);
   }, [isChatOpen]);
@@ -115,7 +115,7 @@ const Chat = ({ isChatOpen }) => {
           return updatedMessages;
         });
       } else {
-     
+       
         setMessages((prev) => ({
           ...prev,
           [selectedOption]: prev[selectedOption] ? [...prev[selectedOption], userMessage] : [userMessage],
@@ -192,15 +192,23 @@ const Chat = ({ isChatOpen }) => {
           if (res.event === 'chat') {
             console.log(res);
             if (res.message.receiver === 'All') {
+              console.log("Last  "+messages.All);
+
+              if (messages.All.at(-1) && messages.All.at(-1)?.timestamp === res.message.timestamp) {
+                return;
+              }
               setMessages((prev) => ({
                 ...prev,
                 "All": prev["All"] ? [...prev["All"], res.message] : [res.message],
               }));
-            }else {
-            setMessages((prev) => ({
-              ...prev,
-              [res.message.receiver]: prev[res.message.receiver] ? [...prev[res.message.receiver], res.message] : [res.message],
-            }));
+            }else {              
+              if (messages[res.message.receiver].at(-1) && messages[res.message.receiver].at(-1)?.timestamp === res.message.timestamp) {
+                return;
+              }
+              setMessages((prev) => ({
+                ...prev,
+                [res.message.receiver]: prev[res.message.receiver] ? [...prev[res.message.receiver], res.message] : [res.message],
+              }));
           }
           }
         }
@@ -267,8 +275,8 @@ const Chat = ({ isChatOpen }) => {
               </div>
               <div className="message-content">
                 <div className="messageSender text-[12px] text-[#228afa] bg-[#262f45] p-1 rounded-md">{message.sender}</div>
-                <div className="messageBot">{message.text}</div>
-                <div className="message-timestamp">{message.timestamp}</div>
+                <p className="messageBot">{message.text}</p>
+                <p className="message-timestamp">{message.timestamp}</p>
               </div>
             </div>
           ))}

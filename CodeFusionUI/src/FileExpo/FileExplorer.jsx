@@ -278,6 +278,7 @@ import { UserContext } from '../LogInPage/UserProvider';
 import Profile from '../WorkSpace/Profile';
 import { useParams } from 'react-router-dom';
 import { deleteFileOrFolder, pasteFileToPath } from '../utils/Fetch';
+import { MdPreview } from 'react-icons/md';
 
 const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated, setIsFileCreated }) => {
 
@@ -300,7 +301,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
     if (copy?.url) {
       console.log("Paste", pathToCopy);
 
-      pasteFileToPath({ pastePath: pathToCopy, file: copy.url, type: copy.type })
+      pasteFileToPath({ pastePath: pathToCopy, file: copy.url, type: copy.type, fileType: copy.fileType })
         .then(res => {
           console.log(res);
           setIsFileCreated(prev => !prev);
@@ -337,7 +338,6 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
   }, [user, isExplorerOpen, isFileCreated]);
 
   const toggleFolder = (folderPath, e) => {
-    // Prevent toggling when clicking the context menu icon
     if (e && e.target.closest('.context-menu-trigger')) {
       return;
     }
@@ -355,21 +355,18 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
   }, [isExplorerOpen]);
 
   useEffect(() => {
-    // Close context menu when clicking outside
     const handleClickOutside = (event) => {
       if (contextMenu.visible && menuRef.current && !menuRef.current.contains(event.target)) {
         closeContextMenu();
       }
     };
 
-    // Handle scroll to close context menu
     const handleScroll = () => {
       if (contextMenu.visible) {
         closeContextMenu();
       }
     };
 
-    // Handle escape key
     const handleKeyDown = (event) => {
       if (event.key === 'Escape' && contextMenu.visible) {
         closeContextMenu();
@@ -395,12 +392,10 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
       item = `${ownername}/${workspace}${item}`
     console.log("Path --> " + item);
 
-    // Calculate position relative to the explorer container
     const explorerRect = explorerRef.current.getBoundingClientRect();
     const x = e.clientX - explorerRect.left;
     const y = e.clientY - explorerRect.top;
 
-    // Close existing menu with animation before opening new one
     if (contextMenu.visible) {
       closeContextMenu();
       setTimeout(() => {
@@ -428,20 +423,25 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
   };
 
   const handleContextMenuAction = (action) => {
-    // Set active action for animation
     setActiveAction(action);
 
-    // Simulate action processing
     setTimeout(() => {
       console.log(`${action} action triggered for ${contextMenu.item + ""}:`,
         contextMenu.type === 'file' ? contextMenu.item?.file : Object.keys(contextMenu.item)[0]);
 
-      // You would implement the actual functionality here
       switch (action) {
+        case 'preview':
+          window.open(import.meta.env.VITE_RUNNER_URL + contextMenu.item.url, '_blank')
+          break;
         case 'copy':
+          const furl = contextMenu.item?.url ? contextMenu.item.url : '/codefusion/' + contextMenu.item;
+          console.log("Foder Url " + furl);
+
           setCopy({
             type: 'copy',
-            url: contextMenu.item?.url
+            url: furl,
+            fileType: contextMenu.item?.url ? 'file' : 'folder'
+
           });
           break;
         case 'delete':
@@ -467,32 +467,29 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
 
           break;
         case 'cut':
+          const curl = contextMenu.item?.url ? contextMenu.item.url : '/codefusion/' + contextMenu.item;
+          console.log("Foder Url " + curl);
+
           setCopy({
             type: 'cut',
-            url: contextMenu.item?.url
+            url: curl,
+            fileType: contextMenu.item?.url ? 'file' : 'folder'
           });
           break;
         case 'paste':
           console.log(contextMenu.item);
           handlePaste(contextMenu.item);
           break;
-        case 'newFile':
-          // New file logic
-          break;
-        case 'newFolder':
-          // New folder logic
-          break;
+
         default:
           break;
       }
 
-      // Reset active action and close menu
       setActiveAction(null);
       closeContextMenu();
     }, 500);
   };
 
-  // Animation variants for menu items
   const menuItemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: i => ({
@@ -510,10 +507,8 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
   const renderContextMenu = () => {
     if (!contextMenu.visible) return null;
 
-    // Different menu items based on whether it's a file or folder
     let menuItems = [];
 
-    // Common actions for both files and folders
     const commonActions = [
       { icon: <Copy size={16} />, label: 'Copy', action: 'copy' },
       { icon: <Edit2 size={16} />, label: 'Rename', action: 'rename' },
@@ -522,17 +517,25 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
     ];
 
     if (contextMenu.type === 'file') {
-      menuItems = [...commonActions];
+      menuItems = [
+        ...commonActions
+      ];
+      if (contextMenu.item.file.split('.')[1] === 'html') {
+
+        menuItems = [
+          {
+            icon: <MdPreview size={16} />, label: 'Preview', action: 'preview'
+          },
+          ...commonActions,
+        ];
+      }
     } else if (contextMenu.type === 'folder') {
       menuItems = [
         ...commonActions,
-        { icon: <FolderPlus size={16} />, label: 'New Folder', action: 'newFolder' },
-        { icon: <Clipboard size={16} />, label: 'New File', action: 'newFile' },
         { icon: <Clipboard size={16} />, label: 'Paste', action: 'paste' },
       ];
     }
 
-    // Ensure menu stays within bounds
     const maxWidth = explorerRef.current?.clientWidth || 400;
     const maxHeight = explorerRef.current?.clientHeight || 600;
     const menuWidth = 220;
@@ -549,7 +552,6 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
       yPos = maxHeight - menuHeight - 10;
     }
 
-    // Get item name based on type
     const itemName = contextMenu.type === 'file'
       ? contextMenu.item?.file
       : contextMenu.item?.split("/").at(-1);
@@ -678,7 +680,6 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
               </span>
               {item.label}
 
-              {/* Ripple effect */}
               {activeAction === item.action && (
                 <motion.div
                   initial={{ scale: 0, opacity: 0.8 }}
@@ -704,7 +705,6 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
     );
   };
 
-  // File item hover effect
   const fileItemVariants = {
     hover: {
       backgroundColor: '#2D3748',
@@ -714,7 +714,6 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
     tap: { scale: 0.98 }
   };
 
-  // File icon animation
   const fileIconVariants = {
     initial: { scale: 0, rotate: -20 },
     animate: { scale: 1, rotate: 0, transition: { type: "spring", stiffness: 400 } }
@@ -777,7 +776,6 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
                   </motion.div>
                   <span style={{ flex: 1 }}>{fileOrFolder.file}</span>
 
-                  {/* Context menu indicator */}
                   <motion.div
                     initial={{ opacity: 0 }}
                     whileHover={{ opacity: 1 }}
@@ -792,7 +790,6 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
                   </motion.div>
                 </div>
 
-                {/* Selection indicator */}
                 {contextMenu.type === 'file' && contextMenu.item?.id === fileOrFolder.id && (
                   <motion.div
                     layoutId="activeItemIndicator"
@@ -873,7 +870,6 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
                   </motion.div>
                   <span style={{ flex: 1 }}>{folderName}</span>
 
-                  {/* Folder context menu trigger */}
                   <motion.div
                     initial={{ opacity: 0 }}
                     whileHover={{ opacity: 1 }}
@@ -888,7 +884,6 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
                   </motion.div>
                 </motion.div>
 
-                {/* Selection indicator for folders */}
                 {isActive && (
                   <motion.div
                     layoutId="activeItemIndicator"

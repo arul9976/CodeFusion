@@ -9,19 +9,21 @@ const FileMenu = ({
 
 
   const menuItems = [
-    { icon: <FileText size={16} />, label: "New File", shortcut: "Ctrl+N" },
-    { icon: <FolderPlus size={16} />, label: "New Folder", shortcut: "Ctrl+Shift+N" },
-    { icon: <Save size={16} />, label: "Save", shortcut: "Ctrl+S" },
+    { icon: <FileText size={16} />, label: "New File", shortcut: "" },
+    { type: "divider" },
+    { type: "divider" },
+
+    { icon: <FolderPlus size={16} />, label: "New Folder", shortcut: "" },
+    { type: "divider" },
+    // { icon: <Save size={16} />, label: "Save", shortcut: "Ctrl+S" },
     // { icon: <Save size={16} />, label: "Save As...", shortcut: "Ctrl+Shift+S" },
-    { type: "divider" },
     // { icon: <Upload size={16} />, label: "Open...", shortcut: "Ctrl+O" },
-    { icon: <Download size={16} />, label: "Export", shortcut: "" },
-    { type: "divider" },
+    // { icon: <Download size={16} />, label: "Export", shortcut: "" },
     // { icon: <Copy size={16} />, label: "Duplicate", shortcut: "Ctrl+D" },
-    { icon: <Trash size={16} />, label: "Delete", shortcut: "Del" },
+    // { icon: <Trash size={16} />, label: "Delete", shortcut: "Del" },
     { type: "divider" },
     // { icon: <Settings size={16} />, label: "Preferences", shortcut: "Ctrl+," },
-    { icon: <LogOut size={16} />, label: "Quit", shortcut: "Ctrl+Q" }
+    { icon: <LogOut size={16} />, label: "Quit", shortcut: "" }
   ];
 
 
@@ -29,7 +31,7 @@ const FileMenu = ({
     switch (idx) {
       case 0:
         handleFileOpen(); break;
-      case 1:
+      case 3:
         handleFolderOpen(); break;
       default:
         break;
@@ -76,7 +78,7 @@ const FileMenu = ({
               <motion.button
                 key={item.label}
                 onClick={
-                  () => whenOnclickAnyMenu(index) 
+                  () => whenOnclickAnyMenu(index)
                 }
                 variants={{
                   hidden: { opacity: 0, x: -10 },

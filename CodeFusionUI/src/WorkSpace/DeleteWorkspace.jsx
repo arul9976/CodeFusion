@@ -6,6 +6,7 @@ import "./RenameWorkspace.css"
 import { UserContext } from "../LogInPage/UserProvider"
 import { deleteWorkspace, updateWorkspace } from "../Redux/editorSlice"
 import { useSelector } from "react-redux"
+import { deleteFileOrFolder } from "../utils/Fetch"
 
 const DeleteWorkspace = ({ onClose, currentWorkspace }) => {
 
@@ -26,7 +27,7 @@ const DeleteWorkspace = ({ onClose, currentWorkspace }) => {
       //   email: user.email,
       // });
 
-      const response = await fetch(`http://localhost:8080/CodeFusion_war/deleteWs?wsName=${encodeURI(currentWorkspace)}&email=${encodeURI(user.email)}`, {
+      const response = await fetch(`${import.meta.env.VITE_SERVLET_URL}/deleteWs?wsName=${encodeURI(currentWorkspace)}&email=${encodeURI(user.email)}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -35,6 +36,11 @@ const DeleteWorkspace = ({ onClose, currentWorkspace }) => {
       console.log(response);
 
       if (response.status === 200) {
+        const fileUrl = `/codefusion/${user.username}/${currentWorkspace}`;
+        deleteFileOrFolder({ 'url': fileUrl, 'type': 'folder' })
+          .then(res => {
+            console.log(res);
+          })
         console.log(workspaces);
         dispatchUser(deleteWorkspace({ workspaceName: currentWorkspace }))
         onClose()

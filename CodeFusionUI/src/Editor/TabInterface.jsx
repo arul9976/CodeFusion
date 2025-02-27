@@ -11,6 +11,7 @@ import FileMenu from './File/FIleMenu';
 import { ClientContext } from './ClientContext';
 import { saveFile } from '../utils/Fetch';
 import Rename from '../FileExpo/Rename';
+// import Help from '../Help/Help';
 
 const TabInterface = ({
   files,
@@ -340,6 +341,8 @@ const FileComp = ({
         </span>
       </motion.div>
 
+      {/* <Help /> */}
+
       <motion.button
         whileHover={{ backgroundColor: 'rgb(75, 85, 99)' }}
         whileTap={{ scale: 0.9 }}
@@ -359,6 +362,7 @@ const FileComp = ({
       >
         <X size={14} />
       </motion.button>
+
 
       {activeFile?.id === file.id && (
         <motion.div

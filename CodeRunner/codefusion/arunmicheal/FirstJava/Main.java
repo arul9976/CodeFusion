@@ -1,11 +1,7 @@
 public class Main {
     // Function to print Hello, World!
     public static void sayHello() {
-       
-       while(true){
-        
-       }
-
+        System.out.println("Hello, World!");
     }
 
     public static void main(String[] args) {

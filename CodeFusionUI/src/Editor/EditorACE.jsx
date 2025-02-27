@@ -22,6 +22,7 @@ import Chat from '../ChatComponents/Chat';
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useWebSocket } from '../Websocket/WebSocketProvider';
 
 
 
@@ -39,6 +40,8 @@ const EditorACE = () => {
 
   const { user, initWebSocketConnection } = useContext(UserContext);
   const { ownername, workspace } = useParams();
+
+  const { socket } = useWebSocket();
 
   const workspaces = useSelector(state => state.editor.workspaces);
   const navigate = useNavigate();
@@ -58,7 +61,7 @@ const EditorACE = () => {
   const [isExplorerOpen, setIsExplorerOpen] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const [showFileExplorer, setShowFileExplorer] = useState(false);
 
@@ -188,7 +191,7 @@ const EditorACE = () => {
       console.log(user);
 
       console.log("Creating " + val);
-      createFile(user.username, {
+      createFile(ownername, {
         fileName: val,
         fileContent: ""
       }, workspace).then((res) => {
@@ -207,7 +210,7 @@ const EditorACE = () => {
   const handleFolderOpen = (val) => {
     console.log(val);
 
-    createFile(user.username, {
+    createFile(ownername, {
       fileName: val,
     }, workspace).then((res) => {
       console.log(res);
@@ -224,11 +227,11 @@ const EditorACE = () => {
       console.log("Please select a file");
       return;
     }
-    const provider = initAndGetProvider(activeFile.url);
+    // const provider = initAndGetProvider(activeFile.url);
     // const yText = getYtext(activeFile.url);
     dispatch(emptyTerminalHistory());
 
-    console.log(language, code);
+    console.log(language, code, activeFile);
 
     // [{
     //   "chatInfo": {
@@ -237,14 +240,15 @@ const EditorACE = () => {
     //   }
     // }]
 
-    provider.ws.send(JSON.stringify({
+    socket.send(JSON.stringify({
       "language": language,
       "code": code,
+      "fpath": activeFile.url,
       "event": "compile"
     }));
 
 
-    provider.ws.onmessage = (event) => {
+    socket.onmessage = (event) => {
       console.log(event, typeof event.data);
 
       if (typeof event.data === 'string') {
@@ -400,6 +404,7 @@ const EditorACE = () => {
         isFileMenuOpen={isFileMenuOpen}
         isFileOpen={showNewFile}
         handleFolderOpen={handleFolderOpen}
+        setIsHelpOpen={setIsHelpOpen}
       />
 
       <div style={{
@@ -461,6 +466,8 @@ const EditorACE = () => {
           }
 
         </div> */}
+
+  
 
         <TabInterface files={files}
           activeFile={activeFile}

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, FolderIcon, FileIcon, XIcon } from "lucide-react"
 import { getFolders } from "../utils/Fetch"
 import { UserContext } from "../LogInPage/UserProvider"
+import { useParams } from "react-router-dom"
 
 const NewFolder = ({ fileOnClick, currentPath = "/" }) => {
 
@@ -17,6 +18,7 @@ const NewFolder = ({ fileOnClick, currentPath = "/" }) => {
   const [isPathDropdownOpen, setIsPathDropdownOpen] = useState(false)
 
   const folderStructureRef = useRef(['/']);
+  const { ownername } = useParams();
 
   const fileType = (event) => {
     setSelectedOption(event.target.value)
@@ -50,7 +52,7 @@ const NewFolder = ({ fileOnClick, currentPath = "/" }) => {
   }
 
   useEffect(() => {
-    getFolders(user.username, currentPath).then(res => {
+    getFolders(ownername, currentPath).then(res => {
       console.log(res);
       if (res.length > 0) {
         folderStructureRef.current = ["/", ...res];

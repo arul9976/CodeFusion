@@ -5,10 +5,13 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, FolderIcon, FileIcon, XIcon } from "lucide-react"
 import { getFolders } from "../utils/Fetch"
 import { UserContext } from "../LogInPage/UserProvider"
+import { useParams } from "react-router-dom"
 
 const NewFile = ({ fileOnClick, currentPath = "/" }) => {
 
   const { user } = useContext(UserContext);
+  const { ownername } = useParams();
+
 
   const [inputValue, setInputValue] = useState("")
   const [error, setError] = useState("")
@@ -50,7 +53,7 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
   }
 
   useEffect(() => {
-    getFolders(user.username, currentPath).then(res => {
+    getFolders(ownername, currentPath).then(res => {
       console.log(res);
       if (res.length > 0) {
         folderStructureRef.current = ["/", ...res];
@@ -290,8 +293,8 @@ const NewFile = ({ fileOnClick, currentPath = "/" }) => {
               <option value=".js">.js</option>
               <option value=".java">.java</option>
               <option value=".py">.py</option>
-              <option value=".rb">.rb</option>
-              <option value=".go">.go</option>
+              {/* <option value=".rb">.rb</option>
+              <option value=".go">.go</option> */}
               {/* <option value=".jsx">.jsx</option> */}
             </select>
           </motion.div>

@@ -637,7 +637,7 @@ const ProfileInfo = ({ setUser, isOpen, onClose }) => {
                                 />
                             ) : (
                                 <>
-                                        <span style={styles.value}>{user?.name}</span>
+                                    <span style={styles.value}>{user?.name}</span>
                                     {/* <button
                                         className="edit-button"
                                         style={styles.editButton}
@@ -678,7 +678,7 @@ const ProfileInfo = ({ setUser, isOpen, onClose }) => {
                                 />
                             ) : (
                                 <>
-                                        <span style={styles.value}>{user.username}</span>
+                                    <span style={styles.value}>{user.username}</span>
                                     {/* <button
                                         className="edit-button"
                                         style={styles.editButton}
@@ -694,7 +694,7 @@ const ProfileInfo = ({ setUser, isOpen, onClose }) => {
 
                     <button
                         style={styles.signOutButton}
-                        onClick={() => navigate('/loginRegister')}
+                        onClick={() => { localStorage.clear(); navigate('/loginRegister') }}
                         onMouseEnter={(e) => {
                             e.target.style.backgroundColor = '#dc2626';
                             e.target.style.transform = 'translateY(-2px)';
