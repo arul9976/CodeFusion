@@ -92,9 +92,11 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import GoogleAuth from "../Auth/GoogleAuth";
 import { UserContext } from "./UserProvider";
 import { capitalize } from "../utils/Utilies";
+import { usePopup } from "../PopupIndication/PopUpContext";
 
 function LoginRegister() {
     const { setUserLoginCredentials } = useContext(UserContext);
+    const { showPopup } = usePopup();
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -156,6 +158,7 @@ function LoginRegister() {
             console.log(response);
 
             if (response.status === 200) {
+                showPopup("Login Success", 'success', 10000);
                 console.log(response.data);
                 console.log(response.data.token);
                 setUserLoginCredentials(response.data)

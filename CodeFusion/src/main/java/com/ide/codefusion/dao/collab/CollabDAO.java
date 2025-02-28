@@ -13,7 +13,7 @@ import java.sql.SQLException;
 public class CollabDAO {
 
     public static boolean addCollaborators(Collaborator collaborator) {
-        System.out.println(collaborator.getEmail() +" "+ collaborator.getCollabEmail());
+        System.out.println(collaborator.getEmail() + " " + collaborator.getCollabEmail());
         try (Connection conn = DataBaseUtil.getConnection()) {
             CallableStatement addCol = conn.prepareCall("CALL addCollab(?, ?, ?)");
             addCol.setString(1, collaborator.getEmail());
@@ -65,7 +65,7 @@ public class CollabDAO {
             CallableStatement sCollabs = conn.prepareCall("CALL getCollaborators(?, ?)");
             sCollabs.setString(1, email);
             sCollabs.setString(2, wsName);
-            System.out.println(" --> " +wsName + " " + email);
+            System.out.println(" --> " + wsName + " " + email);
             if (sCollabs.execute()) {
                 ResultSet rs = sCollabs.getResultSet();
                 while (rs.next()) {
@@ -76,12 +76,25 @@ public class CollabDAO {
                     System.out.println(collaborator.toString());
                     collaborators.put(collaborator);
                 }
-            }else {
+            } else {
                 System.out.println("no collaborators");
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
         return collaborators;
+    }
+
+    public static boolean removeCollab(String email, String wsName, String collabEmail) {
+        try (Connection conn = DataBaseUtil.getConnection()) {
+            CallableStatement sCollabs = conn.prepareCall("CALL removeCollab(?, ?, ?)");
+            sCollabs.setString(1, email);
+            sCollabs.setString(2, wsName);
+            sCollabs.setString(3, collabEmail);
+            return sCollabs.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
     }
 }

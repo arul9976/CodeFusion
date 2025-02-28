@@ -28,6 +28,7 @@ import { useDispatch } from "react-redux";
 import { setUser } from "./Redux/editorSlice";
 import RenameWorkspace from "./WorkSpace/RenameWorkspace";
 import FileMenu from "./Editor/File/FIleMenu";
+import Popup from "./PopupIndication/Popup";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -90,6 +91,9 @@ const App = () => {
     {/* <Route path="/NewFile" Component={NewFileComp} /> */}
       <Route path="/Edit" element={<FileMenu/>} />
       <Route path="/Dashboard" element={<DashPage />} />
+
+      <Route path="/Popup" element={<Popup message={"Hello"} type="error" />} />
+
       {/* <Route path="/Collab" element={<Collaborators />} /> */}
       {/* <Route path="/Tech" element={<CreateWorkspace />} /> */}
       {/* <Route path="/Profile" element={<ProfileInfo user={{

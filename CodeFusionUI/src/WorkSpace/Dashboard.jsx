@@ -15,10 +15,13 @@ import DeleteWorkspace from './DeleteWorkspace';
 import Profile from './Profile';
 import { ClientContext } from '../Editor/ClientContext';
 import EmptyState from './EmptyState';
+import { usePopup } from '../PopupIndication/PopUpContext';
 
 const DashboardPage = () => {
   const { user, dispatchUser } = useContext(UserContext);
   const workspaces = useSelector(state => state.editor.workspaces);
+
+  const { showPopup } = usePopup();
 
   const [activeTab, setActiveTab] = useState(0);
   const [ownerColumn, setOwnerColumn] = useState('block');
@@ -75,24 +78,22 @@ const DashboardPage = () => {
                 console.log("Workspaces updated 2");
                 console.log(workspaces);
               }
-
+      
             });
           }
           else {
             dispatchUser(setWorkspaces([]));
             console.log("No workspaces found");
             getWorkSpaces(user.email, "0").then((data) => {
-              if (data.length > 0) {
+              if (data && data?.length > 0) {
                 dispatchUser(setWorkspaces([...workspaces, ...data]))
                 console.log("Workspaces updated 2");
                 console.log(workspaces);
               }
-
-            });
+        
+            }).catch(() => showPopup("No Workspaces Available", 'warning', 3000))
           }
-        });
-
-
+        }).catch(() => showPopup("No Workspaces Available", 'warning', 3000))
 
         break;
       case 1:

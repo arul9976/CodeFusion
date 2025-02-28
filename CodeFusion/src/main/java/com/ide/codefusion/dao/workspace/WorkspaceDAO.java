@@ -113,7 +113,7 @@ public class WorkspaceDAO {
     public static JSONArray getWorkspaces(String email, String isRecent) {
         JSONArray jsonArray = new JSONArray();
         try (Connection conn = DataBaseUtil.getConnection()) {
-            CallableStatement getWorkspaceStmt = conn.prepareCall(isRecent.equals("1") ? "CALL getRecentWorkspaces(?);" : "CALL getCollabWorkspaces(?);");
+            CallableStatement getWorkspaceStmt = conn.prepareCall(isRecent.equals("1") ? "CALL getWorkspaces(?);" : "CALL getCollabWorkspaces(?);");
             getWorkspaceStmt.setString(1, email);
 
             boolean isWorkspacesHas = getWorkspaceStmt.execute();

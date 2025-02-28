@@ -23,6 +23,7 @@ import { motion } from "framer-motion";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useWebSocket } from '../Websocket/WebSocketProvider';
+import { usePopup } from '../PopupIndication/PopUpContext';
 
 
 
@@ -56,12 +57,11 @@ const EditorACE = () => {
   const [unsavedFiles, setUnsavedFiles] = useState(new Map());
   const [isRename, setIsRename] = useState(null);
 
-  const [terminalOutput, setTerminalOutput] = useState({});
-
   const [isExplorerOpen, setIsExplorerOpen] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  const { showPopup } = usePopup();
 
   const [showFileExplorer, setShowFileExplorer] = useState(false);
 
@@ -118,7 +118,13 @@ const EditorACE = () => {
             if (res.success) {
               setIsRename(false);
               setIsFileCreated(prev => !prev);
+              showPopup(res.message, 'success', 3000);
+            } else {
+              showPopup(res.message, 'error', 3000);
             }
+          }).catch(e => {
+            showPopup(`${oldName.type == 'file' ? 'File' : 'Folder'} Rename Failed`, 'error', 3000);
+
           })
       }
       else {
@@ -138,26 +144,24 @@ const EditorACE = () => {
 
   const handleFile = (e) => {
 
-    if (activeFile) {
-      const bind = getBindings(activeFile.url);
-      console.log(bind);
+    // if (activeFile) {
+    //   const bind = getBindings(activeFile.url);
+    //   console.log(bind);
 
-      if (bind) {
-        const provider = initAndGetProvider(activeFile.url);
-        console.log(provider);
+    //   if (bind) {
+    //     const provider = initAndGetProvider(activeFile.url);
+    //     console.log(provider);
 
-        bind.destroy();
-        if (provider) {
-          providersRef.current.delete(activeFile.url);
-          provider.destroy();
-        }
-      }
-      console.log(activeFile);
-    }
+    //     bind.destroy();
+    //     if (provider) {
+    //       providersRef.current.delete(activeFile.url);
+    //       provider.destroy();
+    //     }
+    //   }
+    //   console.log(activeFile);
+    // }
 
-    if (e.name) {
 
-    }
 
     let curFile = files.find(f => f.id === e.id);
     if (curFile) {
@@ -467,7 +471,7 @@ const EditorACE = () => {
 
         </div> */}
 
-  
+
 
         <TabInterface files={files}
           activeFile={activeFile}

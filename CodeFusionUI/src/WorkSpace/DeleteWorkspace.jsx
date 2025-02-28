@@ -7,11 +7,14 @@ import { UserContext } from "../LogInPage/UserProvider"
 import { deleteWorkspace, updateWorkspace } from "../Redux/editorSlice"
 import { useSelector } from "react-redux"
 import { deleteFileOrFolder } from "../utils/Fetch"
+import { usePopup } from "../PopupIndication/PopUpContext"
 
 const DeleteWorkspace = ({ onClose, currentWorkspace }) => {
 
   const { user, dispatchUser } = useContext(UserContext);
   const workspaces = useSelector(state => state.editor.workspaces);
+
+  const { showPopup } = usePopup();
 
   const [newName, setNewName] = useState("")
   const [error, setError] = useState("")
@@ -36,6 +39,8 @@ const DeleteWorkspace = ({ onClose, currentWorkspace }) => {
       console.log(response);
 
       if (response.status === 200) {
+        showPopup("Workspace Deleted Successfully", 'success', 3000);
+        
         const fileUrl = `/codefusion/${user.username}/${currentWorkspace}`;
         deleteFileOrFolder({ 'url': fileUrl, 'type': 'folder' })
           .then(res => {
@@ -49,6 +54,7 @@ const DeleteWorkspace = ({ onClose, currentWorkspace }) => {
       }
     } catch (err) {
       setError("Error updating workspace name. Please try again.")
+      showPopup("Workspace Deleting Failed", 'error', 3000);
     } finally {
     }
   }

@@ -84,8 +84,8 @@ const getWorkSpaces = async (email, recent) => {
 
     return response?.data;
   } catch (error) {
-    console.error('Error fetching workspaces:', error.response?.data || error.message);
-    // throw error;
+    console.log('Error fetching workspaces:', error.response?.data || error.message);
+    throw error;
   }
 }
 
@@ -169,6 +169,26 @@ const saveFile = async (fileId, code) => {
 }
 
 
+const removecb = async (email, wsName, cEmail) => {
+  console.log(email, wsName, cEmail);
+
+  try {
+    const response = await
+      axios.delete(`${import.meta.env.VITE_SERVLET_URL}/removecb?email=${encodeURIComponent(email)}&wsName=${encodeURIComponent(wsName)}&collabEmail=${encodeURIComponent(cEmail)}`);
+
+      console.log(response);
+      
+    if (response.status === 200) {
+      return response?.data;
+    }
+
+  } catch (e) {
+    console.error("Error removing cb:", e.message);
+    throw e;
+  }
+  return null;
+}
+
 
 const pasteFileToPath = async (fileObj) => {
   console.log(fileObj);
@@ -224,6 +244,6 @@ export {
   getWorkSpaces, createWorkspace, searchUser,
   addCollab, fetchCollaborators, saveFile,
   checkws, pasteFileToPath, reNameFile,
-  deleteFileOrFolder
+  deleteFileOrFolder, removecb
 }
 

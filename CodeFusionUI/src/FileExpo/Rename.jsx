@@ -16,7 +16,6 @@ const Rename = ({ isRename, fileOnClick, currentPath = "/" }) => {
   const [path, setPath] = useState("/")
   const [isPathDropdownOpen, setIsPathDropdownOpen] = useState(false)
 
-  const folderStructureRef = useRef(['/']);
 
   const fileType = (event) => {
     setSelectedOption(event.target.value)

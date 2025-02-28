@@ -6,6 +6,7 @@ import "./RenameWorkspace.css"
 import { UserContext } from "../LogInPage/UserProvider"
 import { setWorkspaces, updateWorkspace } from "../Redux/editorSlice"
 import { useSelector } from "react-redux"
+import { usePopup } from "../PopupIndication/PopUpContext"
 
 
 const RenameWorkspace = ({ onClose, currentWorkspace }) => {
@@ -15,6 +16,7 @@ const RenameWorkspace = ({ onClose, currentWorkspace }) => {
 
   const [newName, setNewName] = useState("")
   const [error, setError] = useState("")
+  const { showPopup } = usePopup();
 
   const handleUpdate = async (e) => {
     e.preventDefault()
@@ -38,11 +40,14 @@ const RenameWorkspace = ({ onClose, currentWorkspace }) => {
       if (response.status === 200) {
         console.log(workspaces);
         dispatchUser(updateWorkspace({ workspaceName: currentWorkspace, newWsName: newName }))
-        onClose()
+        onClose();
+        showPopup("Workspace Renamed successfully", 'success', 3000);
       } else {
+        showPopup(data.message, 'error', 3000);
         setError(data.message || "Failed to update workspace name")
       }
     } catch (err) {
+      showPopup("Workspace Renamed Failed", 'error', 3000);
       setError("Error updating workspace name. Please try again.")
     } finally {
     }

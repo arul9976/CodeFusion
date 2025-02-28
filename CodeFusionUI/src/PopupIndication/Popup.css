@@ -1,0 +1,132 @@
+.popup-container {
+  width: 350px;
+  min-height: 70px;
+  background-color: #1e293b;
+  border-radius: 8px;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  overflow: hidden;
+  animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+/* Message type styles */
+.popup-container.success {
+  background-color: #10b981;
+}
+
+.popup-container.error {
+  background-color: #ef4444;
+}
+
+.popup-container.warning {
+  background-color: #ff9f43;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: translate(-50%, -120%);
+    opacity: 0;
+  }
+
+  60% {
+    transform: translate(-50%, 10px);
+    opacity: 1;
+  }
+
+  80% {
+    transform: translate(-50%, -5px);
+  }
+
+  100% {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* Animation for exit */
+.popup-container.leaving {
+  animation: fadeOutUp 0.5s ease-in forwards;
+}
+
+@keyframes fadeOutUp {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -120%);
+    opacity: 0;
+  }
+}
+
+.popup-content {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 15px;
+  gap: 10px;
+}
+
+.popup-message {
+  color: #FFFFFF;
+  margin: 0;
+  flex-grow: 1;
+  font-size: 17px;
+}
+
+.close-icon {
+  font-size: 18px;
+  cursor: pointer;
+  color: #FFFFFF;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.close-icon:hover {
+  color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+
+/* Status icons */
+.status-icon {
+  font-size: 22px;
+  color: #FFFFFF;
+}
+
+
+.popup-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.popup-container::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  animation: progress linear forwards;
+  animation-duration: inherit;
+  z-index: 1;
+}
+
+@keyframes progress {
+  0% {
+    width: 0;
+  }
+
+  100% {
+    width: 100%;
+  }
+}

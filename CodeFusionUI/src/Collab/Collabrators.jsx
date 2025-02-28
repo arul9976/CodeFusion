@@ -217,9 +217,11 @@ import { useState, useEffect, useRef, useContext } from "react";
 import { X, Search, Check, Crown, Shield } from "lucide-react";
 import { MdPending } from "react-icons/md";
 import "./Collabrators.css";
-import { addCollab, fetchCollaborators, searchUser } from "../utils/Fetch";
+import { addCollab, fetchCollaborators, removecb, searchUser } from "../utils/Fetch";
 import { ClientContext } from "../Editor/ClientContext";
 import { UserContext } from "../LogInPage/UserProvider";
+import { useParams } from "react-router-dom";
+import { usePopup } from "../PopupIndication/PopUpContext";
 
 const Collaborators = ({ setIsCollabOpen, workSpaceName }) => {
 
@@ -235,6 +237,9 @@ const Collaborators = ({ setIsCollabOpen, workSpaceName }) => {
   const [isClose, setIsClose] = useState(false);
   const dropdownRef = useRef(null);
 
+
+  const { ownername, workspace } = useParams();
+  const { showPopup } = usePopup();
 
   useEffect(() => {
 
@@ -252,7 +257,7 @@ const Collaborators = ({ setIsCollabOpen, workSpaceName }) => {
 
     //   } catch (error) {
     //     console.error("Fetch error:", error);
-    
+
     //   }
     // };
 
@@ -307,9 +312,11 @@ const Collaborators = ({ setIsCollabOpen, workSpaceName }) => {
     } else {
       searchUser(query)
         .then(res => {
-          setFilteredUsers(res.filter(u => u.username !== user.username));
+          setFilteredUsers(res.filter(u => u.username !== user.username && collaborators.every(c => c.username !== u.username)));
         }).catch(err => {
           console.error("Search error:", err);
+          showPopup("Failed to search collaborator", 'warning', 3000);
+
         })
       // setFilteredUsers(filtered);
     }
@@ -342,9 +349,11 @@ const Collaborators = ({ setIsCollabOpen, workSpaceName }) => {
         console.log(res);
         setCollaborators([...collaborators, selectedUser]);
         setSelectedUser(null);
+        showPopup("Collaborator Added Successfully", 'success', 3000);
 
       }).catch(err => {
-        console.error("Adding collaborator error:", err);
+        console.log("Adding collaborator error:", err);
+        showPopup("Collaborator Adding failed", 'error', 3000);
       })
 
       setSearch("");
@@ -364,19 +373,32 @@ const Collaborators = ({ setIsCollabOpen, workSpaceName }) => {
   };
 
   const removeCollaborator = (email) => {
-    setCollaborators((prev) => {
-      const collaborator = document.querySelector(`[data-email="${email}"]`);
-      if (collaborator) {
-        collaborator.classList.add("remove-animation");
-      }
 
-      // Remove after animation
-      setTimeout(() => {
-        setCollaborators(prev.filter((user) => user.email !== email));
-      }, 300);
+    removecb(`${ownername}@gmail.com`, workspace, email)
+      .then(res => {
+        console.log(res);
 
-      return prev;
-    });
+        if (res && res.status === "success") {
+          setCollaborators((prev) => {
+            const collaborator = document.querySelector(`[data-email="${email}"]`);
+            if (collaborator) {
+              collaborator.classList.add("remove-animation");
+            }
+
+            setTimeout(() => {
+              setCollaborators(prev.filter((user) => user.email !== email));
+            }, 300);
+
+            return prev;
+          });
+          showPopup("Collaborator Removed Successfully", 'success', 3000);
+        } else {
+          console.error("Failed to remove collaborator");
+          showPopup("Failed to remove collaborator", 'error', 3000);
+        }
+
+      }).catch(() => showPopup("Collaborator Removed Failed", 'error', 3000));
+
   };
 
   const closePanel = () => {

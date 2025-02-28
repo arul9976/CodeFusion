@@ -14,6 +14,7 @@ import { UserContext } from '../LogInPage/UserProvider';
 import { checkws, createWorkspace } from '../utils/Fetch';
 import { pushWorkspace } from '../Redux/editorSlice';
 import { mysqlNow } from '../utils/Utilies';
+import { usePopup } from '../PopupIndication/PopUpContext';
 const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
 
   const { user, dispatchUser } = useContext(UserContext);
@@ -22,7 +23,7 @@ const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
   const [selectedTech, setSelectedTech] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-
+  const { showPopup } = usePopup();
   const techStacks = {
     languages: [
       { name: 'HTML/CSS/JS', icon: <FaHtml5 /> },
@@ -62,11 +63,11 @@ const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
             setSelectedTech('');
             workspace['dTime'] = mysqlNow();
             dispatchUser(pushWorkspace(workspace));
-
             setIsCreating(false);
-
+            showPopup("Workspace Created Successfully", 'success', 3000);
           }).catch((err) => {
             console.error('Error creating workspace:', err);
+            showPopup("Workspace Creation Failed", 'error', 3000);
           }).finally(() => {
             setTimeout(() => {
               setIsLoading(false);
@@ -79,7 +80,7 @@ const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
 
         console.log('Creating workspace:', workspace);
       } else {
-        alert('Workspace name already exists. Please choose a different one.');
+        showPopup("Workspace Name Already Exists", 'warning', 3000);
         setIsCreating(false);
         setIsLoading(false);
         // SetIsCreateWorkspace(false);

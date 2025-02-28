@@ -3,24 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import {
   Menu,
-  Save,
   Play,
-  Share2,
-  Moon,
-  Sun,
-  RefreshCw,
-  Edit3,
-  Eye,
-  FolderOpen,
   Terminal,
-  HelpCircle,
-  Settings,
-  Download,
   // GitHub,
   Users,
-  Plus,
   UserPlus,
-  Copy
 } from 'lucide-react';
 import Collaborators from '../Collab/Collabrators';
 import { UserContext } from '../LogInPage/UserProvider';
@@ -44,7 +31,6 @@ const MenuBar = ({
   const [currentTheme, setCurrentTheme] = useState('dark');
   const [isSaving, setIsSaving] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
-  const [hoveredText, setHoveredText] = useState(null);
 
   const toggleTheme = () => {
     setCurrentTheme(currentTheme === 'dark' ? 'light' : 'dark');
@@ -63,10 +49,7 @@ const MenuBar = ({
     setIsCollabOpen(!isCollabOpen);
   };
 
-  const simulateCopyLink = () => {
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
-  };
+
 
   const styles = {
     menuBar: {

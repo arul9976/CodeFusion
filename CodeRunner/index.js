@@ -740,6 +740,7 @@ function copyDirSync(sourcePath, destPath, type) {
         fs.copyFileSync(srcPath, dstPath);
       }
     }
+
     if (type === 'cut') {
       fs.rmSync(sourcePath, { recursive: true, force: true })
     }
@@ -913,6 +914,7 @@ wss.on('connection', (ws, req) => {
     clientRooms.set(roomId, new Set());
   }
   clientRooms.get(roomId).add(ws);
+  
 
   console.log("Client Room Created ");
 

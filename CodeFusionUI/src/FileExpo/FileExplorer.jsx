@@ -279,6 +279,7 @@ import Profile from '../WorkSpace/Profile';
 import { useParams } from 'react-router-dom';
 import { deleteFileOrFolder, pasteFileToPath } from '../utils/Fetch';
 import { MdPreview } from 'react-icons/md';
+import { usePopup } from '../PopupIndication/PopUpContext';
 
 const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated, setIsFileCreated }) => {
 
@@ -295,7 +296,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
 
   const [copy, setCopy] = useState(null);
 
-
+  const { showPopup } = usePopup();
 
   const handlePaste = (pathToCopy) => {
     if (copy?.url) {
@@ -305,6 +306,13 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
         .then(res => {
           console.log(res);
           setIsFileCreated(prev => !prev);
+          if (res.success) {
+            showPopup(`${pathToCopy.type == 'file' ? 'File' : 'Folder'} Pasted Successfully`, 'success', 3000);
+          } else {
+            showPopup(res.message, 'success', 3000);
+          }
+        }).catch(e => {
+          showPopup('Paste Failed', 'error', 3000);
         })
 
     } else {
