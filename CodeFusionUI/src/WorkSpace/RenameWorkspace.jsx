@@ -29,7 +29,7 @@ const RenameWorkspace = ({ onClose, currentWorkspace }) => {
         email: user.email,
       });
 
-      const response = await fetch(`http://localhost:8080/CodeFusion_war/updatews?workspaceName=${encodeURI(currentWorkspace)}&newWsName=${encodeURI(newName)}&email=${encodeURI(user.email)}`, {
+      const response = await fetch(`${import.meta.env.VITE_SERVLET_URL}/updatews?workspaceName=${encodeURI(currentWorkspace)}&newWsName=${encodeURI(newName)}&email=${encodeURI(user.email)}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -25,6 +25,17 @@
     </context-param>
 
     <filter>
+        <filter-name>CORSFilter</filter-name>
+        <filter-class>com.ide.codefusion.auth.CORSFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>CORSFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+
+    <filter>
         <filter-name>JwtAuthFilter</filter-name>
         <filter-class>com.ide.codefusion.auth.JwtAuthFilter</filter-class>
     </filter>
@@ -34,15 +45,6 @@
         <url-pattern>/*</url-pattern> <!-- Apply this filter to API endpoints -->
     </filter-mapping>
 
-    <filter>
-        <filter-name>CORSFilter</filter-name>
-        <filter-class>com.ide.codefusion.auth.CORSFilter</filter-class>
-    </filter>
-
-    <filter-mapping>
-        <filter-name>CORSFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
 
 
 </web-app>

@@ -151,7 +151,7 @@
 .notificationBadge {
   position: relative;
   cursor: pointer;
-  top: 7px;
+  top: 2px;
   right: -5px;
   animation: pulse 2s infinite;
   z-index: 2;

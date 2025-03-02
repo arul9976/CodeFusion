@@ -64,75 +64,77 @@ const DashboardPage = () => {
   useEffect(() => {
     console.log(user);
 
-    switch (activeTab) {
-      case 0:
-        getWorkSpaces(user.email, "1").then((data) => {
-          if (data && data.length > 0) {
-            dispatchUser(setWorkspaces(data))
-            console.log("Workspaces updated 1");
+    if (user.isLoggedIn) {
+      switch (activeTab) {
+        case 0:
+          getWorkSpaces(user.email, "1").then((data) => {
+            if (data && data.length > 0) {
+              dispatchUser(setWorkspaces(data))
+              console.log("Workspaces updated 1");
 
-            console.log(workspaces);
-            getWorkSpaces(user.email, "0").then((data) => {
-              if (data.length > 0) {
-                dispatchUser(setWorkspaces([...workspaces, ...data]))
-                console.log("Workspaces updated 2");
-                console.log(workspaces);
-              }
-      
-            });
-          }
-          else {
-            dispatchUser(setWorkspaces([]));
-            console.log("No workspaces found");
-            getWorkSpaces(user.email, "0").then((data) => {
-              if (data && data?.length > 0) {
-                dispatchUser(setWorkspaces([...workspaces, ...data]))
-                console.log("Workspaces updated 2");
-                console.log(workspaces);
-              }
-        
-            }).catch(() => showPopup("No Workspaces Available", 'warning', 3000))
-          }
-        }).catch(() => showPopup("No Workspaces Available", 'warning', 3000))
+              console.log(workspaces);
+              getWorkSpaces(user.email, "0").then((data) => {
+                if (data.length > 0) {
+                  dispatchUser(setWorkspaces([...workspaces, ...data]))
+                  console.log("Workspaces updated 2");
+                  console.log(workspaces);
+                }
 
-        break;
-      case 1:
-        getWorkSpaces(user.email, "1").then((data) => {
-          console.log(data);
+              });
+            }
+            else {
+              dispatchUser(setWorkspaces([]));
+              console.log("No workspaces found");
+              getWorkSpaces(user.email, "0").then((data) => {
+                if (data && data?.length > 0) {
+                  dispatchUser(setWorkspaces([...workspaces, ...data]))
+                  console.log("Workspaces updated 2");
+                  console.log(workspaces);
+                }
 
-          if (data.length > 0) {
-            dispatchUser(setWorkspaces(data.filter(ws => ws.ownerName === user.username)))
-            console.log("Workspaces updated");
+              }).catch(() => showPopup("No Workspaces Available", 'warning', 3000))
+            }
+          }).catch(() => showPopup("No Workspaces Available", 'warning', 3000))
 
-            console.log(workspaces);
+          break;
+        case 1:
+          getWorkSpaces(user.email, "1").then((data) => {
+            console.log(data);
 
-          }
-          else {
-            dispatchUser(setWorkspaces([]));
-            console.log("No workspaces found");
-          }
-        });
-        break;
-      case 2:
-        getWorkSpaces(user.email, "0").then((data) => {
-          console.log(data);
+            if (data.length > 0) {
+              dispatchUser(setWorkspaces(data.filter(ws => ws.ownerName === user.username)))
+              console.log("Workspaces updated");
 
-          if (data.length > 0) {
-            dispatchUser(setWorkspaces(data.filter(ws => ws.ownerName !== user.username)))
-            console.log("Workspaces updated");
+              console.log(workspaces);
 
-            console.log(workspaces);
+            }
+            else {
+              dispatchUser(setWorkspaces([]));
+              console.log("No workspaces found");
+            }
+          });
+          break;
+        case 2:
+          getWorkSpaces(user.email, "0").then((data) => {
+            console.log(data);
 
-          }
-          else {
-            dispatchUser(setWorkspaces([]));
-            console.log("No workspaces found");
-          }
-        });
-        break;
-      default:
-        console.log("No workspaces found");
+            if (data.length > 0) {
+              dispatchUser(setWorkspaces(data.filter(ws => ws.ownerName !== user.username)))
+              console.log("Workspaces updated");
 
+              console.log(workspaces);
+
+            }
+            else {
+              dispatchUser(setWorkspaces([]));
+              console.log("No workspaces found");
+            }
+          });
+          break;
+        default:
+          console.log("No workspaces found");
+
+      }
     }
   }, [user, activeTab])
 
@@ -174,14 +176,14 @@ const DashboardPage = () => {
 
 
       <div className={'content'}>
-        {/* <Notification notificationPanel={notificationPanel} setNotificationPanel={setNotificationPanel} /> */}
+        <Notification notificationPanel={notificationPanel} setNotificationPanel={setNotificationPanel} />
 
         <div className={'header'}>
           <h1 style={{ fontSize: '28px', fontWeight: 'bold' }}>{showPage}</h1>
 
           <div className={'headerActions'}>
             <div className={'notificationBadge'} onClick={handleNotify}>
-              {/* <Bell size={20} /> */}
+              <Bell size={20} />
 
 
               {notifications?.length > 0 && (
@@ -249,19 +251,21 @@ const DashboardPage = () => {
 
           {
             workspaces.length > 0 ?
-              workspaces.map((data, idx) => (
-
-                <WorkspaceRow
-                  key={idx}
-                  data={data}
-                  getRandomColor={getRandomColor}
-                  getInitials={getInitials}
-                  idx={idx}
-                  showMenu={showMenu}
-                  setShowMenu={setShowMenu}
-                  activeTab={activeTab}
-                />
-              )) :
+              workspaces.map((data, idx) => {
+                console.log("Key ", idx)
+                return (
+                  < WorkspaceRow
+                    key={idx}
+                    data={data}
+                    getRandomColor={getRandomColor}
+                    getInitials={getInitials}
+                    idx={idx}
+                    showMenu={showMenu}
+                    setShowMenu={setShowMenu}
+                    activeTab={activeTab}
+                  />
+                )
+              }) :
               <EmptyState />
           }
         </div>

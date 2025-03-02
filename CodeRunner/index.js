@@ -46,10 +46,14 @@
 // app.use('/codefusion', express.static(path.join(__dirname, 'codefusion')));
 // app.use(express.json());
 
+// import { CompletionCopilot } from 'monacopilot';
+
 const express = require('express');
 const http = require('http');
 // const socketIo = require('socket.io');
 const WebSocket = require('ws');
+
+const { CompletionCopilot } = require('monacopilot');
 
 const cors = require('cors');
 const Y = require('yjs');
@@ -60,6 +64,16 @@ const multer = require('multer');
 const bodyParser = require('body-parser');
 const { spawn } = require('child_process');
 const { setupWSConnection } = require('y-websocket/bin/utils');
+
+
+
+const MISTRAL_API_KEY = '2cQ0N6eY5XGok55SX8VrzMp6N74Cyjbg';
+
+const copilot = new CompletionCopilot(MISTRAL_API_KEY, {
+  provider: 'mistral',
+  model: 'codestral',
+});
+
 
 const { v4: uuidv4 } = require("uuid");
 
@@ -405,7 +419,7 @@ const saveFile = (path, code) => {
 app.post('/saveFile', (req, res) => {
   const { fileId, code } = req.body;
   const filePath = path.join(__dirname, fileId);
-  console.log("File Path: " + filePath + " " + code);
+  console.log("File Path: " + filePath);
 
   try {
     saveFile(filePath, code);
@@ -454,7 +468,7 @@ app.post('/uploadProficPic/:userId', upload.single('profilePic'), (req, res) => 
     console.log(req.file);
 
     if (!req.file) {
-      return res.status(400).json({ error: 'No image uploaded' });
+      return res.status(204).json({ message: 'No image uploaded' });
     }
 
     const fileUrl = `${req.protocol}://${req.get('host')}/codefusion/${req.params.userId}/profile/${req.file.filename}`;
@@ -830,7 +844,27 @@ app.post("/deletefile", (req, res) => {
       message: error.message
     })
   }
-})
+});
+
+
+app.post('/code-completion', async (req, res) => {
+  console.log("Code Completion hited");
+
+  const { completion, error, raw } = await copilot.complete({ body: req.body });
+
+  console.log("Completion " + completion);
+  console.log("Raw " + raw);
+
+  // if (raw) {
+  //   calculateCost(raw.usage.input_tokens);
+  // }
+
+  if (error) {
+    return res.status(500).json({ completion: null, error });
+  }
+
+  res.json({ completion });
+});
 
 app.get('/list-all-files/:userId/:ws', (req, res) => {
   const { userId, ws } = req.params;
@@ -852,7 +886,6 @@ app.get('/list-all-files/:userId/:ws', (req, res) => {
 });
 
 // const yCursor = doc.getText('cursor');
-let connectedUsers = new Set();
 const clientRooms = new Map();
 const cursors = new Map();
 const docs = new Map();
@@ -903,30 +936,29 @@ wss.on('connection', (ws, req) => {
 
   console.log("ID ------> ", ws.id);
 
-  if (username) {
-    ws.username = username;
-  }
-  console.log("--> Room " + username + "\nID" + roomId);
-  // const awareness = new Aware
+  console.log("--> Room " + username + "\nRoom ID " + roomId);
+
+
   if (!clientRooms.has(roomId)) {
     console.log("Room Added");
-
-    clientRooms.set(roomId, new Set());
+    clientRooms.set(roomId, new Map());
   }
-  clientRooms.get(roomId).add(ws);
-  
+
+
+  clientRooms.get(roomId).set(username, ws);
+
 
   console.log("Client Room Created ");
 
 
   // const doc = getOrUpdateYtext(filePath);
 
-  const currUser = {
-    username: username,
-    roomId: roomId
-  };
+  // const currUser = {
+  //   username: username,
+  //   roomId: roomId
+  // };
 
-  connectedUsers.add(currUser);
+  // connectedUsers.add(currUser);
 
   // console.log(connectedUsers, doc.get("monaco").toString() + " END");
 
@@ -936,7 +968,7 @@ wss.on('connection', (ws, req) => {
 
   // console.log("Text -> " + doc.getText(filePath).toString());
 
-  const userList = Array.from(connectedUsers);
+  const userList = Array.from(clientRooms);
   console.log(userList, clientRooms.get(roomId).size);
 
   const message = {
@@ -945,7 +977,7 @@ wss.on('connection', (ws, req) => {
     message: `${username} joined the session`
   };
 
-  console.log(`${username} connected. Total users: ${connectedUsers.size}`);
+  console.log(`${username} connected. Total users: ${userList.length}`);
 
   ws.on('message', (message) => {
     let data;
@@ -962,19 +994,19 @@ wss.on('connection', (ws, req) => {
         case 'chat':
           console.log("Message From Client ", data.message);
           const { message } = data;
-          clientRooms.get(message.roomId).forEach(client => {
+          clientRooms.get(message.roomId).forEach((client, un) => {
             console.log(message.receiver);
-            if (message.receiver === 'All' && (message.sender !== client.username) && client.readyState === WebSocket.OPEN) {
-              console.log("Message send to all clients ", client.username, client.id);
+            if (message.receiver === 'All' && (message.sender !== un) && client.readyState === WebSocket.OPEN) {
+              console.log("Message send to all clients ", un, client.id);
 
               client.send(JSON.stringify({
                 event: 'chat',
                 message: message
               }));
             } else {
-              console.log(client.username, message.receiver);
-              if (message.receiver == client.username && client.readyState === WebSocket.OPEN) {
-                console.log("Message send to all clients ", client.username, client.id);
+              console.log(un, message.receiver);
+              if (message.receiver == un && client.readyState === WebSocket.OPEN) {
+                console.log("Message send to all clients ", un, client.id);
 
                 client.send(JSON.stringify({
                   event: 'chat',
@@ -1067,11 +1099,10 @@ wss.on('connection', (ws, req) => {
   // });
 
   ws.on('close', () => {
-    connectedUsers.delete(currUser);
-    clientRooms.get(roomId).delete(ws);
+    clientRooms.get(roomId).delete(username);
     const disconnectMessage = {
       type: 'users',
-      users: Array.from(connectedUsers),
+      users: userList,
       message: `${username} left the session`
     };
 
@@ -1081,7 +1112,7 @@ wss.on('connection', (ws, req) => {
       }
     });
     // provider.destroy();
-    console.log(`${username} disconnected. Total users: ${connectedUsers.size}`);
+    console.log(`${username} disconnected. Total users: ${userList.size}`);
   });
 });
 

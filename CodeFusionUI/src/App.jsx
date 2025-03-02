@@ -29,6 +29,9 @@ import { setUser } from "./Redux/editorSlice";
 import RenameWorkspace from "./WorkSpace/RenameWorkspace";
 import FileMenu from "./Editor/File/FIleMenu";
 import Popup from "./PopupIndication/Popup";
+import ZohoRedirect from "./Auth/ZohoRedirect";
+import { jwtLogin } from "./utils/Fetch";
+import { usePopup } from "./PopupIndication/PopUpContext";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -37,32 +40,57 @@ const App = () => {
   // const user = useContext(UserContext);
   const {user, initWebSocketConnection } = useContext(UserContext);
   
+  const { showPopup } = usePopup();
+
   useEffect(() => {
 
     const token = localStorage.getItem("token");
-    const username = localStorage.getItem("username");
-    const name = localStorage.getItem("name");
-    const email = localStorage.getItem("email");
+    // const username = localStorage.getItem("username");
+    // const name = localStorage.getItem("name");
+    // const email = localStorage.getItem("email");
 
+    const endPoint = window.location.pathname.split("/").at(-1);
     if (token) {
-      dispatch(setUser({
-        name: name,
-        username: username,
-        email: email,
-        isLoggedIn: true,
-        token: token,
-        profilePic: localStorage.getItem("profilePic") 
-      }));
+
+      jwtLogin(token)
+      .then(data => {
+        console.log("User Data " + data.token);
+        
+        dispatch(setUser({
+          name: data.name,
+          username: data.username,
+          email: data.email,
+          isLoggedIn: true,
+          token: token,
+          profilePic: data.profilePic
+        }));
+
+        showPopup('Logged In Successfully', 'success', 3000);
+
+      }).catch(err => {
+        showPopup('Token Expired Relogin', 'warning', 3000);
+        navigate("/loginRegister");
+
+      })
+
+      // dispatch(setUser({
+      //   name: name,
+      //   username: username,
+      //   email: email,
+      //   isLoggedIn: true,
+      //   token: token,
+      //   profilePic: localStorage.getItem("profilePic") 
+      // }));
 
       // console.log("In App", user.user, user);
-      console.log(window.location.pathname.split("/").at(-1));
+      console.log(endPoint);
       
-      if (window.location.pathname.split('/').at(-1).toLowerCase() === 'loginregister') {
+      if (endPoint.toLowerCase() === 'loginregister') {
         console.log("navigated to Dashboard");
         navigate("/Dashboard")
       }
     }
-    else {
+    else if (endPoint !== 'loginregister' && endPoint !== 'zohoredirect'){
       navigate("/loginRegister")
     }
   }, []);
@@ -91,7 +119,7 @@ const App = () => {
     {/* <Route path="/NewFile" Component={NewFileComp} /> */}
       <Route path="/Edit" element={<FileMenu/>} />
       <Route path="/Dashboard" element={<DashPage />} />
-
+      <Route path="/zohoredirect" element={<ZohoRedirect/>} />
       <Route path="/Popup" element={<Popup message={"Hello"} type="error" />} />
 
       {/* <Route path="/Collab" element={<Collaborators />} /> */}

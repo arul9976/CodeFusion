@@ -2,17 +2,23 @@ import React, { createContext, useContext, useEffect, useState, useRef } from "r
 import * as Y from "yjs";
 import { WebsocketProvider as YWebsocketProvider } from "y-websocket";
 import { UserContext } from "../LogInPage/UserProvider";
+import { usePopup } from "../PopupIndication/PopUpContext";
 
 const WebSocketContext = createContext(null);
 
 export const WebSocketProvider = ({ children, roomId }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [clientId, setClientId] = useState(null); 
+  const [clientId, setClientId] = useState(null);
   const reconnectRef = useRef(null);
   const workspaceProviders = useRef(new Map());
   const { user } = useContext(UserContext);
+
+  const { showSocketConnection, showPopup, socketConnected } = usePopup();
+
   const connectWebSocket = () => {
+    console.log("Socket connection Called ------");
+
     if (!user) {
       console.log("User not specified");
       return;
@@ -21,6 +27,8 @@ export const WebSocketProvider = ({ children, roomId }) => {
     const ws = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_URL}?username=${user.username}&roomId=${roomId}`);
 
     ws.onopen = () => {
+      socketConnected();
+      showPopup("Workspace Connected Successfully", 'success', 3000);
       console.log(`Connected to Global WebSocket for room ${roomId} as ${user.username}`);
       setIsConnected(true);
       setSocket(ws);
@@ -37,11 +45,16 @@ export const WebSocketProvider = ({ children, roomId }) => {
     };
 
     ws.onclose = () => {
+      showSocketConnection(connectWebSocket);
       console.log(`Global WebSocket for room ${roomId} disconnected. Reconnecting...`);
       setIsConnected(false);
       setSocket(null);
       clearTimeout(reconnectRef.current);
-      reconnectRef.current = setTimeout(connectWebSocket, 3000);
+      reconnectRef.current = setTimeout(() => {
+        console.log("Called After 5 seconds");
+        
+        connectWebSocket();
+      }, 5000);
     };
 
     ws.onerror = (error) => {
@@ -63,15 +76,15 @@ export const WebSocketProvider = ({ children, roomId }) => {
       workspaceProviders.current.forEach((provider) => provider.destroy());
       workspaceProviders.current.clear();
     };
-  }, [user, roomId]); // Re-run if username or roomId changes
+  }, [user, roomId]); 
 
   const getWorkspaceProvider = (workspaceId) => {
-    const fullRoomId = `${roomId}-${workspaceId}`; // Combine roomId with workspaceId
+    const fullRoomId = `${roomId}-${workspaceId}`; 
     if (!workspaceProviders.current.has(fullRoomId)) {
       const doc = new Y.Doc();
       const provider = new YWebsocketProvider(
-        "ws://localhost:1234",
-        fullRoomId, // Use combined roomId-workspaceId as the Yjs room
+        import.meta.env.VITE_WEBSOCKET_URL,
+        fullRoomId, 
         doc
       );
 

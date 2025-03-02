@@ -170,7 +170,7 @@ const Notification = ({ notificationPanel, setNotificationPanel }) => {
 
   useEffect(() => {
     // setNotifications(demoNotifications);
-    dispatchUser(setNotifications(demoNotifications));
+    // dispatchUser(setNotifications(demoNotifications));
     // console.log("Hiiiii");
     // setNotificationPanel(() => notificationPanel);
   }, []);

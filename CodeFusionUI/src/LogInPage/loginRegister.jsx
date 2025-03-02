@@ -93,6 +93,7 @@ import GoogleAuth from "../Auth/GoogleAuth";
 import { UserContext } from "./UserProvider";
 import { capitalize } from "../utils/Utilies";
 import { usePopup } from "../PopupIndication/PopUpContext";
+import ZohoAuth from "../Auth/Zoho";
 
 function LoginRegister() {
     const { setUserLoginCredentials } = useContext(UserContext);
@@ -127,9 +128,9 @@ function LoginRegister() {
             if (response.status === 201) {
                 setUserLoginCredentials(response.data)
                 localStorage.setItem('token', response.data.token);
-                localStorage.setItem('username', response.data.username);
-                localStorage.setItem('email', response.data.email);
-                localStorage.setItem('name', capitalize(response.data.name));
+                // localStorage.setItem('username', response.data.username);
+                // localStorage.setItem('email', response.data.email);
+                // localStorage.setItem('name', capitalize(response.data.name));
                 navigate("/Dashboard");
 
             }
@@ -163,10 +164,10 @@ function LoginRegister() {
                 console.log(response.data.token);
                 setUserLoginCredentials(response.data)
                 localStorage.setItem('token', response.data.token);
-                localStorage.setItem('username', response.data.username);
-                localStorage.setItem('email', response.data.email);
-                localStorage.setItem('name', capitalize(response.data.name));
-                localStorage.setItem('profilePic', response.data.profilePic);
+                // localStorage.setItem('username', response.data.username);
+                // localStorage.setItem('email', response.data.email);
+                // localStorage.setItem('name', capitalize(response.data.name));
+                // localStorage.setItem('profilePic', response.data.profilePic);
                 navigate("/Dashboard");
 
             } else {
@@ -240,6 +241,8 @@ function LoginRegister() {
                             <p className="social-title">Or sign up with</p>
                             <div className="social-buttons">
                                 <GoogleAuth />
+                                <ZohoAuth />
+
                                 {/* <button type="button" className="social-button github-btn" onClick={handleGitHubLogin}>
                                     <FaGithub />
                                 </button> */}
@@ -278,6 +281,7 @@ function LoginRegister() {
                             <p className="social-title">Or log in with</p>
                             <div className="social-buttons">
                                 <GoogleAuth />
+                                <ZohoAuth />
                                 {/* <button type="button" className="social-button github-btn" onClick={handleGitHubLogin}>
                                     <FaGithub />
                                 </button> */}

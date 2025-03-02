@@ -1,0 +1,10 @@
+.zAuth {
+  width: 45px;
+  height: 45px;
+  background: url('https://play-lh.googleusercontent.com/h1hlFniDGXLdEesCE5xYZuaKnKpJoBOdn8Amr34pizacD4qh2WdFcTlT3qetHPUeLA=w240-h480-rw') no-repeat;
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
+  transform: translateY(-3px);
+  
+}

@@ -2,13 +2,13 @@ package com.ide.codefusion.auth;
 
 import com.ide.codefusion.utils.JwtUtil;
 import jakarta.servlet.*;
-import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.json.JSONObject;
 
 import java.io.IOException;
 
-@WebFilter("/*")
+//@WebFilter("/*")
 public class JwtAuthFilter implements Filter {
 
     private final JwtUtil jwtUtil = new JwtUtil();
@@ -26,22 +26,25 @@ public class JwtAuthFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        System.out.println("Type " + request.getHeader("Access-Control-Request-Method"));
-        System.out.println("Auth " + request.getHeader("Authorization"));
-        System.out.println("Email " + request.getParameter("email"));
+//        System.out.println("Type " + request.getHeader("Access-Control-Request-Method"));
+//        System.out.println("Auth " + request.getHeader("Authorization"));
+        System.out.println("End Point --> " + request.getRequestURI());
 
-        if (isPublicUrl(request.getRequestURI()) || true) {
+        if (isPublicUrl(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
 
         final String requestTokenHeader = request.getHeader("Authorization");
-//        System.out.println(requestTokenHeader);
+
+        System.out.println("Token " + requestTokenHeader);
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             String jwtToken = requestTokenHeader.substring(7);
             System.out.println("Token " + jwtToken);
             try {
-                String username = jwtUtil.getUsernameFromToken(jwtToken);
+                JSONObject userObj = jwtUtil.getUsernameFromToken(jwtToken);
+                String username = userObj.getString("username");
+
                 System.out.println("Username " + username);
                 if (username != null) {
                     request.setAttribute("username", username);
@@ -62,8 +65,8 @@ public class JwtAuthFilter implements Filter {
     }
 
     private boolean isPublicUrl(String url) {
-        return url.endsWith("/signup") || url.endsWith("/login") || url.contains("/oauth/google")
-                || url.contains("/reset-password") || url.contains("/public");
+        return url.endsWith("/") || url.endsWith("/signup") || url.endsWith("/login") || url.contains("/oauth/google") || url.contains("/oauth/zoho")
+                || url.contains("/reset-password") || url.contains("/public") || url.endsWith("/jwtLogin");
     }
 
     @Override

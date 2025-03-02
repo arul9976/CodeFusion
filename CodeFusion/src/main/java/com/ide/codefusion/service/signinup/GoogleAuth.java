@@ -18,6 +18,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet(name = "googleauth", value = "/oauth/google")
 public class GoogleAuth extends HttpServlet {
@@ -55,7 +57,8 @@ public class GoogleAuth extends HttpServlet {
                 if (user == null) {
                     user = new User();
                     user.setEmail(email);
-                    user.setUserName((String) payload.get("name"));
+                    user.setUserName(email.split("@")[0]);
+                    user.setNickname((String) payload.get("name"));
                     user.setProfilePic(picture);
                     user.setPassword("GOOGLE");
                     user.setAuthProvider("GOOGLE");
@@ -66,14 +69,20 @@ public class GoogleAuth extends HttpServlet {
                     }
                 }
                 response.setContentType("application/json");
-                String token = jwtUtil.generateToken(email);
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("email", user.getEmail());
+                claims.put("username", user.getUserName());
+                claims.put("name", user.getNickname());
+                claims.put("ProfilePic", user.getProfilePic());
+
+                String token = jwtUtil.generateToken(email, claims);
                 String nkName = user.getUserName().split(" ")[0];
                 JSONObject jsonResponse = new JSONObject();
                 jsonResponse.put("token", token);
                 jsonResponse.put("email", user.getEmail());
-                jsonResponse.put("username", user.getEmail().split("@")[0]);
+                jsonResponse.put("username", user.getUserName());
                 jsonResponse.put("profilePic", user.getProfilePic());
-                jsonResponse.put("name", (nkName.charAt(0) + "").toUpperCase() + nkName.substring(1));
+                jsonResponse.put("name", user.getNickname());
 
                 response.getWriter().write(jsonResponse.toString());
             } else {

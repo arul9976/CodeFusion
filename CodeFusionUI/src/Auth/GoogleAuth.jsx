@@ -26,9 +26,9 @@ const GoogleAuth = () => {
 
         if (success) {
           localStorage.setItem('token', response.data.token);
-          localStorage.setItem('username', response.data.username);
-          localStorage.setItem('email', response.data.email);
-          localStorage.setItem('name', capitalize(response.data.name));
+          // localStorage.setItem('username', response.data.username);
+          // localStorage.setItem('email', response.data.email);
+          // localStorage.setItem('name', capitalize(response.data.name));
           navigate("/Dashboard");
 
         }

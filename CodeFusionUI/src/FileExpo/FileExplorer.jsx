@@ -343,7 +343,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
       }
     };
     fetchFiles();
-  }, [user, isExplorerOpen, isFileCreated]);
+  }, [isFileCreated, user, isExplorerOpen]);
 
   const toggleFolder = (folderPath, e) => {
     if (e && e.target.closest('.context-menu-trigger')) {
@@ -462,7 +462,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
           break;
         case 'rename':
           if (contextMenu.item?.url) {
-            renameHandle(contextMenu.item);
+            renameHandle({ ...contextMenu.item, type: 'file' });
 
           } else {
             renameHandle({

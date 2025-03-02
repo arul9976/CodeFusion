@@ -52,7 +52,12 @@ const getFolders = async (username, currentPath) => {
 
 const fetchCollaborators = async (wsName, email) => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_SERVLET_URL}/getCollabs?wsName=${encodeURI(wsName)}&email=${encodeURI(email)}`);
+    const response = await fetch(`${import.meta.env.VITE_SERVLET_URL}/getCollabs?wsName=${encodeURI(wsName)}&email=${encodeURI(email)}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token"),
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
@@ -76,9 +81,9 @@ const getWorkSpaces = async (email, recent) => {
     const response = await axios.get(`${import.meta.env.VITE_SERVLET_URL}/getwslist?email=${email}&recent=${recent}`, {
       // const response = await axios.get(`http://172.17.22.225:8080/CodeFusion_war/getwslist?email=${email}`, {
       headers: {
+        "Authorization": "Bearer " + token,
         "Content-Type": "application/json",
-      },
-      withCredentials: true,
+      }
     });
     console.log(response);
 
@@ -89,12 +94,38 @@ const getWorkSpaces = async (email, recent) => {
   }
 }
 
+
+const updateProfileDB = async (updatedProfile) => {
+
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/updatenkname`, updatedProfile, {
+      headers: {
+        "Authorization": "Bearer " + token,
+        "Content-Type": "application/json",
+      }
+    });
+
+    console.log(response);
+    return response?.data;
+
+  } catch (err) {
+    console.log(err)
+  }
+}
+
 const createWorkspace = async (workspace) => {
   console.log("---> " + workspace);
   const token = localStorage.getItem("token");
   console.log("Token " + token);
   try {
-    const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/createworkspace`, workspace);
+    const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/createworkspace`, workspace, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token"),
+      }
+    });
     // const response = await axios.post(`http://172.17.22.225:8080/CodeFusion_war/createworkspace`, workspace);
     console.log(response);
 
@@ -113,12 +144,28 @@ const createWorkspace = async (workspace) => {
 const searchUser = async (username) => {
   console.log("---> " + username);
   // const response = await axios.get(`http://172.17.22.225:8080/CodeFusion_war/collabsearch?username=${username}`);
-  const response = await axios.get(`${import.meta.env.VITE_SERVLET_URL}/collabsearch?username=${username}`);
+  const response = await axios.get(`${import.meta.env.VITE_SERVLET_URL}/collabsearch?username=${username}`, {
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + localStorage.getItem("token"),
+    },
+  });
   console.log(response);
   if (response.status === 200) {
     return response?.data || [];
   }
   return null;
+}
+
+const jwtLogin = async (token) => {
+  return await axios.post(`${import.meta.env.VITE_SERVLET_URL}/jwtLogin`, { token: token })
+    .then(res => {
+      console.log(res.data);
+      return res.data
+    })
+    .catch(err => {
+      throw err
+    });
 }
 
 const addCollab = async (collab) => {
@@ -129,6 +176,7 @@ const addCollab = async (collab) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": "Bearer " + localStorage.getItem("token"),
     },
     body: collab,
   });
@@ -141,7 +189,12 @@ const addCollab = async (collab) => {
 
 const checkws = async (wsName, email) => {
   try {
-    const response = await axios.get(`${import.meta.env.VITE_SERVLET_URL}/checkws?wsName=${encodeURIComponent(wsName)}&email=${encodeURI(email)}`);
+    const response = await axios.get(`${import.meta.env.VITE_SERVLET_URL}/checkws?wsName=${encodeURIComponent(wsName)}&email=${encodeURI(email)}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token"),
+      },
+    });
     console.log(response);
 
     return response?.data.error === "Workspace does not exist";
@@ -174,10 +227,15 @@ const removecb = async (email, wsName, cEmail) => {
 
   try {
     const response = await
-      axios.delete(`${import.meta.env.VITE_SERVLET_URL}/removecb?email=${encodeURIComponent(email)}&wsName=${encodeURIComponent(wsName)}&collabEmail=${encodeURIComponent(cEmail)}`);
+      axios.delete(`${import.meta.env.VITE_SERVLET_URL}/removecb?email=${encodeURIComponent(email)}&wsName=${encodeURIComponent(wsName)}&collabEmail=${encodeURIComponent(cEmail)}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + localStorage.getItem("token"),
+        },
+      });
 
-      console.log(response);
-      
+    console.log(response);
+
     if (response.status === 200) {
       return response?.data;
     }
@@ -244,6 +302,7 @@ export {
   getWorkSpaces, createWorkspace, searchUser,
   addCollab, fetchCollaborators, saveFile,
   checkws, pasteFileToPath, reNameFile,
-  deleteFileOrFolder, removecb
+  deleteFileOrFolder, removecb, updateProfileDB,
+  jwtLogin
 }
 

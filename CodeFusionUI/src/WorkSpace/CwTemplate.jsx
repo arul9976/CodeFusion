@@ -12,7 +12,7 @@ import './Cw.css';
 import { X } from 'lucide-react';
 import { UserContext } from '../LogInPage/UserProvider';
 import { checkws, createWorkspace } from '../utils/Fetch';
-import { pushWorkspace } from '../Redux/editorSlice';
+import { pushNotifications, pushWorkspace } from '../Redux/editorSlice';
 import { mysqlNow } from '../utils/Utilies';
 import { usePopup } from '../PopupIndication/PopUpContext';
 const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
@@ -65,6 +65,15 @@ const CreateWorkspace = ({ SetIsCreateWorkspace }) => {
             dispatchUser(pushWorkspace(workspace));
             setIsCreating(false);
             showPopup("Workspace Created Successfully", 'success', 3000);
+            dispatchUser(pushNotifications({
+              id: 1,
+              type: 'success',
+              title: 'Project Created',
+              message: `Your new workspace ${workspaceName} has been created successfully.`,
+              // time: 'now',
+              // icon: Check,
+              color: '#22c55e',
+            }));
           }).catch((err) => {
             console.error('Error creating workspace:', err);
             showPopup("Workspace Creation Failed", 'error', 3000);

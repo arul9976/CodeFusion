@@ -31,7 +31,7 @@ const UserProvider = ({ children }) => {
         username: userInfo.username,
         email: userInfo.email,
         isLoggedIn: true,
-        profilePic: userInfo.profilePic
+        profilePic: userInfo.profilePic || null
 
       }));
       return true;

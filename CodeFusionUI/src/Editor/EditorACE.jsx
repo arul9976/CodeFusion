@@ -114,10 +114,10 @@ const EditorACE = () => {
         console.log(oldName.newName);
         reNameFile(oldName)
           .then(res => {
-            console.log(res);
             if (res.success) {
+              // console.log("=======> " + res);
+              setIsFileCreated(!isFileCreated);
               setIsRename(false);
-              setIsFileCreated(prev => !prev);
               showPopup(res.message, 'success', 3000);
             } else {
               showPopup(res.message, 'error', 3000);

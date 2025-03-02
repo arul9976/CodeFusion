@@ -4,21 +4,20 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.json.JSONObject;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import static io.jsonwebtoken.Jwts.*;
+import static io.jsonwebtoken.Jwts.builder;
 
 public class JwtUtil {
     private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60; // 5 hours
 
-    public String getUsernameFromToken(String token) {
+    public JSONObject getUsernameFromToken(String token) {
         try {
             Claims claims = Jwts.parser()
                     .setSigningKey(SECRET_KEY)
@@ -29,8 +28,14 @@ public class JwtUtil {
             if (claims.getExpiration().before(new Date())) {
                 throw new RuntimeException("Token has expired");
             }
-
-            return claims.getSubject();
+            System.out.println("Username from JWTUtil " + claims.get("username"));
+            JSONObject result = new JSONObject();
+            result.put("username", claims.getSubject());
+            result.put("email", claims.get("email"));
+            result.put("ProfilePic", claims.get("profilePic"));
+            result.put("name", claims.get("name"));
+            result.put("isLoggedIn", true);
+            return result;
         } catch (Exception e) {
             throw new RuntimeException("Invalid or expired token");
         }
@@ -55,8 +60,8 @@ public class JwtUtil {
         return expiration.before(new Date());
     }
 
-    public String generateToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
+    public String generateToken(String username, Map<String, Object> claims) {
+//        Map<String, Object> claims = new HashMap<>();
         return doGenerateToken(claims, username);
     }
 
@@ -68,7 +73,7 @@ public class JwtUtil {
     }
 
     public Boolean validateToken(String token, String username) {
-        final String usernameFromToken = getUsernameFromToken(token);
+        final String usernameFromToken = getUsernameFromToken(token).getString("username");
         return (usernameFromToken.equals(username) && !isTokenExpired(token));
     }
 }

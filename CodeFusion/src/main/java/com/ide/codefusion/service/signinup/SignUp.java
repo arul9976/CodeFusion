@@ -16,6 +16,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.Serial;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Servlet implementation class SignUpServlet
@@ -66,7 +68,12 @@ public class SignUp extends HttpServlet {
         }
 //        // Generate JWT token
         response.setStatus(201);
-        String token = jwtUtil.generateToken(user.getEmail());
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", user.getEmail());
+        claims.put("username", user.getUserName());
+        claims.put("name", user.getNickname());
+        claims.put("ProfilePic", user.getProfilePic());
+        String token = jwtUtil.generateToken(user.getEmail(), claims);
 
         JSONObject jsonResponse = new JSONObject();
         jsonResponse.put("token", token);

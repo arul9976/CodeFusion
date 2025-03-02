@@ -130,10 +130,15 @@ import React, { useState, useRef, useContext, useEffect } from 'react';
 import { X, UserCircle, Camera, Save } from 'lucide-react';
 import { UserContext } from '../LogInPage/UserProvider';
 import { updateNkname } from '../Redux/editorSlice';
+import { usePopup } from '../PopupIndication/PopUpContext';
+import axios from 'axios';
+import { updateProfileDB } from '../utils/Fetch';
 
 const ProfileEdit = ({ isOpen, onClose, user, setUser }) => {
 
   const { dispatchUser } = useContext(UserContext);
+
+  const { showPopup } = usePopup();
 
   const [formData, setFormData] = useState({
     name: user?.name || "Leo",
@@ -173,37 +178,45 @@ const ProfileEdit = ({ isOpen, onClose, user, setUser }) => {
     formDataToSubmit.append('profilePic', fileRef.current);
 
     try {
-      
-      const picResult = await fetch(`${import.meta.env.VITE_RUNNER_URL}/uploadProficPic/${user.username}`, {
+
+      const picResult = await axios.post(`${import.meta.env.VITE_RUNNER_URL}/uploadProficPic/${user.username}`, {
         method: 'POST',
         body: formDataToSubmit
       });
 
       updatedProfile['profilePic'] = user.profilePic;
+      console.log(picResult);
 
       if (picResult.status === 200) {
         const uploadedImg = await picResult.json();
         updatedProfile['profilePic'] = uploadedImg.fileUrl;
       }
-      const response = await fetch(`${import.meta.env.VITE_SERVLET_URL}/updatenkname`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedProfile),
-      });
-      if (response.status === 200) {
-        dispatchUser(updateNkname({
-          name: updatedProfile.updated_name,
-          email: user.email,
-          profilePic: updatedProfile.profilePic,
-        }))
-        onClose();
-      } else {
-        alert("Failed to update profile: " + result.message);
-      }
+      else if (picResult.status === 204) {
+        const response = await updateProfileDB(updatedProfile);
 
+
+        if (response?.success) {
+          showPopup('Profile Updated Successfully', 'success', 3000);
+
+          dispatchUser(updateNkname({
+            name: updatedProfile.updated_name,
+            email: user.email,
+            profilePic: updatedProfile.profilePic,
+          }))
+          onClose();
+        } else {
+          // alert("Failed to update profile: " + result.message);
+          showPopup('Failed to update profile', 'error', 3000);
+        }
+      }
+      else {
+        // alert("Failed to update profile: " + result.message);
+        showPopup("Error in Profile Updating", 'error', 3000);
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("An error occurred. Please try again.");
+      showPopup('Update Failed', 'error', 3000);
+
     }
   };
 

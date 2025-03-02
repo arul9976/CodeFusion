@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-@WebFilter("/*")
+//@WebFilter("/*")
 public class CORSFilter implements Filter {
 
 
@@ -29,7 +29,9 @@ public class CORSFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
-        resp.setHeader("Access-Control-Allow-Origin", "http://172.17.22.225:3001");
+//        System.out.println("CORSFilter Token " + req.getHeader("Authorization"));
+
+        resp.setHeader("Access-Control-Allow-Origin", "http://localhost:3001");
 //        resp.setHeader("Access-Control-Allow-Origin", "http://172.17.22.225:3001");
         resp.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         resp.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -49,7 +51,7 @@ public class CORSFilter implements Filter {
             resp.setStatus(HttpServletResponse.SC_OK);
             return;
         }
-            chain.doFilter(request, response);
+        chain.doFilter(request, response);
 
     }
 
