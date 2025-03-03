@@ -33,13 +33,12 @@ import { usePopup } from '../PopupIndication/PopUpContext';
 const EditorACE = () => {
 
   const {
-    currentTheme, dispatch, initAndGetProvider, editorsRef,
-    getBindings, providersRef, getYtext, language,
+    currentTheme, dispatch, getYtext, language,
     code, setCurrentWorkSpace
   } = useContext(ClientContext);
 
 
-  const { user, initWebSocketConnection } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const { ownername, workspace } = useParams();
 
   const { socket } = useWebSocket();
@@ -118,6 +117,13 @@ const EditorACE = () => {
               // console.log("=======> " + res);
               setIsFileCreated(!isFileCreated);
               setIsRename(false);
+
+              socket.send(JSON.stringify({
+                event: 'file_system',
+                message: `${user.username} Renamed a ${oldName.type} ${oldName.newName.split('/n').at(-1)}`,
+                roomId: `${user.username}$${workspace}`
+              }));
+
               showPopup(res.message, 'success', 3000);
             } else {
               showPopup(res.message, 'error', 3000);
@@ -199,11 +205,16 @@ const EditorACE = () => {
         fileName: val,
         fileContent: ""
       }, workspace).then((res) => {
-        console.log(res);
         console.log(res.message);
-        // setFiles(...files, {'name': res.fileName, 'id': res.fileName, 'url': res.url});
+
+        showPopup(res.message, 'success', 3000);
         setIsFileCreated(prev => !prev);
 
+        socket.send(JSON.stringify({
+          event: 'file_system',
+          message: `${user.username} Created a File ${val}`,
+          roomId: `${user.username}$${workspace}`
+        }));
       })
 
     }
@@ -218,9 +229,16 @@ const EditorACE = () => {
       fileName: val,
     }, workspace).then((res) => {
       console.log(res);
-      console.log(res.message);
-      // setFiles(...files, {'name': res.folderName, 'id': res.folderName, 'url': res.url});
+
+      showPopup(res.message, 'success', 3000);
+
       setIsFileCreated(prev => !prev);
+
+      socket.send(JSON.stringify({
+        event: 'file_system',
+        message: `${user.username} Created a Folder ${val}`,
+        roomId: `${user.username}$${workspace}`
+      }));
     })
 
     setShowNewFolder((prev) => !prev);
@@ -231,18 +249,10 @@ const EditorACE = () => {
       console.log("Please select a file");
       return;
     }
-    // const provider = initAndGetProvider(activeFile.url);
-    // const yText = getYtext(activeFile.url);
+
     dispatch(emptyTerminalHistory());
 
     console.log(language, code, activeFile);
-
-    // [{
-    //   "chatInfo": {
-    //     "senderId": "ar@gmail.com",
-    //     "recipientId": "All",
-    //   }
-    // }]
 
     socket.send(JSON.stringify({
       "language": language,
@@ -250,36 +260,6 @@ const EditorACE = () => {
       "fpath": activeFile.url,
       "event": "compile"
     }));
-
-
-    socket.onmessage = (event) => {
-      console.log(event, typeof event.data);
-
-      if (typeof event.data === 'string') {
-        const res = JSON.parse(event.data);
-        console.log(res.data);
-        setShowTerminal(true);
-        if (res.event === 'output') {
-          // inputWantRef.current = res.input;
-          let data = res.data;
-          console.log(data, data.length);
-
-          if (data.length > 21) {
-            data = res.data.splice(Math.max(res.data.length - 20, 0), 20);
-          }
-          dispatch(setInputWant({ isWant: res.input }));
-          dispatch(setTerminalHistory([{ content: data.join("\n"), type: res.input ? 'input' : 'output' }]));
-        }
-        else if (res.event === 'error') {
-          // inputWantRef.current = res.input;
-          let response = res.data;
-          console.log(response, response.length);
-          dispatch(setInputWant({ isWant: res.input }));
-          dispatch(setTerminalHistory([{ content: response, type: 'error' }]));
-        }
-      }
-    };
-
 
     // provider.ws.on('message', (event) => {
     //   console.log(event);
@@ -342,6 +322,47 @@ const EditorACE = () => {
 
   //   }
   // }, [user])
+
+
+  useEffect(() => {
+    if (socket) {
+
+      socket.onmessage = (event) => {
+        console.log(event, typeof event.data);
+
+        if (typeof event.data === 'string') {
+          const res = JSON.parse(event.data);
+          if (res.event === 'output') {
+            setShowTerminal(true);
+            let data = res.data;
+            console.log(data, data.length);
+
+            if (data.length > 21) {
+              data = res.data.splice(Math.max(res.data.length - 20, 0), 20);
+            }
+            dispatch(setInputWant({ isWant: res.input }));
+            dispatch(setTerminalHistory([{ content: data.join("\n"), type: res.input ? 'input' : 'output' }]));
+          }
+
+          else if (res.event === 'error') {
+            // inputWantRef.current = res.input;
+            let response = res.data;
+            console.log(response, response.length);
+            dispatch(setInputWant({ isWant: res.input }));
+            dispatch(setTerminalHistory([{ content: response, type: 'error' }]));
+          }
+
+
+          else if (res.event === 'file_system') {
+            console.log("FILE CREATED " + res);
+            showPopup(res.message, 'success', 3000);
+            setIsFileCreated(prev => !prev)
+          }
+        }
+      };
+
+    }
+  }, [socket]);
 
 
   useEffect(() => {

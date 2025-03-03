@@ -52,7 +52,7 @@ export const WebSocketProvider = ({ children, roomId }) => {
       clearTimeout(reconnectRef.current);
       reconnectRef.current = setTimeout(() => {
         console.log("Called After 5 seconds");
-        
+
         connectWebSocket();
       }, 5000);
     };
@@ -76,20 +76,31 @@ export const WebSocketProvider = ({ children, roomId }) => {
       workspaceProviders.current.forEach((provider) => provider.destroy());
       workspaceProviders.current.clear();
     };
-  }, [user, roomId]); 
+  }, [user, roomId]);
 
   const getWorkspaceProvider = (workspaceId) => {
-    const fullRoomId = `${roomId}-${workspaceId}`; 
+    const fullRoomId = `${roomId}-${workspaceId}`;
+    console.log("Full Room ID " + fullRoomId);
+    console.log(workspaceProviders.current.get(fullRoomId));
+
     if (!workspaceProviders.current.has(fullRoomId)) {
       const doc = new Y.Doc();
       const provider = new YWebsocketProvider(
-        import.meta.env.VITE_WEBSOCKET_URL,
-        fullRoomId, 
+        `${import.meta.env.VITE_WEBSOCKET_URL}?username=${user.username}&fullRoomId=${encodeURIComponent(fullRoomId)}&`,
+        fullRoomId,
         doc
       );
 
       provider.on("status", (event) => {
-        console.log(`Yjs WebSocket for ${fullRoomId} (user: ${username}) status: ${event.status}`);
+        console.log(`Yjs WebSocket for ${fullRoomId} (user: ${user.username}) status: ${event.status}`);
+      });
+
+      provider.on('connection-close', () => {
+        if (provider.wsconnected === false && workspaceProviders.has(fullRoomId)) {
+          provider.destroy();
+          workspaceProviders.delete(fullRoomId);
+          console.log(`Cleaned up provider for ${roomId}`);
+        }
       });
 
       workspaceProviders.current.set(fullRoomId, provider);

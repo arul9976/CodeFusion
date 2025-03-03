@@ -280,6 +280,7 @@ import { useParams } from 'react-router-dom';
 import { deleteFileOrFolder, pasteFileToPath } from '../utils/Fetch';
 import { MdPreview } from 'react-icons/md';
 import { usePopup } from '../PopupIndication/PopUpContext';
+import { useWebSocket } from '../Websocket/WebSocketProvider';
 
 const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated, setIsFileCreated }) => {
 
@@ -297,6 +298,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
   const [copy, setCopy] = useState(null);
 
   const { showPopup } = usePopup();
+  const { socket } = useWebSocket();
 
   const handlePaste = (pathToCopy) => {
     if (copy?.url) {
@@ -458,6 +460,16 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
             .then(res => {
               console.log(res);
               setIsFileCreated(prev => !prev);
+              if (res.success) {
+                showPopup(`${((contextMenu.item?.url) ? 'File' : 'Folder')} Deleted Successfully`, 'success', 3000)
+                socket.send(JSON.stringify({
+                  event: 'file_system',
+                  message: `${user.username} Deleted a ${((contextMenu.item?.url) ? 'File ' + contextMenu.item.file : 'Folder ' + contextMenu.item)}`,
+                  roomId: `${user.username}$${workspace}`
+                }));
+              }else {
+                showPopup(res.message, 'error', 3000);
+              }
             })
           break;
         case 'rename':

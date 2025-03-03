@@ -298,6 +298,7 @@ app.post('/createOrUpdateFile/:userId/:wsName', (req, res) => {
       message: `${fileName.split(".").length > 1 ? 'File' : 'Folder'} created successfully`,
       url: filePath.split(`/${userId}/`)[0]
     }));
+
   } catch (err) {
     console.log(err.message);
 
@@ -399,7 +400,7 @@ function getFileContent(path) {
     const fileData = fs.readFileSync(`/home/arul-zstk404/Documents/JAVA/CodeFusion/CodeRunner${path}`, 'utf8');
     return fileData;
   } catch (err) {
-    console.error(`Error reading file: ${path}`);
+    console.log(`Error reading file: ${path}`);
     return null;
   }
 
@@ -432,12 +433,16 @@ app.post('/saveFile', (req, res) => {
 
 app.get('/getFileContent/:filePath', (req, res) => {
   const filePath = req.params.filePath;
-  const fileContent = getFileContent(filePath);
+  try {
+    const fileContent = getFileContent(filePath);
+    if (fileContent) {
+      res.status(200).send(JSON.stringify(fileContent));
+    } else {
+      res.status(404).send('File not found');
+    }
+  } catch (e) {
+    res.status(500).send('Error Getting file content');
 
-  if (fileContent) {
-    res.send(JSON.stringify(fileContent));
-  } else {
-    res.status(404).send('File not found');
   }
 });
 
@@ -491,10 +496,14 @@ app.get('/getFolders/:userId/:wsName', (req, res) => {
   if (!fs.existsSync(directoryPath)) {
     return res.status(404).send('No files found');
   }
+  try {
+    const fileList = getFolders(directoryPath, wsName);
 
-  const fileList = getFolders(directoryPath, wsName);
-
-  res.send(fileList);
+    res.send(fileList);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send('Error getting folders');
+  }
 })
 
 
@@ -887,6 +896,7 @@ app.get('/list-all-files/:userId/:ws', (req, res) => {
 
 // const yCursor = doc.getText('cursor');
 const clientRooms = new Map();
+const editors = new Map();
 const cursors = new Map();
 const docs = new Map();
 
@@ -922,6 +932,20 @@ const processes = new Map();
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const username = url.searchParams.get('username');
+  const fullRoomId = url.searchParams.get('fullRoomId');
+
+  if (fullRoomId) {
+    console.log("Full Room Id: " + fullRoomId);
+    if (!editors.has(fullRoomId)) {
+      editors.set(fullRoomId, new Set());
+
+    }
+    editors.get(fullRoomId).add(ws);
+    setupWSConnection(ws, req);
+
+    console.log("Editors\n", Array.from(editors));
+    return;
+  }
   let roomId = url.searchParams.get('roomId') || url.searchParams.get('filePath');
 
   console.log("ROOM ID: " + roomId);
@@ -984,12 +1008,30 @@ wss.on('connection', (ws, req) => {
     try {
       data = JSON.parse(message.toString());
     } catch (e) {
+      console.log("Editors Message\n" + editors);
+
       return;
     }
 
     if (data) {
 
       switch (data.event) {
+
+
+        case 'file_system':
+          console.log("File Created ", data.message);
+          const { roomId } = data;
+          console.log("RoomId ", roomId);
+
+          clientRooms.get(roomId)?.forEach((client, un) => {
+            if (un !== username && client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({
+                event: 'file_system',
+                message: data.message
+              }));
+            }
+          })
+          break;
 
         case 'chat':
           console.log("Message From Client ", data.message);

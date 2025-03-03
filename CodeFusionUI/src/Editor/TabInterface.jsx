@@ -173,7 +173,7 @@ const FileComp = ({
 
 
   useEffect(() => {
-    console.log(activeFile, unsavedFiles, isSaved);
+    // console.log(activeFile, unsavedFiles, isSaved);
 
 
     if (activeFile && isSaved.current) {

@@ -9,16 +9,19 @@ import { getFileMode } from '../utils/GetIcon';
 import { getFileContent } from '../utils/Fetch';
 import { setCode, setLang } from '../Redux/editorSlice';
 import { registerCompletion } from 'monacopilot';
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 import axios from 'axios';
+import { useWebSocket } from '../Websocket/WebSocketProvider';
 const MonacoIDE = ({ activeFile }) => {
 
-  const { initAndGetProvider, getYtext, editorsRef, bindings, dispatch, language } = useContext(ClientContext);
+  const {  editorsRef, dispatch, language } = useContext(ClientContext);
+  const { getWorkspaceProvider } = useWebSocket();
 
   const editorRef = useRef(null);
   const currFile = useRef(null);
   const monacoRef = useRef(null);
-
+  const monacoBind = useRef(null);
+  const providerRef = useRef(null);
 
   const initiateFile = (file) => {
     currFile.current = file;
@@ -32,29 +35,76 @@ const MonacoIDE = ({ activeFile }) => {
 
     editorsRef.current.get(file.id);
 
-    // const provider = initAndGetProvider(file.url);
+    const provider = getWorkspaceProvider(activeFile.id);
 
-    console.log("Commit");
+    console.log("Provider Initiated ", monacoBind.current, providerRef.current);
+    
     const model = editorRef.current.getModel();
+    const yText = provider.doc.getText(activeFile.id);
 
-    getFileContent(file.url).then((res) => {
-      console.log(res);
-      model.setValue(res);
+    if (yText.toString().length !== 0) {
+      bindMonaco(yText, model, provider);
+      providerRef.current = provider;
+      console.log("Provider Already Active");
 
-    })
+      return;
+    } 
 
-    // provider.on("sync", (isSynced) => {
+    provider.on('sync', (event) => {
 
-    //   const model = editorRef.current.getModel();
+      console.log(event);
 
-    //   console.log("synced Initialized");
+      // const yText = provider.doc.getText(activeFile.id);
+      console.log(yText.toString());
+      
+      if(yText.toString().length === 0){
+        getFileContent(file.url).then((res) => {
+          console.log(res);
+          yText.delete(0, yText.toString().length);
+          yText.insert(0, res);
 
-    //   if (isSynced) {
-    //     console.log("synced");
+          console.log("YText -> " + yText.toString());
 
-    //   }
-    //   console.log("Synced with server:", isSynced);
-    // });
+          // model.setValue(yText.toString());
+
+          bindMonaco(yText, model, provider);
+          console.log("Editor Synced!!!!!!");
+
+        })
+      } else {
+        // model.setValue(yText.toString());
+        bindMonaco(yText, model, provider);
+      }
+
+      providerRef.current = provider;
+    });
+
+    if (providerRef.current || monacoBind.current) { console.log("retured"); return; }
+      
+    console.log(yText.toString());
+
+
+
+
+
+
+
+    // providerRef.current = provider;
+
+  }
+
+  const bindMonaco = (yText, model, provider) => {
+    const binding = new MonacoBinding(
+      yText,
+      model,
+      new Set([editorRef.current]),
+      provider.awareness,
+      {
+        throttle: debounce((fn) => fn(), 700)
+      }
+    );
+
+    monacoBind.current = binding;
   }
 
   function handleEditorDidMount(editor, monaco, file) {
@@ -65,7 +115,7 @@ const MonacoIDE = ({ activeFile }) => {
       endpoint: `${import.meta.env.VITE_RUNNER_URL}/code-completion`,
     });
 
-    console.log(file);
+    // console.log(file);
     currFile.current = file;
     if (!file) return;
     monacoRef.current = monaco;
@@ -73,25 +123,33 @@ const MonacoIDE = ({ activeFile }) => {
     editorsRef.current.set(file.id, editor);
     initiateFile(file);
 
-    // getFileContent(file.url).then((res) => {
-    //   // yText.insert(0, res);
-    // editorRef.current.getModel().setValue(res);
-    // })
   }
 
   const handleChange = (value) => {
-    console.log(value);
+    // console.log(value);
     dispatch(setCode(value));
   }
 
 
+  useEffect(() => {
+    if (!monacoBind.current) return;
+
+    // monacoBind.current.update();
+    
+    return () => {
+      if (monacoBind.current) {
+        monacoBind.current.destroy();
+      }
+    };
+
+  }, [monacoBind]);
+
 
   useEffect(() => {
-    console.log("Runned");
 
     const lan = getFileMode(activeFile.name);
     dispatch(setLang(lan))
-    console.log(language);
+    console.log("Runned", language);
 
     if (editorRef.current && currFile.current.id !== activeFile.id) {
       console.log(activeFile);
@@ -101,7 +159,27 @@ const MonacoIDE = ({ activeFile }) => {
       console.log("Initiated");
 
     }
-  })
+  }, []);
+
+
+  // useEffect(() => {
+  //   if (providerRef.current && monacoBind.current) {
+  //     console.log("Provider Configured");
+
+  //   }
+
+  //   return () => {
+  //     if (providerRef.current) {
+  //       providerRef.current.destroy();
+  //       if (monacoBind.current)
+  //         monacoBind.current.destroy();
+
+  //       console.log("Destroyed provider and binding");
+        
+  //     }
+
+  //   }
+  // }, [providerRef.current, monacoBind.current]);
 
   const beforeMount = (monaco) => {
     monaco.editor.defineTheme('modernDark', {

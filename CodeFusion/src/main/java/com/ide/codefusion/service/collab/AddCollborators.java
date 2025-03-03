@@ -31,8 +31,8 @@ public class AddCollborators extends HttpServlet {
             sb.append(line);
 
         }
-        JSONObject jsonObject = new JSONObject(sb.toString()).getJSONObject("body");
-
+        JSONObject jsonObject = new JSONObject(sb.toString());
+        System.out.println("---> " + jsonObject.toString());
         try {
             System.out.println(jsonObject.toString());
             Collaborator collaborator = new Collaborator();

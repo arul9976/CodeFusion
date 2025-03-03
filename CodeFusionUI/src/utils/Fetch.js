@@ -6,16 +6,17 @@ const getFileContent = async (path) => {
 
   try {
     // const response = await fetch(`http://172.17.22.225:3000/list-all-files/${user}`);
-    const response = await fetch(`${import.meta.env.VITE_RUNNER_URL}/getFileContent/${encodeURIComponent(path)}`);
+    const response = await axios.get(`${import.meta.env.VITE_RUNNER_URL}/getFileContent/${encodeURIComponent(path)}`);
     // const response = await fetch(`http://172.17.22.225:3000/getFileContent/${encodeURIComponent(path)}`);
-    const data = await response.json();
-    console.log("FileContent " + data);
 
-    // if (data) {
-    return data;
+    console.log(response);
+    
+    if (response.status === 200) {
+      return response?.data;
+    }
 
   } catch (error) {
-    console.error("Error fetching files:", error);
+    console.log("Error fetching files:", error);
   }
   return null;
 }
@@ -172,13 +173,11 @@ const addCollab = async (collab) => {
   // const response = await axios.post(`http://172.17.22.225:8080/CodeFusion_war/addcollab`, {
   console.log(collab);
 
-  const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/addcollab`, {
-    method: "POST",
+  const response = await axios.post(`${import.meta.env.VITE_SERVLET_URL}/addcollab`, collab, {
     headers: {
       "Content-Type": "application/json",
       "Authorization": "Bearer " + localStorage.getItem("token"),
     },
-    body: collab,
   });
   console.log(response);
   if (response.status === 200) {

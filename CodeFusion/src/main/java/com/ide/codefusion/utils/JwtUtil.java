@@ -30,7 +30,7 @@ public class JwtUtil {
             }
             System.out.println("Username from JWTUtil " + claims.get("username"));
             JSONObject result = new JSONObject();
-            result.put("username", claims.getSubject());
+            result.put("username", claims.get("username"));
             result.put("email", claims.get("email"));
             result.put("ProfilePic", claims.get("profilePic"));
             result.put("name", claims.get("name"));
