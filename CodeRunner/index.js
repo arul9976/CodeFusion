@@ -1020,10 +1020,10 @@ wss.on('connection', (ws, req) => {
 
         case 'file_system':
           console.log("File Created ", data.message);
-          const { roomId } = data;
-          console.log("RoomId ", roomId);
+          // const { roomId } = data;
+          console.log("RoomId ", data.roomId);
 
-          clientRooms.get(roomId)?.forEach((client, un) => {
+          clientRooms.get(data.roomId)?.forEach((client, un) => {
             if (un !== username && client.readyState === WebSocket.OPEN) {
               client.send(JSON.stringify({
                 event: 'file_system',

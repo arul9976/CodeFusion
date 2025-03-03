@@ -450,7 +450,7 @@ const EditorACE = () => {
 
         <motion.div
           initial={{ width: 0 }}
-          animate={{ width: isChatOpen ? '430px' : 0 }}
+          animate={{ width: isChatOpen ? 'max-content' : 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           style={{
             ...styles.chat,

@@ -3,6 +3,7 @@ import * as Y from "yjs";
 import { WebsocketProvider as YWebsocketProvider } from "y-websocket";
 import { UserContext } from "../LogInPage/UserProvider";
 import { usePopup } from "../PopupIndication/PopUpContext";
+import { getFileContent } from "../utils/Fetch";
 
 const WebSocketContext = createContext(null);
 
@@ -78,8 +79,8 @@ export const WebSocketProvider = ({ children, roomId }) => {
     };
   }, [user, roomId]);
 
-  const getWorkspaceProvider = (workspaceId) => {
-    const fullRoomId = `${roomId}-${workspaceId}`;
+  const getWorkspaceProvider = (workspaceId, bindMonaco, model) => {
+    const fullRoomId = `${roomId}-IDE`;
     console.log("Full Room ID " + fullRoomId);
     console.log(workspaceProviders.current.get(fullRoomId));
 
@@ -90,6 +91,17 @@ export const WebSocketProvider = ({ children, roomId }) => {
         fullRoomId,
         doc
       );
+
+      provider.on('sync', (event) => {
+        if (event) {
+          const yText = getYTextWithContent(provider, workspaceId);
+          console.log("Provider Synced Successfully");
+          console.log("Server yText\n", yText.toString());
+
+          setUpContentToIDE(workspaceId, yText, bindMonaco, provider, model);
+
+        }
+      })
 
       provider.on("status", (event) => {
         console.log(`Yjs WebSocket for ${fullRoomId} (user: ${user.username}) status: ${event.status}`);
@@ -104,13 +116,77 @@ export const WebSocketProvider = ({ children, roomId }) => {
       });
 
       workspaceProviders.current.set(fullRoomId, provider);
+    } else {
+      const provider = workspaceProviders.current.get(fullRoomId);
+
+      const yText = getYTextWithContent(provider, workspaceId);
+      setUpContentToIDE(workspaceId, yText, bindMonaco, provider, model);
+  
+
     }
+
     return workspaceProviders.current.get(fullRoomId);
   };
 
+
+  const setUpContentToIDE = (workspaceId, yText, bindMonaco, provider, model) => {
+    if (yText.toString() !== '$$$') {
+      console.log("YText Already Exists");
+      bindMonaco(yText, model, provider);
+      return;
+    }
+    else {
+      getFileContent(workspaceId)
+        .then(res => {
+          if (res) {
+            yText.delete(0, yText.toString().length);
+            yText.insert(0, res);
+            showPopup('File Loaded successfully', 'success', 3000);
+
+            console.log("YText -> \n" + yText?.toString());
+
+            bindMonaco(yText, model, provider);
+
+          } else {
+            showPopup('Response is Empty', 'warning', 3000);
+
+          }
+        });
+    }
+  }
+
+  const getYTextWithContent = (provider, workspaceId) => {
+    const fullRoomId = `${roomId}-IDE`;
+
+    const filesMap = provider.doc.getMap('files');
+    if (!filesMap.has(workspaceId)) {
+      filesMap.set(workspaceId, new Y.Text('$$$'));
+      console.log(`Created new Y.Text for ${workspaceId} in ${fullRoomId}`);
+
+    }
+    return filesMap.get(workspaceId);
+  }
+
+  const isProviderHave = (fileId) => {
+    return workspaceProviders.current.has(fileId);
+  }
+
+  const isYTextHave = (fileId) => {
+    const fullRoomId = `${roomId}-IDE`;
+    if (!isProviderHave(fileId)) return false;
+    const workspaceProvider = getWorkspaceProvider(fullRoomId);
+    const filesMap = workspaceProvider.doc.getMap('files');
+
+    return filesMap.has(fileId);
+  }
+
   return (
     <WebSocketContext.Provider
-      value={{ socket, isConnected, clientId, roomId, getWorkspaceProvider }}
+      value={{
+        socket, isConnected, clientId,
+        roomId, getWorkspaceProvider, getYTextWithContent,
+        isYTextHave, isProviderHave
+      }}
     >
       {children}
     </WebSocketContext.Provider>

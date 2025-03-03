@@ -1,16 +1,19 @@
-/* Chat Container Styles */
 .chat-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* background-color: #1a1f2e; */
   padding: 20px;
   height: 100%;
+  transition: width 0.3s ease;
+  /*  width: 400px; */
+}
+
+.chat-container.expanded {
+  width: 650px;
 }
 
 .chat-window {
   width: 100%;
-  max-width: 800px;
   height: 100%;
   background-color: #1e2538;
   border-radius: 12px;
@@ -19,9 +22,9 @@
   flex-direction: column;
   overflow: hidden;
   animation: slideIn 0.5s ease;
+  transition: 300ms ease-in-out;
 }
 
-/* Header Styles */
 .chat-header {
   background-color: #262f45;
   padding: 16px 24px;
@@ -37,12 +40,12 @@
   gap: 12px;
 }
 
-/* Dropdown Styles */
 .dropdown-container {
   position: relative;
 }
 
-.user-button {
+.user-button,
+.bot-button {
   background-color: #313b55;
   border: none;
   padding: 8px 16px;
@@ -55,7 +58,8 @@
   transition: background-color 0.3s ease;
 }
 
-.user-button:hover {
+.user-button:hover,
+.bot-button:hover {
   background-color: #3d486b;
 }
 
@@ -96,41 +100,23 @@
   color: #fff;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dropdown-item:hover {
   background-color: #313b55;
 }
 
-/* Bot Status Styles */
-.bot-status {
+.time-display {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   color: #fff;
+  font-size: 14px;
 }
 
-.bot-avatar {
-  width: 36px;
-  height: 36px;
-  background-color: #4a5576;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: pulse 2s infinite;
-}
-
-.status-indicator {
-  width: 8px;
-  height: 8px;
-  background-color: #4CAF50;
-  border-radius: 50%;
-  margin-left: 8px;
-  animation: blink 1.5s infinite;
-}
-
-/* Messages Container Styles */
 .messages-container {
   flex: 1;
   overflow-y: auto;
@@ -160,16 +146,82 @@
 }
 
 .message-wrapper.sent .message-content {
-  background-color: #2962FF;
+  background-color: #2962ff;
+}
+
+.message-sender {
+  font-size: 12px;
+  color: #228afa;
+  background-color: #262f45;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  display: inline-block;
+}
+
+.message-text {
+  margin-bottom: 4px;
+}
+
+.message-text pre {
+  background-color: #1a1f2e;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  position: relative;
+}
+
+.message-text code {
+  font-family: "Courier New", Courier, monospace;
+  white-space: pre-wrap;
+}
+
+.code-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.code-actions button {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.CancelIcon {
+  /* width: 80px; */
+  height: 40px;
+  margin: auto 0;
+  margin-left: 20px;
+  align-items: self-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chat-container.full-screen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.code-actions button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .message-timestamp {
   font-size: 12px;
   color: #8792a8;
-  margin-top: 4px;
 }
 
-/* Typing Indicator Styles */
 .typing-indicator {
   display: flex;
   gap: 4px;
@@ -192,7 +244,6 @@
   animation-delay: 0.4s;
 }
 
-/* Input Container Styles */
 .input-container {
   padding: 20px;
   background-color: #262f45;
@@ -218,10 +269,8 @@
 }
 
 .send-button {
-  background-color: #2962FF;
+  background-color: #2962ff;
   border: none;
-  /* width: 40px;
-  height: 40px; */
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -229,6 +278,7 @@
   color: #fff;
   cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s ease;
+  padding: 12px;
 }
 
 .send-button:hover {
@@ -236,7 +286,6 @@
   transform: scale(1.05);
 }
 
-/* Animations */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -285,33 +334,6 @@
   }
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(74, 85, 118, 0.4);
-  }
-
-  70% {
-    box-shadow: 0 0 0 10px rgba(74, 85, 118, 0);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(74, 85, 118, 0);
-  }
-}
-
-@keyframes blink {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* Scrollbar Styles */
 .messages-container::-webkit-scrollbar {
   width: 8px;
 }

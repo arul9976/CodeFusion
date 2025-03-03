@@ -12,10 +12,12 @@ import { registerCompletion } from 'monacopilot';
 import { debounce, throttle } from 'lodash';
 import axios from 'axios';
 import { useWebSocket } from '../Websocket/WebSocketProvider';
+import { usePopup } from '../PopupIndication/PopUpContext';
 const MonacoIDE = ({ activeFile }) => {
 
   const {  editorsRef, dispatch, language } = useContext(ClientContext);
-  const { getWorkspaceProvider } = useWebSocket();
+  const { getWorkspaceProvider, getYTextWithContent, isYTextHave } = useWebSocket();
+  const { showPopup } = usePopup();
 
   const editorRef = useRef(null);
   const currFile = useRef(null);
@@ -34,62 +36,15 @@ const MonacoIDE = ({ activeFile }) => {
     }
 
     editorsRef.current.get(file.id);
+    const model = editorRef.current.getModel();
 
-    const provider = getWorkspaceProvider(activeFile.id);
+    const provider = getWorkspaceProvider(activeFile.id, bindMonaco, model);
 
     console.log("Provider Initiated ", monacoBind.current, providerRef.current);
     
-    const model = editorRef.current.getModel();
-    const yText = provider.doc.getText(activeFile.id);
-
-    if (yText.toString().length !== 0) {
-      bindMonaco(yText, model, provider);
-      providerRef.current = provider;
-      console.log("Provider Already Active");
-
-      return;
-    } 
-
-    provider.on('sync', (event) => {
-
-      console.log(event);
-
-      // const yText = provider.doc.getText(activeFile.id);
-      console.log(yText.toString());
-      
-      if(yText.toString().length === 0){
-        getFileContent(file.url).then((res) => {
-          console.log(res);
-          yText.delete(0, yText.toString().length);
-          yText.insert(0, res);
-
-          console.log("YText -> " + yText.toString());
-
-          // model.setValue(yText.toString());
-
-          bindMonaco(yText, model, provider);
-          console.log("Editor Synced!!!!!!");
-
-        })
-      } else {
-        // model.setValue(yText.toString());
-        bindMonaco(yText, model, provider);
-      }
-
-      providerRef.current = provider;
-    });
-
-    if (providerRef.current || monacoBind.current) { console.log("retured"); return; }
-      
-    console.log(yText.toString());
+    providerRef.current = provider;
 
 
-
-
-
-
-
-    // providerRef.current = provider;
 
   }
 
