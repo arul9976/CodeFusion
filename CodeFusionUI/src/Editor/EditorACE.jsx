@@ -9,7 +9,7 @@ import { themeUtil } from './IdeUtils';
 import FileExplorer from '../FileExpo/FileExplorer';
 import { getFileIcon, getFileMode } from '../utils/GetIcon';
 import { ClientContext } from './ClientContext';
-import { emptyTerminalHistory, setCurrentTheme, setInputWant, setTerminalHistory } from '../Redux/editorSlice';
+import { emptyTerminalHistory, setChatMessages, setCurrentTheme, setInputWant, setTerminalHistory } from '../Redux/editorSlice';
 import MonacoIDE from './MonacoIDE';
 import { UserContext } from '../LogInPage/UserProvider';
 import NewFile from './NewFile';
@@ -121,7 +121,7 @@ const EditorACE = () => {
               socket.send(JSON.stringify({
                 event: 'file_system',
                 message: `${user.username} Renamed a ${oldName.type} ${oldName.newName.split('/n').at(-1)}`,
-                roomId: `${user.username}$${workspace}`
+                roomId: `${ownername}$${workspace}`
               }));
 
               showPopup(res.message, 'success', 3000);
@@ -213,7 +213,7 @@ const EditorACE = () => {
         socket.send(JSON.stringify({
           event: 'file_system',
           message: `${user.username} Created a File ${val}`,
-          roomId: `${user.username}$${workspace}`
+          roomId: `${ownername}$${workspace}`
         }));
       })
 
@@ -346,6 +346,9 @@ const EditorACE = () => {
 
           else if (res.event === 'error') {
             // inputWantRef.current = res.input;
+            setShowTerminal(true);
+
+
             let response = res.data;
             console.log(response, response.length);
             dispatch(setInputWant({ isWant: res.input }));
@@ -355,8 +358,13 @@ const EditorACE = () => {
 
           else if (res.event === 'file_system') {
             console.log("FILE CREATED " + res);
-            showPopup(res.message, 'success', 3000);
             setIsFileCreated(prev => !prev)
+            showPopup(res.message, 'success', 3000);
+          }
+
+          else if (res.event === 'chat') {
+            console.log(res);
+            dispatch(setChatMessages({ selectedOption: res.message.sender, userMessage: res.message }));
           }
         }
       };
@@ -369,7 +377,7 @@ const EditorACE = () => {
     console.log(workspace);
 
     if (!workspaces.some(ws => ws.workspaceName === workspace)) {
-      navigate('/notfound');
+      navigate('/Dashboard');
     } else {
       setCurrentWorkSpace(workspace);
     }
@@ -457,7 +465,7 @@ const EditorACE = () => {
             overflow: 'hidden'
           }}
         >
-          <Chat isChatOpen={isChatOpen} />
+          <Chat isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
         </motion.div>
         {/* Main Editor Area */}
         {/* <div style={styles.main}>

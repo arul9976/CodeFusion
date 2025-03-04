@@ -10,13 +10,17 @@ import { fetchCollaborators } from "../utils/Fetch";
 import { useParams } from "react-router-dom";
 import { UserContext } from "../LogInPage/UserProvider";
 import { useWebSocket } from "../Websocket/WebSocketProvider";
+import { setChatMessages, setMsgSeened } from "../Redux/editorSlice";
+import { useSelector } from "react-redux";
 
 
-const Chat = ({ isChatOpen }) => {
+const Chat = ({ isChatOpen, setIsChatOpen }) => {
 
   const { ownername, workspace } = useParams();
-  const { user } = useContext(UserContext);
+  const { user, dispatchUser } = useContext(UserContext);
   const [copied, setCopied] = useState(false);
+
+  const chatMessages = useSelector(state => state.editor.chatMessages);
 
   const { socket } = useWebSocket();
 
@@ -29,6 +33,7 @@ const Chat = ({ isChatOpen }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("All");
   const [isBotActive, setIsBotActive] = useState(false);
+
   const [messages, setMessages] = useState({
     "Bot": [
       {
@@ -61,23 +66,27 @@ const Chat = ({ isChatOpen }) => {
   };
 
   useEffect(() => {
+    // console.log(chatMessages);
+
     scrollToBottom();
-  }, [messages]);
+  }, [messages, chatMessages]);
 
   useEffect(() => {
     if (isChatOpen) {
       fetchCollaborators(workspace, ownername + "@gmail.com")
         .then(data => {
           console.log(data);
-
-          setUsers([{ username: ownername }, ...data.filter(u => u.username !== user.username)]);
+          const filtered = data.filter(u => u.username !== user.username);
+          setUsers(user.username !== ownername ? [{ username: ownername }, ...filtered] : filtered);
         })
         .catch((err) => {
           console.log("Error fetching contributors " + err.message);
         })
     }
-    const fetchedUsers = ["Manimekala", "Pravin", "ArulKumar"];
-    setUsers(fetchedUsers);
+    //  else {
+    //   const fetchedUsers = ["Manimekala", "Pravin", "ArulKumar"];
+    //   setUsers(fetchedUsers);
+    // }
   }, [isChatOpen]);
 
   // const getBotResponse = (userMessage) => {
@@ -127,7 +136,8 @@ const Chat = ({ isChatOpen }) => {
         receiver: selectedOption,
         timestamp: new Date().toLocaleTimeString(),
         isBot: false,
-        roomId: (ownername + "$" + workspace)
+        roomId: (ownername + "$" + workspace),
+        seen: false
       };
 
       console.log(socket, selectedOption);
@@ -141,80 +151,82 @@ const Chat = ({ isChatOpen }) => {
         }));
       }
 
-      if (selectedOption === "All") {
+      // if (selectedOption === "All") {
 
-        setMessages((prev) => {
-          const updatedMessages = { ...prev };
-          Object.keys(prev).forEach((user) => {
-            if (user !== "Bot") {
-              updatedMessages[user] = prev[user] ? [...prev[user], userMessage] : [userMessage];
-            }
-          });
-          return updatedMessages;
-        });
-      } else {
+      dispatchUser(setChatMessages({ selectedOption, userMessage }));
 
-        setMessages((prev) => ({
-          ...prev,
-          [selectedOption]: prev[selectedOption] ? [...prev[selectedOption], userMessage] : [userMessage],
-        }));
-      }
+      // setMessages((prev) => {
+      //   const updatedMessages = { ...prev };
+      //   Object.keys(prev).forEach((user) => {
+      //     if (user !== "Bot") {
+      //       updatedMessages[user] = prev[user] ? [...prev[user], userMessage] : [userMessage];
+      //     }
+      //   });
+      //   return updatedMessages;
+      // });
+      // } else {
 
-      if (selectedOption === "Bot") {
-        setIsTyping(true);
-        setTimeout(() => {
-          const botMessage = {
-            text: getBotResponse(inputMessage),
-            sender: "Bot",
-            timestamp: new Date().toLocaleTimeString(),
-            isBot: true,
-          };
+      // setMessages((prev) => ({
+      //   ...prev,
+      //   [selectedOption]: prev[selectedOption] ? [...prev[selectedOption], userMessage] : [userMessage],
+      // }));
+      // }
 
-          setMessages((prev) => ({
-            ...prev,
-            "Bot": prev["Bot"] ? [...prev["Bot"], botMessage] : [botMessage],
-          }));
-          setIsTyping(false);
-        }, 1500);
-      }
+      // if (selectedOption === "Bot") {
+      //   setIsTyping(true);
+      //   setTimeout(() => {
+      //     const botMessage = {
+      //       text: getBotResponse(inputMessage),
+      //       sender: "Bot",
+      //       timestamp: new Date().toLocaleTimeString(),
+      //       isBot: true,
+      //     };
+
+      //     setMessages((prev) => ({
+      //       ...prev,
+      //       "Bot": prev["Bot"] ? [...prev["Bot"], botMessage] : [botMessage],
+      //     }));
+      //     setIsTyping(false);
+      //   }, 1500);
+      // }
 
       setInputMessage("");
     }
   };
 
-  useEffect(() => {
-    if (socket) {
-      socket.onmessage = (event) => {
-        console.log(event, typeof event.data);
+  // useEffect(() => {
+  //   if (socket) {
+  //     socket.onmessage = (event) => {
+  //       console.log(event, typeof event.data);
 
-        if (typeof event.data === 'string') {
-          const res = JSON.parse(event.data);
-          if (res.event === 'chat') {
-            console.log(res);
-            if (res.message.receiver === 'All') {
-              console.log("Last  " + messages.All);
+  //       if (typeof event.data === 'string') {
+  //         const res = JSON.parse(event.data);
+  //         if (res.event === 'chat') {
+  //           console.log(res);
+  //           if (res.message.receiver === 'All') {
+  //             console.log("Last  " + messages.All);
 
-              if (messages.All.at(-1) && messages.All.at(-1)?.timestamp === res.message.timestamp) {
-                return;
-              }
-              setMessages((prev) => ({
-                ...prev,
-                "All": prev["All"] ? [...prev["All"], res.message] : [res.message],
-              }));
-            } else {
-              if (messages[res.message.receiver].at(-1) && messages[res.message.receiver].at(-1)?.timestamp === res.message.timestamp) {
-                return;
-              }
-              setMessages((prev) => ({
-                ...prev,
-                [res.message.receiver]: prev[res.message.receiver] ? [...prev[res.message.receiver], res.message] : [res.message],
-              }));
-            }
-          }
-        }
-      }
-    }
-  }, [socket])
+  //             if (messages.All.at(-1) && messages.All.at(-1)?.timestamp === res.message.timestamp) {
+  //               return;
+  //             }
+  //             setMessages((prev) => ({
+  //               ...prev,
+  //               "All": prev["All"] ? [...prev["All"], res.message] : [res.message],
+  //             }));
+  //           } else {
+  //             if (messages[res.message.receiver].at(-1) && messages[res.message.receiver].at(-1)?.timestamp === res.message.timestamp) {
+  //               return;
+  //             }
+  //             setMessages((prev) => ({
+  //               ...prev,
+  //               [res.message.receiver]: prev[res.message.receiver] ? [...prev[res.message.receiver], res.message] : [res.message],
+  //             }));
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }, [socket])
 
 
   return (
@@ -233,15 +245,49 @@ const Chat = ({ isChatOpen }) => {
 
               {isDropdownOpen && (
                 <div className="dropdown-menu">
-                  {users.map((uinfo, idx) => (
-                    <div key={idx} className="dropdown-item" onClick={() => handleOptionClick(uinfo.username)}>
-                      <User size={16} />
-                      <span>{uinfo.username}</span>
-                    </div>
-                  ))}
+                  {users.map((uinfo, idx) => {
+                    const userMsg = chatMessages[uinfo.username];
+                    let count = 0;
+                    if (userMsg) {
+                      for (let i = 0; i < userMsg.length; i++) {
+                        if (!userMsg[i].seen && userMsg[i].sender !== user.username) {
+                          count++;
+                        }
+                      }
+
+                    }
+
+                    return (
+                      <div key={idx} className="dropdown-item" onClick={() => handleOptionClick(uinfo.username)}>
+                        <User size={16} />
+                        <span className="overflow-hidden">{uinfo.username}</span>
+                        {
+                          count > 0 && (<p className="w-[18px] h-[18px] flex iterm-center justify-center rounded-full bg-red-500 text-[12px] font-bold">
+                            {count > 9 ? '9+' : count}
+                          </p>)
+                        }
+                      </div>
+                    )
+                  })}
                   <div className="dropdown-item" onClick={() => handleOptionClick("All")}>
                     <User size={16} />
                     <span>All</span>
+                    {
+                      [1].map(v => {
+
+                        let c = chatMessages['All'].reduce((acc, val) => {
+                          if (val.sender != user.username) return acc + (val.seen ? 0 : 1);
+                          return acc;
+                        }, 0);
+                        if (c) {
+                          return (
+                            < p className="w-[18px] h-[18px] flex iterm-center justify-center rounded-full bg-red-500 text-[12px] font-bold">
+                              {c}
+                            </p>
+                          )
+                        }
+                      })
+                    }
                   </div>
                 </div>
               )}
@@ -256,18 +302,21 @@ const Chat = ({ isChatOpen }) => {
             <button onClick={toggleFullScreen}>
               {isFullScreen ? <FaCompress size={16} /> : <FaExpand size={16} />}
             </button>
-            <button>
+            <button onClick={() => setIsChatOpen(false)}>
               <X size={18} />
             </button>
           </div>
         </div>
         <div className="messages-container">
-          {messages[selectedOption]?.map((message, index) => {
-            console.log("Message object:", message);
+          {chatMessages[selectedOption]?.map((message, index) => {
+            // console.log("Message object:", message);
             const messageText = typeof message.text === "object" ? message.text.text : message.text;
             const codeRegex = /```(?:[a-z]*)?\n([\s\S]*?)```/g;
             let parts = [];
             let lastIndex = 0;
+
+            if (message.sender !== user.username)
+              dispatchUser(setMsgSeened({ message, idx: index }));
 
             messageText.replace(codeRegex, (match, code, offset) => {
               if (offset > lastIndex) {
@@ -290,7 +339,7 @@ const Chat = ({ isChatOpen }) => {
               >
                 <div className="avatar">{message.isBot ? <FaRobot /> : <FaUser />}</div>
                 <div className="message-content">
-                  <div className="messageSender">{message.sender}</div>
+                  <div className="messageSender text-[13px] pl-1 pr-1 bg-[#228afa] rounded mt-1 mb-1">{message.sender === user.username ? 'you' : message.sender}</div>
                   {parts.map((part, partIndex) => (
                     part.type === "code" ? (
                       <div className="code-snippet-container" key={partIndex}>
@@ -313,7 +362,13 @@ const Chat = ({ isChatOpen }) => {
                         </button>
                       </div>
                     ) : (
-                      <p className="message-text" key={partIndex}>{part.content}</p>
+                      <>
+                        <p className="message-text" key={partIndex}>
+                          {part.content}
+                        </p>
+
+                      </>
+
                     )
                   ))}
 
@@ -352,7 +407,7 @@ const Chat = ({ isChatOpen }) => {
           </button>
         </form>
       </div>
-    </div>
+    </div >
   );
 };
 

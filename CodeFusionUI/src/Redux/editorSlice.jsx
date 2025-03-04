@@ -152,8 +152,43 @@ const editorSlice = createSlice({
 
 
     setChatMessages: (state, action) => {
-      const { message, wsName } = action.payload;
-      state.chatMessages[wsName] = message;
+      const { selectedOption, userMessage } = action.payload;
+      // state.chatMessages[wsName] = message;
+      // console.log(selectedOption, userMessage);
+
+      if (userMessage.receiver === 'All') {
+        // Object.keys(state.chatMessages).forEach((user) => {
+        //   // console.log("User -> " + user);
+        //   if (user !== "Bot") {
+        //     state.chatMessages[user] = state.chatMessages[user] ? [...state.chatMessages[user], userMessage] : [userMessage];
+        //   }
+        // });
+        state.chatMessages['All'] = [...state.chatMessages['All'] || {}, userMessage];
+
+      } else {
+        console.log("User -> ", selectedOption);
+        state.chatMessages[selectedOption] = state.chatMessages[selectedOption] || [];
+        state.chatMessages[selectedOption] = [...state.chatMessages[selectedOption] || {}, userMessage];
+      }
+
+    },
+
+    setMsgSeened: (state, action) => {
+      const { message, idx } = action.payload;
+      console.log(message, idx);
+      let msg = null;
+      if(message.receiver === 'All'){
+        msg = state.chatMessages['All'].find((msg, i) => i == idx);
+      }else {
+        msg = state.chatMessages[message.sender].find((msg, i) => i == idx);
+      }
+      console.log("--->\n", msg);
+
+      if (msg) {
+        msg.seen = true;
+        console.log(msg);
+
+      }
     }
   },
 });
@@ -162,7 +197,7 @@ export const {
 
   setCode, setLang, setOutput, setCursor, setCurrentTheme, setActiveFile, setEditorTheme, removeYdoc, setUser,
   setWorkspaces, pushWorkspace, setTerminalHistory, emptyTerminalHistory, setInputWant, pushNotifications,
-  setNotifications, updateWorkspace, deleteWorkspace, updateNkname
+  setNotifications, updateWorkspace, deleteWorkspace, updateNkname, setChatMessages, setMsgSeened
 
 } = editorSlice.actions;
 

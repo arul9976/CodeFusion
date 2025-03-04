@@ -13,17 +13,50 @@ import { debounce, throttle } from 'lodash';
 import axios from 'axios';
 import { useWebSocket } from '../Websocket/WebSocketProvider';
 import { usePopup } from '../PopupIndication/PopUpContext';
+import { UserContext } from '../LogInPage/UserProvider';
+import { getRandomColor } from '../utils/Utilies';
 const MonacoIDE = ({ activeFile }) => {
 
   const {  editorsRef, dispatch, language } = useContext(ClientContext);
-  const { getWorkspaceProvider, getYTextWithContent, isYTextHave } = useWebSocket();
+  const { getWorkspaceProvider } = useWebSocket();
   const { showPopup } = usePopup();
+  const { user } = useContext(UserContext);
 
   const editorRef = useRef(null);
+
+  const cursorLabelsRef = useRef({});
+
+  const decorationsRef = useRef({});
+
   const currFile = useRef(null);
   const monacoRef = useRef(null);
   const monacoBind = useRef(null);
   const providerRef = useRef(null);
+
+
+  const updateCursor = debounce(() => {
+
+      const states = providerRef.current.awareness.getStates();
+      // console.log("States ", states);
+
+      states.forEach((state, clientId) => {
+        // console.log("Client " + clientId, state.cursor);
+
+        if (clientId !== providerRef.current.awareness.clientID && state.cursor && activeFile.id === state.activeFile) {
+          const { lineNumber, column } = state.cursor;
+          // console.log("Client " + clientId, lineNumber, column);
+          // console.log(cursorLabelsRef.current);
+
+          createUserCursor(editorRef.current, {
+            id: clientId,
+            name: state.username,
+            color: getRandomColor(),
+            position: { lineNumber, column }
+          });
+        }
+      });
+
+  }, 300)
 
   const initiateFile = (file) => {
     currFile.current = file;
@@ -39,10 +72,18 @@ const MonacoIDE = ({ activeFile }) => {
     const model = editorRef.current.getModel();
 
     const provider = getWorkspaceProvider(activeFile.id, bindMonaco, model);
+    providerRef.current = provider;
+
+    // provider.awareness.setLocalStateField('username', user.username);
+    // provider.awareness.setLocalStateField('name', 'Alice');
+    // provider.awareness.setLocalStateField('color', '#ff0000');
 
     console.log("Provider Initiated ", monacoBind.current, providerRef.current);
-    
-    providerRef.current = provider;
+
+
+
+    provider.awareness.on('update', updateCursor);
+
 
 
 
@@ -77,6 +118,35 @@ const MonacoIDE = ({ activeFile }) => {
     editorRef.current = editor;
     editorsRef.current.set(file.id, editor);
     initiateFile(file);
+
+    const localUser = { id: 'local', name: 'you', color: getRandomColor(), position: { lineNumber: 1, column: 1 } };
+   
+    createUserCursor(editor, localUser);
+
+    editor.onDidChangeCursorPosition((e) => {
+      // console.log('Local cursor moved to:', e.position);
+      // console.log('Local awareness state:', providerRef.current.awareness.getLocalState());
+
+      updateUserCursor(editor, {
+        ...localUser,
+        position: e.position
+      });
+
+      providerRef.current.awareness.setLocalStateField('cursor', e.position)
+
+    });
+
+    editor.onDidBlurEditorText(() => {
+      if (cursorLabelsRef.current[localUser.id]) {
+        cursorLabelsRef.current[localUser.id].style.display = 'none';
+      }
+    });
+
+    editor.onDidFocusEditorText(() => {
+      if (cursorLabelsRef.current[localUser.id]) {
+        cursorLabelsRef.current[localUser.id].style.display = 'block';
+      }
+    });
 
   }
 
@@ -114,27 +184,43 @@ const MonacoIDE = ({ activeFile }) => {
       console.log("Initiated");
 
     }
+
+    return () => {
+      Object.values(cursorLabelsRef.current).forEach(label => {
+        if (label && label.parentNode) {
+          label.parentNode.removeChild(label);
+        }
+      });
+    };
+
   }, []);
 
+  const createUserCursor = (editor, user) => {
+    const domNode = editor.getDomNode();
 
-  // useEffect(() => {
-  //   if (providerRef.current && monacoBind.current) {
-  //     console.log("Provider Configured");
+    if (domNode) {
 
-  //   }
+      if (!cursorLabelsRef.current[user.id]) {
+        const userDiv = document.createElement('div');
+        userDiv.className = `user-tag ${user.id}-tag`;
+        userDiv.textContent = user.name;
+        userDiv.style.position = 'absolute';
+        userDiv.style.backgroundColor = user.color;
+        userDiv.style.color = 'white';
+        userDiv.style.padding = '2px 6px';
+        userDiv.style.borderRadius = '3px';
+        userDiv.style.fontSize = '12px';
+        userDiv.style.zIndex = '10';
+        userDiv.style.transition = 'all 0.2s ease-out';
+        userDiv.style.pointerEvents = 'none';
+        domNode.appendChild(userDiv);
 
-  //   return () => {
-  //     if (providerRef.current) {
-  //       providerRef.current.destroy();
-  //       if (monacoBind.current)
-  //         monacoBind.current.destroy();
+        cursorLabelsRef.current[user.id] = userDiv;
+      }
 
-  //       console.log("Destroyed provider and binding");
-        
-  //     }
-
-  //   }
-  // }, [providerRef.current, monacoBind.current]);
+      updateUserCursor(editor, user);
+    }
+  };
 
   const beforeMount = (monaco) => {
     monaco.editor.defineTheme('modernDark', {
@@ -158,7 +244,11 @@ const MonacoIDE = ({ activeFile }) => {
         { token: 'attribute.name', foreground: 'c4b5fd' },
         { token: 'attribute.value', foreground: '86efac' },
         { token: 'class', foreground: 'c4b5fd', fontStyle: 'bold' },
-        { token: 'interface', foreground: '93c5fd', fontStyle: 'bold' }
+        { token: 'interface', foreground: '93c5fd', fontStyle: 'bold' },
+
+        { token: 'error', foreground: 'ef4444' },
+        { token: 'warning', foreground: 'f59e0b' },
+        { token: 'info', foreground: '3b82f6' }
       ],
       colors: {
         'editor.background': '#1a1d24',
@@ -185,7 +275,22 @@ const MonacoIDE = ({ activeFile }) => {
         'editorIndentGuide.background': '#2d323c',
         'editorIndentGuide.activeBackground': '#4b5563',
         'editorBracketMatch.border': '#4f46e5',
-        'editorBracketMatch.background': '#3b4252'
+        'editorBracketMatch.background': '#3b4252',
+
+        'editorError.foreground': '#ef4444',
+        'editorWarning.foreground': '#f59e0b',
+        'editorInfo.foreground': '#3b82f6',
+        'editorError.border': '#ef4444',
+        'editorWarning.border': '#f59e0b',
+        'editorInfo.border': '#3b82f6',
+
+        'editorRuler.foreground': '#374151',
+        'minimap.errorHighlight': '#ef4444',
+        'minimap.warningHighlight': '#f59e0b',
+
+        'editorOverviewRuler.errorForeground': '#ef4444',
+        'editorOverviewRuler.warningForeground': '#f59e0b',
+        'editorOverviewRuler.infoForeground': '#3b82f6'
       }
     });
 
@@ -193,67 +298,41 @@ const MonacoIDE = ({ activeFile }) => {
     // Authorization: `Bearer ${'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'}`,
 
 
+  };
 
-    // const debouncedFetch = debounce(async (text, callback) => {
-    //   try {
-    //     const response = await axios.post(
-    //       "https://api-inference.huggingface.co/models/bigcode/starcoder",
-    //       {
-    //         inputs: text,
-    //         parameters: { max_new_tokens: 50, return_full_text: false },
-    //       },
-    //       {
-    //         headers: {
-    //           Authorization: `Bearer ${'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'}`,
-    //           "Content-Type": "application/json",
-    //         },
-    //       }
-    //     );
-    //     const suggestion = response.data[0].generated_text.trim();
-    //     callback({ suggestion });
-    //   } catch (error) {
-    //     // console.error("Hugging Face API error:", error);
-    //     callback({ suggestion: "" });
-    //   }
-    // }, 150); // 150ms debounce for Tabnine-like speed
 
-    // monaco.languages.registerCompletionItemProvider("javascript", {
-    //   triggerCharacters: [".", " ", "(", "\n"], // Add newline for multi-line
-    //   provideCompletionItems: (model, position) => {
-    //     const textUntilPosition = model.getValueInRange({
-    //       startLineNumber: Math.max(1, position.lineNumber - 5), // 5 lines of context
-    //       startColumn: 1,
-    //       endLineNumber: position.lineNumber,
-    //       endColumn: position.column,
-    //     });
-    //     console.log("Input: ", textUntilPosition);
+  const updateUserCursor = (editor, user) => {
+    if (cursorLabelsRef.current[user.id]) {
+      const coordinates = editor.getScrolledVisiblePosition(user.position);
 
-    //     return new Promise((resolve) => {
-    //       debouncedFetch(textUntilPosition, (data) => {
-    //         const suggestionText = data.suggestion || "";
-    //         const suggestions = suggestionText
-    //           ? [
-    //             {
-    //               label: suggestionText,
-    //               kind: monaco.languages.CompletionItemKind.Snippet,
-    //               insertText: suggestionText,
-    //               detail: "Suggested by StarCoder (Tabnine-like)",
-    //               range: {
-    //                 startLineNumber: position.lineNumber,
-    //                 startColumn: position.column,
-    //                 endLineNumber: position.lineNumber,
-    //                 endColumn: position.column,
-    //               }, // Replace at cursor
-    //             },
-    //           ]
-    //           : [];
+      if (coordinates) {
+        cursorLabelsRef.current[user.id].style.left = `${coordinates.left + 20}px`;
+        cursorLabelsRef.current[user.id].style.top = `${coordinates.top}px`;
+        cursorLabelsRef.current[user.id].style.display = 'block';
 
-    //         console.log("Suggestion: ", suggestionText);
-    //         resolve({ suggestions });
-    //       });
-    //     });
-    //   },
-    // });
+        if (decorationsRef.current[user.id]) {
+          decorationsRef.current[user.id].clear();
+        }
+
+        const userColor = user.color.replace('0.8', '0.3');
+        decorationsRef.current[user.id] = editor.createDecorationsCollection([
+          {
+            range: new monaco.Range(
+              user.position.lineNumber,
+              user.position.column,
+              user.position.lineNumber,
+              user.position.column + 1
+            ),
+            options: {
+              className: `${user.id}-cursor`,
+              hoverMessage: { value: user.name },
+              inlineClassName: `${user.id}-highlight`,
+              stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+            }
+          }
+        ]);
+      }
+    }
   };
 
   return (
@@ -263,7 +342,7 @@ const MonacoIDE = ({ activeFile }) => {
       width: '100%',
     }}>
       <Editor
-        heigh={"100%"}
+        height={"100%"} 
         width={"100%"}
         defaultLanguage={getFileMode(activeFile.name)}
         theme="modernDark"
@@ -273,9 +352,10 @@ const MonacoIDE = ({ activeFile }) => {
         options={{
           suggestOnTriggerCharacters: true,
           quickSuggestions: { other: true, comments: true, strings: true },
-          acceptSuggestionOnCommitCharacter: true, 
+          acceptSuggestionOnCommitCharacter: true,
           acceptSuggestionOnEnter: "on",
-          tabCompletion: "on", 
+          tabCompletion: "on",
+          semanticHighlighting: { enabled: true },
           wordBasedSuggestions: false,
           fontSize: 14,
           fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
@@ -283,14 +363,8 @@ const MonacoIDE = ({ activeFile }) => {
           lineHeight: 1.5,
           letterSpacing: 0.5,
           padding: { top: 16, bottom: 16 },
-          minimap: {
-            enabled: false
-          },
-          scrollbar: {
-            useShadows: false,
-            verticalScrollbarSize: 8,
-            horizontalScrollbarSize: 8
-          },
+          minimap: { enabled: false },
+          scrollbar: { useShadows: false, verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
           smoothScrolling: true,
           cursorBlinking: 'smooth',
           cursorSmoothCaretAnimation: true,
@@ -308,9 +382,19 @@ const MonacoIDE = ({ activeFile }) => {
             insertMode: 'replace',
             snippetsPreventQuickSuggestions: false,
           },
+          languages: {
+            java: {
+              diagnostics: true,
+              validate: true
+            }
+          },
+          codeActionsOnSave: {
+            source: true
+          },
           bracketPairColorization: {
             enabled: true,
-          }
+          },
+          "editor.diagnostics.enabled": true,
         }}
       />
     </div >

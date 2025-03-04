@@ -130,6 +130,9 @@ export const WebSocketProvider = ({ children, roomId }) => {
 
 
   const setUpContentToIDE = (workspaceId, yText, bindMonaco, provider, model) => {
+    provider.awareness.setLocalStateField('username', user.username);
+    provider.awareness.setLocalStateField('activeFile', workspaceId);
+
     if (yText.toString() !== '$$$') {
       console.log("YText Already Exists");
       bindMonaco(yText, model, provider);

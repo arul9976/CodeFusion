@@ -28,4 +28,9 @@ const capitalize = (name) => {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-export { mysqlNow, getInitials, capitalize };
+const getRandomColor = () => {
+  const hue = Math.floor(Math.random() * 360);
+  return `hsl(${hue}, 70%, 50%)`;
+}
+
+export { mysqlNow, getInitials, capitalize, getRandomColor };

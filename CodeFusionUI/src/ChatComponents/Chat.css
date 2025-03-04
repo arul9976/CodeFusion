@@ -91,6 +91,8 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   min-width: 160px;
+  max-width: 260px;
+  width: 260px;
   z-index: 1000;
   animation: fadeIn 0.3s ease;
 }
@@ -100,9 +102,10 @@
   color: #fff;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  display: flex;
+  display: grid;
   align-items: center;
   gap: 8px;
+  grid-template-columns: 10% 70% 10%;
 }
 
 .dropdown-item:hover {
@@ -161,6 +164,7 @@
 
 .message-text {
   margin-bottom: 4px;
+  font-size: 18px !important;
 }
 
 .message-text pre {

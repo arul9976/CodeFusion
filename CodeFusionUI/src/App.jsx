@@ -32,6 +32,7 @@ import Popup from "./PopupIndication/Popup";
 import ZohoRedirect from "./Auth/ZohoRedirect";
 import { jwtLogin } from "./utils/Fetch";
 import { usePopup } from "./PopupIndication/PopUpContext";
+import MonacoCollaborativeEditor from "./Demo";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -116,7 +117,7 @@ const App = () => {
        {/* <Route path="/IDE1" Component={CodeEditor} /> */}
       <Route path="/Google" Component={GoogleAuth} />
       <Route path="/Chat" element={<Term/>} />
-    {/* <Route path="/NewFile" Component={NewFileComp} /> */}
+      {/* <Route path="/NewFile" Component={MonacoCollaborativeEditor} /> */}
       <Route path="/Edit" element={<FileMenu/>} />
       <Route path="/Dashboard" element={<DashPage />} />
       <Route path="/zohoredirect" element={<ZohoRedirect/>} />

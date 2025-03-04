@@ -99,7 +99,7 @@ const DashboardPage = () => {
           break;
         case 1:
           getWorkSpaces(user.email, "1").then((data) => {
-            console.log(data);
+            console.log(data, user.username);
 
             if (data.length > 0) {
               dispatchUser(setWorkspaces(data.filter(ws => ws.ownerName === user.username)))

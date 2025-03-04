@@ -787,7 +787,7 @@ function pasteToFolder(pathToCopy, fileToCopy, type) {
     const sourcePath = path.resolve(fileToCopy);
     const destPath = path.resolve(path.join(pathToCopy, path.basename(fileToCopy)));
 
-    console.log("---> " + sourcePath + "\n---> " + destPath);
+    console.log("---> " + sourcePath + "\n---> " + destPath + "\n---> " + type);
 
     if (!fs.existsSync(sourcePath)) {
       throw new Error('Source file does not exist');
@@ -798,7 +798,7 @@ function pasteToFolder(pathToCopy, fileToCopy, type) {
       fs.mkdirSync(destDir, { recursive: true });
     }
 
-    fs.copyFileSync(sourcePath, destPath, { overwrite: true });
+    fs.copySync(sourcePath, destPath, { overwrite: true });
 
     if (type.toLowerCase() === 'cut') {
       fs.unlinkSync(sourcePath);
@@ -1024,7 +1024,10 @@ wss.on('connection', (ws, req) => {
           console.log("RoomId ", data.roomId);
 
           clientRooms.get(data.roomId)?.forEach((client, un) => {
+            console.log("Entered ", un);
+
             if (un !== username && client.readyState === WebSocket.OPEN) {
+              console.log("Send to ", un);
               client.send(JSON.stringify({
                 event: 'file_system',
                 message: data.message

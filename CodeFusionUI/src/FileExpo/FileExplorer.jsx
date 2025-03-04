@@ -310,8 +310,13 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
           setIsFileCreated(prev => !prev);
           if (res.success) {
             showPopup(`${pathToCopy.type == 'file' ? 'File' : 'Folder'} Pasted Successfully`, 'success', 3000);
+            socket.send(JSON.stringify({
+              event: 'file_system',
+              message: `${user.username} ${copy.type} a ${copy.fileType} from ${copy.url} to ${pathToCopy}`,
+              roomId: `${ownername}$${workspace}`
+            }));
           } else {
-            showPopup(res.message, 'success', 3000);
+            showPopup(res.message, 'warning', 3000);
           }
         }).catch(e => {
           showPopup('Paste Failed', 'error', 3000);
@@ -465,7 +470,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
                 socket.send(JSON.stringify({
                   event: 'file_system',
                   message: `${user.username} Deleted a ${((contextMenu.item?.url) ? 'File ' + contextMenu.item.file : 'Folder ' + contextMenu.item)}`,
-                  roomId: `${user.username}$${workspace}`
+                  roomId: `${ownername}$${workspace}`
                 }));
               }else {
                 showPopup(res.message, 'error', 3000);
