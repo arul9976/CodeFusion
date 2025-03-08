@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, FolderPlus, Save, LogOut, Settings, Download, Upload, Copy, Trash } from 'lucide-react';
+import { usePopup } from '../../PopupIndication/PopUpContext';
+import { useNavigate } from 'react-router-dom';
 
 const FileMenu = ({
   handleFileOpen, isFileOpen, handleFileMenuOpen,
   handleFolderOpen
 }) => {
 
+  const { showPopup } = usePopup();
+
+  const navigate = useNavigate();
 
   const menuItems = [
     { icon: <FileText size={16} />, label: "New File", shortcut: "" },
@@ -33,6 +38,12 @@ const FileMenu = ({
         handleFileOpen(); break;
       case 3:
         handleFolderOpen(); break;
+      case 6:
+        showPopup('Workspace closing...', 'warning', 2600)
+        setTimeout(() => {
+          navigate('/Dashboard');
+        }, 2500);
+        break;
       default:
         break;
     }

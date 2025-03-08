@@ -29,6 +29,12 @@ const TabInterface = ({
   handleRename
 }) => {
 
+  useEffect(() => {
+    if (files)
+      console.log(files);
+
+  }, [files])
+
 
   return (
     <motion.div
@@ -174,7 +180,6 @@ const FileComp = ({
 
   useEffect(() => {
     // console.log(activeFile, unsavedFiles, isSaved);
-
 
     if (activeFile && isSaved.current) {
       isSaved.current = false;
@@ -341,7 +346,7 @@ const FileComp = ({
         </span>
       </motion.div>
 
-      {/* <Help /> */}
+      {/* <Help/> */}
 
       <motion.button
         whileHover={{ backgroundColor: 'rgb(75, 85, 99)' }}

@@ -13,7 +13,6 @@ import { getInitials } from '../utils/Utilies';
 import RenameWorkspace from './RenameWorkspace';
 import DeleteWorkspace from './DeleteWorkspace';
 import Profile from './Profile';
-import { ClientContext } from '../Editor/ClientContext';
 import EmptyState from './EmptyState';
 import { usePopup } from '../PopupIndication/PopUpContext';
 
@@ -55,14 +54,11 @@ const DashboardPage = () => {
 
 
   // useEffect(() => {
+  //   console.log("Workspaces --> ", workspaces);
 
-  //   switch (activeTab) {
-  //     case 1:
-  //   }
-  // }, [activeTab])
+  // }, [workspaces])
 
   useEffect(() => {
-    console.log(user);
 
     if (user.isLoggedIn) {
       switch (activeTab) {
@@ -70,14 +66,14 @@ const DashboardPage = () => {
           getWorkSpaces(user.email, "1").then((data) => {
             if (data && data.length > 0) {
               dispatchUser(setWorkspaces(data))
-              console.log("Workspaces updated 1");
+              // console.log("Workspaces updated 1");
 
-              console.log(workspaces);
+              // console.log(workspaces);
               getWorkSpaces(user.email, "0").then((data) => {
                 if (data.length > 0) {
                   dispatchUser(setWorkspaces([...workspaces, ...data]))
-                  console.log("Workspaces updated 2");
-                  console.log(workspaces);
+                  // console.log("Workspaces updated 2");
+                  // // console.log(workspaces);
                 }
 
               });
@@ -88,8 +84,8 @@ const DashboardPage = () => {
               getWorkSpaces(user.email, "0").then((data) => {
                 if (data && data?.length > 0) {
                   dispatchUser(setWorkspaces([...workspaces, ...data]))
-                  console.log("Workspaces updated 2");
-                  console.log(workspaces);
+                  // console.log("Workspaces updated 2");
+                  // console.log(workspaces);
                 }
 
               }).catch(() => showPopup("No Workspaces Available", 'warning', 3000))
@@ -135,6 +131,10 @@ const DashboardPage = () => {
           console.log("No workspaces found");
 
       }
+
+      return () => {
+        dispatchUser(setWorkspaces([]));
+      }
     }
   }, [user, activeTab])
 
@@ -144,7 +144,10 @@ const DashboardPage = () => {
       <ProfileInfo isOpen={isProfileOn} onClose={handleProfileOpen} />
 
       <div className={'sidebar'}>
-        <div className={'logo'}>
+        <div className={'logo flex item-center justify-center'}>
+          <div className="w-[45px]">
+            <img src="/logo.png" alt="" />
+          </div>
           <div className={'logoText'}>Code Fusion</div>
         </div>
 

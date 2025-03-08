@@ -3,6 +3,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { MonacoBinding } from 'y-monaco';
 import Editor from '@monaco-editor/react';
+import { Parser } from "web-tree-sitter";
 
 import { ClientContext } from './ClientContext';
 import { getFileMode } from '../utils/GetIcon';
@@ -10,11 +11,11 @@ import { getFileContent } from '../utils/Fetch';
 import { setCode, setLang } from '../Redux/editorSlice';
 import { registerCompletion } from 'monacopilot';
 import { debounce, throttle } from 'lodash';
-import axios from 'axios';
 import { useWebSocket } from '../Websocket/WebSocketProvider';
 import { usePopup } from '../PopupIndication/PopUpContext';
 import { UserContext } from '../LogInPage/UserProvider';
 import { getRandomColor } from '../utils/Utilies';
+import { Language } from 'web-tree-sitter';
 const MonacoIDE = ({ activeFile }) => {
 
   const {  editorsRef, dispatch, language } = useContext(ClientContext);
@@ -23,6 +24,7 @@ const MonacoIDE = ({ activeFile }) => {
   const { user } = useContext(UserContext);
 
   const editorRef = useRef(null);
+  const languageWorkers = useRef({});
 
   const cursorLabelsRef = useRef({});
 
@@ -33,6 +35,60 @@ const MonacoIDE = ({ activeFile }) => {
   const monacoBind = useRef(null);
   const providerRef = useRef(null);
 
+  const parserRef = useRef(null);
+
+  const loadTreeSitter = () =>
+    new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/web-tree-sitter@0.20.8/lib/index.js";
+      script.onload = () => resolve(window.TreeSitter);
+      document.head.appendChild(script);
+    });
+
+  const languageGrammars = {
+    javascript: "https://unpkg.com/tree-sitter-javascript@0.20.1/tree-sitter-javascript.wasm",
+    python: "/tree-sitter-python.wasm",
+    java: "/tree-sitter-java.wasm",
+    cpp: "https://unpkg.com/tree-sitter-cpp@0.20.3/tree-sitter-cpp.wasm",
+    csharp: "https://unpkg.com/tree-sitter-c-sharp@0.20.0/tree-sitter-c-sharp.wasm",
+    go: "https://unpkg.com/tree-sitter-go@0.20.0/tree-sitter-go.wasm",
+    rust: "https://unpkg.com/tree-sitter-rust@0.20.1/tree-sitter-rust.wasm",
+    php: "https://unpkg.com/tree-sitter-php@0.19.0/tree-sitter-php.wasm",
+    ruby: "https://unpkg.com/tree-sitter-ruby@0.20.1/tree-sitter-ruby.wasm",
+  };
+
+  const updateErrors = (parser, editor, monacoInstance) => {
+    const code = editor.getValue();
+    const tree = parser.parse(code);
+    console.log('Full syntax tree:', tree.rootNode.toString());
+
+    const errors = [];
+    const collectErrors = (node) => {
+      if (node.type === 'ERROR') {
+        console.log('Error node:', node.toString(), node.startPosition, node.endPosition);
+        errors.push({
+          severity: monaco.MarkerSeverity.Error,
+          message: `Syntax error: ${node.text || 'invalid syntax'}`,
+          startLineNumber: node.startPosition.row + 1,
+          startColumn: node.startPosition.column + 1,
+          endLineNumber: node.endPosition.row + 1,
+          endColumn: node.endPosition.column + 1,
+        });
+      }
+      node.children.forEach(collectErrors);
+    };
+
+    collectErrors(tree.rootNode);
+
+    // if (tree.rootNode.hasError()) {
+    //   console.log('Tree contains errors');
+    // } else {
+    //   console.log('No syntactic errors detected in tree');
+    // }
+
+    console.log('Detected errors:', errors);
+    monacoInstance.editor.setModelMarkers(editor.getModel(), 'tree-sitter', errors);
+  };
 
   const updateCursor = debounce(() => {
 
@@ -89,6 +145,44 @@ const MonacoIDE = ({ activeFile }) => {
 
   }
 
+  const initParser = async (lan) => {
+    try {
+      console.log("+++ " + lan);
+      let path = languageGrammars[lan]
+      console.log("Path ", path);
+
+      await Parser.init({
+        locateFile: (file) => {
+          return '/tree-sitter.wasm'; 
+        },
+      });
+
+      const parser = new Parser();
+      console.log("Path1 ", path);
+
+      const lang = await Language.load(path);
+      parser.setLanguage(lang);
+
+      
+
+      parserRef.current = parser;
+      
+      console.log('Parser initialized successfully');
+      return parser;
+
+    } catch (error) {
+      console.error('Failed to initialize parser:', error);
+    }
+  };
+
+  // useEffect(() => {
+
+  //   console.log("Treesitter Init", language);
+  //   if(language)
+  //     initParser();
+ 
+  // }, [language]);
+
   const bindMonaco = (yText, model, provider) => {
     const binding = new MonacoBinding(
       yText,
@@ -104,12 +198,98 @@ const MonacoIDE = ({ activeFile }) => {
   }
 
   function handleEditorDidMount(editor, monaco, file) {
-    console.log("Current Language " + getFileMode(activeFile.name));
+
+    let lan = getFileMode(activeFile.name);
+
+    console.log("Current Language " + lan);
+
 
     registerCompletion(monaco, editor, {
-      language: getFileMode(activeFile.name),
+      language: lan,
       endpoint: `${import.meta.env.VITE_RUNNER_URL}/code-completion`,
     });
+
+    initParser(lan).then(parser => {
+      parserRef.current = parser;
+      let c = 'def hello(): print("Hello, world!")';
+      let t = parser.parse(c);
+      console.log('Syntax tree:', t);
+      console.log('Root node:', t.rootNode.toString());
+
+      monaco.languages.registerCompletionItemProvider(lan, {
+        provideCompletionItems: (model, position) => {
+          if (!parser) {
+            console.log("Not registered completion");
+             return {  suggestions: [] }
+          };
+
+          const code = model.getValue();
+          console.log("Curr Code ", code);
+
+          const tree = parser.parse(code);
+          const cursorPosition = { row: position.lineNumber - 1, column: position.column - 1 };
+          const node = tree.rootNode.namedDescendantForPosition(cursorPosition);
+
+          const suggestions = [];
+          
+          const collectSuggestions = (n) => {
+            if (n.type === "identifier" || n.type === "variable_name" || n.type === "function_definition" || n.type === "class_definition") {
+              suggestions.push({
+                label: n.text,
+                kind: monaco.languages.CompletionItemKind[n.type.includes("function") ? "Function" : "Variable"],
+                insertText: n.text,
+                range: {
+                  startLineNumber: position.lineNumber,
+                  endLineNumber: position.lineNumber,
+                  startColumn: position.column - 1,
+                  endColumn: position.column,
+                },
+              });
+            }
+            n.children.forEach(collectSuggestions);
+          };
+
+          // const collectSuggestions = (n) => {
+          //   if (!n) return;
+          //   let kind;
+          //   switch (n.type) {
+          //     case 'function_definition':
+          //       kind = monaco.languages.CompletionItemKind.Function;
+          //       break;
+          //     case 'class_definition':
+          //       kind = monaco.languages.CompletionItemKind.Class;
+          //       break;
+          //     case 'identifier':
+          //     case 'variable_name':
+          //       kind = monaco.languages.CompletionItemKind.Variable;
+          //       break;
+          //     default:
+          //       return;
+          //   }
+          //   suggestions.push({
+          //     label: n.text,
+          //     kind,
+          //     insertText: n.text,
+          //     range: {
+          //       startLineNumber: position.lineNumber,
+          //       endLineNumber: position.lineNumber,
+          //       startColumn: position.column,
+          //       endColumn: position.column,
+          //     },
+          //   });
+          //   n.children.forEach(collectSuggestions);
+          // };
+
+          collectSuggestions(node || tree.rootNode);
+
+          console.log("Suggestions ", suggestions);
+          
+          return { suggestions:suggestions };
+        },
+      });
+    })
+
+   
 
     // console.log(file);
     currFile.current = file;
@@ -119,32 +299,40 @@ const MonacoIDE = ({ activeFile }) => {
     editorsRef.current.set(file.id, editor);
     initiateFile(file);
 
-    const localUser = { id: 'local', name: 'you', color: getRandomColor(), position: { lineNumber: 1, column: 1 } };
+    // const localUser = { id: 'local', name: 'you', color: getRandomColor(), position: { lineNumber: 1, column: 1 } };
    
-    createUserCursor(editor, localUser);
+    // createUserCursor(editor, localUser);
 
     editor.onDidChangeCursorPosition((e) => {
       // console.log('Local cursor moved to:', e.position);
       // console.log('Local awareness state:', providerRef.current.awareness.getLocalState());
 
-      updateUserCursor(editor, {
-        ...localUser,
-        position: e.position
-      });
+      // updateUserCursor(editor, {
+      //   ...localUser,
+      //   position: e.position
+      // });
 
       providerRef.current.awareness.setLocalStateField('cursor', e.position)
-
+    
     });
 
-    editor.onDidBlurEditorText(() => {
-      if (cursorLabelsRef.current[localUser.id]) {
-        cursorLabelsRef.current[localUser.id].style.display = 'none';
-      }
-    });
+    // editor.onDidBlurEditorText(() => {
+    //   if (cursorLabelsRef.current[localUser.id]) {
+    //     cursorLabelsRef.current[localUser.id].style.display = 'none';
+    //   }
+    // });
 
-    editor.onDidFocusEditorText(() => {
-      if (cursorLabelsRef.current[localUser.id]) {
-        cursorLabelsRef.current[localUser.id].style.display = 'block';
+    // editor.onDidFocusEditorText(() => {
+    //   if (cursorLabelsRef.current[localUser.id]) {
+    //     cursorLabelsRef.current[localUser.id].style.display = 'block';
+    //   }
+    // });
+
+    editor.onDidChangeModelContent((e) => {
+      if (parserRef.current) {
+        updateErrors(parserRef.current, editor, monaco);
+        console.log("Error updating");
+
       }
     });
 
@@ -153,6 +341,7 @@ const MonacoIDE = ({ activeFile }) => {
   const handleChange = (value) => {
     // console.log(value);
     dispatch(setCode(value));
+
   }
 
 
@@ -184,7 +373,6 @@ const MonacoIDE = ({ activeFile }) => {
       console.log("Initiated");
 
     }
-
     return () => {
       Object.values(cursorLabelsRef.current).forEach(label => {
         if (label && label.parentNode) {
@@ -350,6 +538,7 @@ const MonacoIDE = ({ activeFile }) => {
         onMount={(editor, monaco) => handleEditorDidMount(editor, monaco, activeFile)}
         onChange={handleChange}
         options={{
+          // readOnly: true,
           suggestOnTriggerCharacters: true,
           quickSuggestions: { other: true, comments: true, strings: true },
           acceptSuggestionOnCommitCharacter: true,

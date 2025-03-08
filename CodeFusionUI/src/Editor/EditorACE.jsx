@@ -1,18 +1,14 @@
 
 
-import React, { useState, useEffect, useContext, useRef } from 'react';
-import { FileText, X, Settings, Search, Terminal, GitBranch, ChevronUp, ChevronDown, RefreshCw, Share2, Menu, Save, Play, Moon, Sun } from 'lucide-react';
+import React, { useState, useEffect, useContext } from 'react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import Term from '../Terminal/Terminal';
 import { themeUtil } from './IdeUtils';
 // import { io } from 'socket.io-client';
 
-import FileExplorer from '../FileExpo/FileExplorer';
-import { getFileIcon, getFileMode } from '../utils/GetIcon';
 import { ClientContext } from './ClientContext';
-import { emptyTerminalHistory, setChatMessages, setCurrentTheme, setInputWant, setTerminalHistory } from '../Redux/editorSlice';
-import MonacoIDE from './MonacoIDE';
+import { emptyTerminalHistory, setChatMessages, setCurrentTheme, setIDELoading, setInputWant, setTerminalHistory } from '../Redux/editorSlice';
 import { UserContext } from '../LogInPage/UserProvider';
-import NewFile from './NewFile';
 import { createFile, reNameFile } from '../utils/Fetch';
 import SidebarWithExplorer from './SideBarWithExplorer';
 import TabInterface from './TabInterface';
@@ -24,6 +20,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useWebSocket } from '../Websocket/WebSocketProvider';
 import { usePopup } from '../PopupIndication/PopUpContext';
+import LoadingScreen from '../Loading/loading';
 
 
 
@@ -44,9 +41,11 @@ const EditorACE = () => {
   const { socket } = useWebSocket();
 
   const workspaces = useSelector(state => state.editor.workspaces);
+  const IDELoading = useSelector(state => state.editor.IDELoading);
+
   const navigate = useNavigate();
 
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState([]); // setFiles(['A', 'B', 'C'])
   const [activeFile, setActiveFile] = useState(null);
   const [showTerminal, setShowTerminal] = useState(false);
   const [showNewFile, setShowNewFile] = useState(false);
@@ -168,7 +167,6 @@ const EditorACE = () => {
     // }
 
 
-
     let curFile = files.find(f => f.id === e.id);
     if (curFile) {
       console.log("Active file Setted");
@@ -225,21 +223,22 @@ const EditorACE = () => {
   const handleFolderOpen = (val) => {
     console.log(val);
 
-    createFile(ownername, {
-      fileName: val,
-    }, workspace).then((res) => {
-      console.log(res);
+    if (val)
+      createFile(ownername, {
+        fileName: val,
+      }, workspace).then((res) => {
+        console.log(res);
 
-      showPopup(res.message, 'success', 3000);
+        showPopup(res.message, res.status ? 'success' : 'error', 3000);
 
-      setIsFileCreated(prev => !prev);
+        setIsFileCreated(prev => !prev);
 
-      socket.send(JSON.stringify({
-        event: 'file_system',
-        message: `${user.username} Created a Folder ${val}`,
-        roomId: `${user.username}$${workspace}`
-      }));
-    })
+        socket.send(JSON.stringify({
+          event: 'file_system',
+          message: `${user.username} Created a Folder ${val}`,
+          roomId: `${user.username}$${workspace}`
+        }));
+      });
 
     setShowNewFolder((prev) => !prev);
   }
@@ -376,18 +375,47 @@ const EditorACE = () => {
   useEffect(() => {
     console.log(workspace);
 
+    if (workspace.length === 0) {
+      dispatch(setIDELoading(true));
+
+      setTimeout(() => {
+        dispatch(setIDELoading(false));
+        console.log("Loading", IDELoading);
+
+      }, 2400);
+    }
+
     if (!workspaces.some(ws => ws.workspaceName === workspace)) {
       navigate('/Dashboard');
     } else {
       setCurrentWorkSpace(workspace);
     }
 
-  }, [])
+    return () => {
+      dispatch(setIDELoading(true));
+    }
 
-  return (
-    <div style={styles.container}>
+  }, []);
 
-      {/* <div style={styles.menuBar}>
+
+  if (IDELoading) {
+    console.log(IDELoading);
+
+    setTimeout(() => {
+      dispatch(setIDELoading(false));
+      console.log("Loading", IDELoading);
+
+    }, 3000);
+
+    return (
+      <LoadingScreen />
+    )
+  } else
+
+    return (
+      <div style={styles.container}>
+
+        {/* <div style={styles.menuBar}>
         <div style={styles.menuItem} onClick={handleFileOpen}>
           <Menu size={16} style={{ marginRight: '8px' }} />
           File
@@ -429,46 +457,51 @@ const EditorACE = () => {
         </div>
       </div> */}
 
-      <MenuBar
-        handleFileOpen={handleFileOpen}
-        setShowTerminal={setShowTerminal}
-        getOutput={getOutput}
-        handleFileMenuOpen={handleFileMenuOpen}
-        isFileMenuOpen={isFileMenuOpen}
-        isFileOpen={showNewFile}
-        handleFolderOpen={handleFolderOpen}
-        setIsHelpOpen={setIsHelpOpen}
-      />
+        <MenuBar
+          handleFileOpen={handleFileOpen}
+          setShowTerminal={setShowTerminal}
+          getOutput={getOutput}
+          handleFileMenuOpen={handleFileMenuOpen}
+          isFileMenuOpen={isFileMenuOpen}
+          isFileOpen={showNewFile}
+          handleFolderOpen={handleFolderOpen}
+          setIsHelpOpen={setIsHelpOpen}
+        />
 
-      <div style={{
-        display: 'flex',
-        height: '100%',
-        position: 'relative'
-      }}>
-        <SidebarWithExplorer isExplorerOpen={isExplorerOpen}
-          toggleExplorer={toggleExplorer}
-          toggleTerminal={toggleTerminal}
-          theme={currentTheme}
-          files={files}
-          handleFile={handleFile}
-          setIsChatOpen={setIsChatOpen}
-          isFileCreated={isFileCreated}
-          setIsFileCreated={setIsFileCreated}
-          renameHandle={renameHandle} />
+        <div style={{
+          display: 'flex',
+          height: '100%',
+          position: 'relative'
+        }}>
+          <SidebarWithExplorer isExplorerOpen={isExplorerOpen}
+            toggleExplorer={toggleExplorer}
+            toggleTerminal={toggleTerminal}
+            theme={currentTheme}
+            files={files}
+            setFiles={setFiles}
+            handleFile={handleFile}
+            setIsChatOpen={setIsChatOpen}
+            isFileCreated={isFileCreated}
+            setIsFileCreated={setIsFileCreated}
+            renameHandle={renameHandle}
+            
+            />
 
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: isChatOpen ? 'max-content' : 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          style={{
-            ...styles.chat,
-            overflow: 'hidden'
-          }}
-        >
-          <Chat isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
-        </motion.div>
-        {/* Main Editor Area */}
-        {/* <div style={styles.main}>
+
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: isChatOpen ? 'max-content' : 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            style={{
+              ...styles.chat,
+              overflow: 'hidden'
+            }}
+          >
+            <Chat isChatOpen={isChatOpen} setIsChatOpen={setIsChatOpen} />
+          </motion.div>
+
+          {/* Main Editor Area */}
+          {/* <div style={styles.main}>
           <div style={styles.tabBar}>
             {files.map(file => (
               <div
@@ -502,44 +535,44 @@ const EditorACE = () => {
 
 
 
-        <TabInterface files={files}
-          activeFile={activeFile}
-          handleFile={handleFile}
-          closeFile={closeFile}
-          showNewFile={showNewFile}
-          showNewFolder={showNewFolder}
-          handleFileOpen={handleFileOpen}
-          handleFolderOpen={handleFolderOpen}
-          cPath={workspace}
-          unsavedFiles={unsavedFiles}
-          setUnsavedFiles={setUnsavedFiles}
-          isRename={isRename}
-          handleRename={renameHandle}
-        />
+          <TabInterface files={files}
+            activeFile={activeFile}
+            handleFile={handleFile}
+            closeFile={closeFile}
+            showNewFile={showNewFile}
+            showNewFolder={showNewFolder}
+            handleFileOpen={handleFileOpen}
+            handleFolderOpen={handleFolderOpen}
+            cPath={workspace}
+            unsavedFiles={unsavedFiles}
+            setUnsavedFiles={setUnsavedFiles}
+            isRename={isRename}
+            handleRename={renameHandle}
+          />
 
-      </div>
-
-
-      <div
-        style={{
-          ...styles.terminalContainer,
-          height: showTerminal ? 500 : 0
-        }}
-      >
-        <div style={styles.terminalHeader}>
-          <div style={styles.terminalTitle}>Terminal</div>
-          <div
-            style={styles.terminalToggle}
-            onClick={toggleTerminal}
-          >
-            {showTerminal ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          </div>
         </div>
 
-        <Term />
-      </div>
-    </div >
-  );
+
+        <div
+          style={{
+            ...styles.terminalContainer,
+            height: showTerminal ? 500 : 0
+          }}
+        >
+          <div style={styles.terminalHeader}>
+            <div style={styles.terminalTitle}>Terminal</div>
+            <div
+              style={styles.terminalToggle}
+              onClick={toggleTerminal}
+            >
+              {showTerminal ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            </div>
+          </div>
+
+          <Term />
+        </div>
+      </div >
+    );
 };
 
 export default EditorACE;

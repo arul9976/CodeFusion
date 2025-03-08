@@ -17,7 +17,8 @@ const SidebarWithExplorer = ({
   setIsChatOpen,
   isFileCreated,
   setIsFileCreated,
-  renameHandle
+  renameHandle,
+  setFiles
 }) => {
 
 
@@ -28,12 +29,12 @@ const SidebarWithExplorer = ({
       backgroundColor: '#1E293B',
     },
     sideBar: {
-      width: '48px',
+      // width: '48px',
       backgroundColor: '#0F172A',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      padding: '8px 0',
+      padding: '8px 12px',
       gap: '4px'
     },
     sideBarIcon: {
@@ -139,6 +140,7 @@ const SidebarWithExplorer = ({
             isFileCreated={isFileCreated}
             setIsFileCreated={setIsFileCreated}
             renameHandle={renameHandle}
+            setFiles={setFiles}
           />
         </div>
       </motion.div>

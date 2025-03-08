@@ -452,10 +452,10 @@ const MenuBar = ({
         width: '100%',
         justifyContent: 'center',
         backgroundColor: 'rgba(79, 70, 229, 0.1)',
-        color: '#4f46e5',
+        color: 'rgb(187, 184, 245)',
       }}>
         <UserPlus size={16} />
-        Invite Members
+        Invite Collaborators
       </button>
     </div>
   );

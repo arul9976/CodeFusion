@@ -282,7 +282,13 @@ import { MdPreview } from 'react-icons/md';
 import { usePopup } from '../PopupIndication/PopUpContext';
 import { useWebSocket } from '../Websocket/WebSocketProvider';
 
-const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated, setIsFileCreated }) => {
+const FileExplorer = ({
+  isExplorerOpen,
+  renameHandle,
+  handleFile,
+  isFileCreated,
+  setIsFileCreated,
+  files, setFiles }) => {
 
   const { ownername } = useParams();
 
@@ -331,7 +337,8 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
   useEffect(() => {
     console.log("COPY --> " + copy?.url, copy?.type);
 
-  }, [copy])
+  }, [copy]);
+
   useEffect(() => {
     const fetchFiles = async () => {
       console.log(workspace);
@@ -342,15 +349,57 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
         if (response.status === 200) {
           const data = await response?.json();
           setFileData(data[ownername]);
+          return data[ownername];
         } else {
           setFileData([]);
         }
       } catch (error) {
         console.error("Error fetching files:", error);
       }
+
+      return [];
     };
-    fetchFiles();
+
+    if (isExplorerOpen) {
+      fetchFiles().then(res => {
+        if (res.length > 0) {
+          const urls = extractUrls(res);
+          console.log(urls, files);
+
+          setFiles(prev => {
+            return prev.filter(file => urls.includes(file.url));
+          })
+        }
+      })
+
+    }
   }, [isFileCreated, user, isExplorerOpen]);
+
+
+
+  const extractUrls = (data) => {
+    const urls = [];
+
+    // Recursive function to find URLs in any value
+    const findUrls = (value) => {
+      if (!value || typeof value !== "object") return; 
+
+      if (Array.isArray(value)) {
+        value.forEach((item) => findUrls(item));
+      } else {
+        if (value.url) {
+          urls.push(value.url);
+        }
+        Object.values(value).forEach((prop) => findUrls(prop));
+      }
+    };
+
+    data.forEach((item) => {
+      findUrls(item);
+    });
+
+    return urls;
+  };
 
   const toggleFolder = (folderPath, e) => {
     if (e && e.target.closest('.context-menu-trigger')) {
@@ -472,7 +521,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
                   message: `${user.username} Deleted a ${((contextMenu.item?.url) ? 'File ' + contextMenu.item.file : 'Folder ' + contextMenu.item)}`,
                   roomId: `${ownername}$${workspace}`
                 }));
-              }else {
+              } else {
                 showPopup(res.message, 'error', 3000);
               }
             })
@@ -758,6 +807,11 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
       >
         {files.map((fileOrFolder, index) => {
           if (fileOrFolder.file) {
+
+            // setFiles(prev => {
+            //   return prev.filter(f => prev.some(fi => fi.url === fileOrFolder.url));
+            // })
+
             if (!fileOrFolder.id) {
               fileOrFolder['id'] = fileOrFolder.url;
             }
@@ -1068,7 +1122,7 @@ const FileExplorer = ({ isExplorerOpen, renameHandle, handleFile, isFileCreated,
               padding: "40px 20px"
             }}
           >
-            No files or folders found for this user.
+            No files or folders found here.
           </motion.p>
         ) : (
           renderFiles(fileData)

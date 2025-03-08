@@ -599,7 +599,7 @@ const ProfileInfo = ({ setUser, isOpen, onClose }) => {
                             ) : (
                                 <UserCircle size={116} color="#94a3b8" />
                             )}
-                            <div style={styles.cameraOverlay}>
+                            <div style={styles.cameraOverlay} onClick={() => { setIsEditModalOpen(true); onClose() }}>
                                 <Camera size={24} color="white" />
 
 
@@ -609,14 +609,14 @@ const ProfileInfo = ({ setUser, isOpen, onClose }) => {
                 </div>
 
                 <div style={styles.formSection}>
-
+                    {/* 
                     <button
                         className="edit-button"
                         style={styles.editButton}
                         onClick={() => { setIsEditModalOpen(true); onClose() }}
                     >
                         <Edit size={16} />
-                    </button>
+                    </button> */}
 
                     {/* Name Field */}
                     <div

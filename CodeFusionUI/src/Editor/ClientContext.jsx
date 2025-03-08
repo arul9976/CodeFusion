@@ -168,6 +168,7 @@ const ClientProvider = ({ children }) => {
   const code = useSelector(state => state.editor.code);
   const editorTheme = useSelector(state => state.editor.editorTheme);
   const activeFile = useSelector(state => state.editor.activeFile);
+
   const cursor = useSelector(state => state.editor.cursor);
   const output = useSelector(state => state.editor.output);
   const ydocsRef = useRef(new Map());
@@ -257,7 +258,6 @@ const ClientProvider = ({ children }) => {
       editorTheme, activeFile, cursor, output, ydocRef, getYtext,
       initAndGetProvider, editorsRef, getBindings, bindings,
       providersRef, currentProvider, setCurrentWorkSpace, currWorkSpace
-
 
     }}>
       {children}

@@ -84,8 +84,15 @@ global.WebSocket = WebSocket;
 app.use(express.static('public'));
 app.use(bodyParser.text());
 
-app.use(cors())
+const corsOptions = {
+  origin: 'http://localhost:3001',
+  methods: 'GET, POST',
+  allowedHeaders: 'Content-Type, Authorization',
+};
+
+app.use(cors(corsOptions))
 app.use('/codefusion', express.static(path.join(__dirname, 'codefusion')));
+
 app.use('/codefusion/:username/profile/', (req, res, next) => {
   const { username } = req.params;
   const imagePath = path.join(__dirname, 'codefusion', username, 'profile', req.path);
@@ -293,6 +300,7 @@ app.post('/createOrUpdateFile/:userId/:wsName', (req, res) => {
     console.log(`File '/${userId}/${fileName}' created/updated successfully with the provided content.`);
 
     res.status(201).send(JSON.stringify({
+      status: true,
       userId,
       fileName,
       message: `${fileName.split(".").length > 1 ? 'File' : 'Folder'} created successfully`,
@@ -1278,8 +1286,8 @@ function sendToRoom(wss, roomId, message) {
 
 
 
-server.listen(3000, () => {
-  console.log('Server is running on port 3000');
+server.listen(4500, () => {
+  console.log('Server is running on port 4500');
 });
 
 

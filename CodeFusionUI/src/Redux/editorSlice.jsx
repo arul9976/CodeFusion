@@ -9,7 +9,7 @@ const initialState = {
     profilePic: null
   },
   code: '',
-  language: 'javascript',
+  language: '',
   output: '',
   cursor: { row: 0, column: 0 },
   currentTheme: 'dark',
@@ -22,17 +22,25 @@ const initialState = {
   ],
   inputWant: false,
   notifications: [],
-  chatMessages: {
-    "Bot": [
-      {
-        text: "Hello! I'm your assistant. How can I help you today?",
-        sender: "Bot",
-        timestamp: new Date().toLocaleTimeString(),
-        isBot: true,
-      },
-    ],
-    "All": [],
-  }
+  IDELoading: true,
+  Chat: {
+    chatMessages: {
+      "Bot": [
+        {
+          text: "Hello! I'm your assistant. How can I help you today?",
+          sender: "Bot",
+          timestamp: new Date().toLocaleTimeString(),
+          isBot: true,
+        },
+      ],
+      "All": [],
+    },
+    hasMore: true,
+    oldestId: null,
+    loading: false
+  },
+  workspaceFiles: [],
+
 };
 
 const editorSlice = createSlice({
@@ -120,6 +128,8 @@ const editorSlice = createSlice({
       state.workspaces = state.workspaces.filter(ws => ws['workspaceName'] !== workspaceName);
     },
 
+
+
     setTerminalHistory: (state, action) => {
       console.log(action.payload);
       // if (state.terminalHistory.length > 20) {
@@ -150,45 +160,114 @@ const editorSlice = createSlice({
       state.notifications.push(action.payload);
     },
 
+    setOlderMessages: (state, action) => {
+
+      const { messages, isFirst } = action.payload;
+
+      const groupedByName = messages.reduce((acc, msg) => {
+        if (!acc[msg.receiver]) {
+          acc[msg.receiver] = [];
+        }
+
+        acc[msg.receiver].push(msg);
+        return acc;
+      }, {});
+
+      // console.log(groupedByName);
+
+      state.Chat.oldestId = messages[0].id;
+      console.log("Oldest ID", state.Chat.oldestId);
+
+      Object.keys(groupedByName).forEach(key => {
+        const userMessages = groupedByName[key];
+        console.log(key, userMessages);
+
+        if (key === 'All') {
+          if (isFirst) {
+            state.Chat.chatMessages[key] = userMessages;
+
+          } else
+            state.Chat.chatMessages[key] = [...userMessages, ...(state.Chat.chatMessages[key] || [])];
+        } else {
+          if (isFirst) {
+            state.Chat.chatMessages[key] = userMessages;
+          } else
+            state.Chat.chatMessages[key] = [...userMessages.filter(msg => msg.receiver === state.user.username || msg.sender === state.user.username), ...(state.Chat.chatMessages[key] || [])];
+
+        }
+      })
+
+
+      // const allMessages = messages.filter(message => message.receiver === 'All');
+      // state.Chat.chatMessages['All'] = [...allMessages, ...state.Chat.chatMessages['All'] || {}];
+
+
+      //  else {
+      //   // console.log("User -> ", selectedOption);
+      //   state.Chat.chatMessages[selectedOption] = state.Chat.chatMessages[selectedOption] || [];
+      //   state.Chat.chatMessages[selectedOption] = [userMessage, ...state.Chat.chatMessages[selectedOption] || {}];
+      // }
+
+    },
+
 
     setChatMessages: (state, action) => {
       const { selectedOption, userMessage } = action.payload;
-      // state.chatMessages[wsName] = message;
-      // console.log(selectedOption, userMessage);
-
       if (userMessage.receiver === 'All') {
-        // Object.keys(state.chatMessages).forEach((user) => {
-        //   // console.log("User -> " + user);
-        //   if (user !== "Bot") {
-        //     state.chatMessages[user] = state.chatMessages[user] ? [...state.chatMessages[user], userMessage] : [userMessage];
-        //   }
-        // });
-        state.chatMessages['All'] = [...state.chatMessages['All'] || {}, userMessage];
+        // console.log(userMessage);
+        state.Chat.chatMessages['All'] = [...state.Chat.chatMessages['All'] || {}, userMessage];
+
+      } else if (userMessage.isBot) {
+        state.Chat.chatMessages['Bot'] = [...state.Chat.chatMessages['Bot'] || {}, userMessage];
 
       } else {
-        console.log("User -> ", selectedOption);
-        state.chatMessages[selectedOption] = state.chatMessages[selectedOption] || [];
-        state.chatMessages[selectedOption] = [...state.chatMessages[selectedOption] || {}, userMessage];
+        // console.log("User -> ", selectedOption);
+        state.Chat.chatMessages[selectedOption] = state.Chat.chatMessages[selectedOption] || [];
+        state.Chat.chatMessages[selectedOption] = [...state.Chat.chatMessages[selectedOption] || {}, userMessage];
       }
 
     },
 
     setMsgSeened: (state, action) => {
       const { message, idx } = action.payload;
-      console.log(message, idx);
+      // console.log(message, idx);
       let msg = null;
-      if(message.receiver === 'All'){
-        msg = state.chatMessages['All'].find((msg, i) => i == idx);
-      }else {
-        msg = state.chatMessages[message.sender].find((msg, i) => i == idx);
+      if (message.receiver === 'All') {
+        msg = state.Chat.chatMessages['All'].find((msg, i) => i == idx);
+      } else {
+        msg = state.Chat.chatMessages[message.sender].find((msg, i) => i == idx);
       }
-      console.log("--->\n", msg);
+      // console.log("--->\n", msg);
 
       if (msg) {
         msg.seen = true;
-        console.log(msg);
+        // console.log(msg);
 
       }
+    },
+
+    setLoading: (state, action) => {
+      state.Chat.loading = action.payload;
+    },
+
+
+    setHasMore: (state, action) => {
+      state.Chat.hasMore = action.payload;
+    },
+
+    emptyChat: (state, action) => {
+      Object.keys(state.Chat.chatMessages).forEach(key => {
+        state.Chat.chatMessages[key] = [];
+      })
+    },
+
+
+    setIDELoading: (state, action) => {
+      state.IDELoading = action.payload;
+    },
+
+    setworkspaceFiles: (state, action) => {
+      state.workspaceFiles = action.payload;
     }
   },
 });
@@ -197,7 +276,8 @@ export const {
 
   setCode, setLang, setOutput, setCursor, setCurrentTheme, setActiveFile, setEditorTheme, removeYdoc, setUser,
   setWorkspaces, pushWorkspace, setTerminalHistory, emptyTerminalHistory, setInputWant, pushNotifications,
-  setNotifications, updateWorkspace, deleteWorkspace, updateNkname, setChatMessages, setMsgSeened
+  setNotifications, updateWorkspace, deleteWorkspace, updateNkname, setChatMessages, setMsgSeened,
+  setOlderMessages, setLoading, setHasMore, emptyChat, setIDELoading, setworkspaceFiles
 
 } = editorSlice.actions;
 

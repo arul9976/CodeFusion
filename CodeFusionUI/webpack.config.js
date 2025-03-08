@@ -8,13 +8,19 @@ module.exports = {
     headers: {
       'Content-Type': 'application/javascript',  // Ensures the right MIME type
     },
+    mimeTypes: { 'application/wasm': ['wasm'] }
+
   },
   module: {
     rules: [
       {
         test: /\.worker\.js$/,
         use: { loader: 'worker-loader' },
-      }
+      },
+      {
+        test: /pythonWorker\.js$/,
+        use: { loader: "worker-loader" },
+      },
     ],
   },
   resolve: {

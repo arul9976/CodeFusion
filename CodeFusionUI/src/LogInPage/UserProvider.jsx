@@ -17,6 +17,8 @@ const UserProvider = ({ children }) => {
   const inputWant = useSelector(state => state.editor.inputWant);
   const isLoggedIn = useSelector(state => state.editor.user.isLoggedIn);
   const notifications = useSelector(state => state.editor.notifications);
+  const workspaceFiles = useSelector(state => state.editor.workspaceFiles);
+
   const webSocketRef = useRef(new Map());
   const yDocRef = useRef(null);
 
@@ -77,7 +79,7 @@ const UserProvider = ({ children }) => {
   return (
     <UserContext.Provider value={{
       setUserLoginCredentials, user, isLoggedIn, dispatchUser, terminalHistory, inputWant,
-      notifications, initWebSocketConnection
+      notifications, initWebSocketConnection, workspaceFiles
     }}>
       {children}
     </UserContext.Provider>

@@ -217,7 +217,7 @@ const Notification = ({ notificationPanel, setNotificationPanel }) => {
       <div style={styles.panel}>
         <div style={styles.header}>
           <div style={styles.title}>
-            <Bell size={20} /> Notifications
+            <Bell size={40} /> Notifications
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button

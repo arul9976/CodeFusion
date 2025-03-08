@@ -11,7 +11,6 @@ body {
     overflow: hidden;
 }
 
-/* Smooth Fade-in Animation */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-30px); }
     to { opacity: 1; transform: translateY(0); }
@@ -34,7 +33,6 @@ body {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-/* Animated Login Title */
 h2 {
     color: white;
     font-weight: 600;
@@ -48,7 +46,6 @@ h2 {
     to { text-shadow: 0px 0px 20px rgba(255, 255, 255, 0.7); }
 }
 
-/* Input Fields */
 .login-container input {
     width: 94%;
     padding: 12px;
@@ -63,7 +60,6 @@ h2 {
     text-align: center;
 }
 
-/* Input Glow Effect */
 .login-container input:hover {
     background: rgba(255, 255, 255, 0.1);
 }
@@ -74,7 +70,6 @@ h2 {
     transform: scale(1.05);
 }
 
-/* Labels */
 .login-container label {
     display: block;
     text-align: left;
@@ -83,7 +78,6 @@ h2 {
     margin-bottom: 5px;
 }
 
-/* Buttons */
 .login-container button {
     width: 100%;
     padding: 14px 0;
@@ -101,20 +95,17 @@ h2 {
     overflow: hidden;
 }
 
-/* Button Hover Effect */
 .login-container button:hover {
     background: linear-gradient(45deg, #1e3545, #27445D);
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
-/* Button Click (Pressed) Effect */
 .login-container button:active {
     transform: translateY(2px);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* Button Ripple Effect */
 .login-container button::after {
     content: "";
     position: absolute;
@@ -129,13 +120,11 @@ h2 {
     opacity: 0;
 }
 
-/* Activate ripple effect on click */
 .login-container button:active::after {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
 }
 
-/* Error Messages */
 .error-message {
     color: #e74c3c;
     font-size: 16px;
@@ -145,7 +134,6 @@ h2 {
     animation: shake 0.5s ease-in-out;
 }
 
-/* Shake Animation for Error Messages */
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
@@ -153,7 +141,6 @@ h2 {
     75% { transform: translateX(-5px); }
 }
 
-/* Paragraph Text */
 .login-container p {
     color: white;
     font-size: 14px;
@@ -161,7 +148,6 @@ h2 {
     text-align: center;
 }
 
-/* Login Redirect Button */
 .login-container .create-account-btn {
     background: rgba(255, 255, 255, 0.2);
     border: 2px solid white;
@@ -183,7 +169,6 @@ h2 {
     transform: scale(1.05);
 }
 
-/* Floating Particles Animation */
 @keyframes floating {
     0% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
@@ -216,3 +201,48 @@ h2 {
 
 
 
+/* //////// */
+
+
+
+/* .background-animation {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.particle {
+    position: absolute;
+    bottom: -100px;
+    background: linear-gradient(to top, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.2));
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.6;
+    animation: float linear forwards;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateY(-100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+.bg-gradient-to-br {
+    background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+.backdrop-blur-lg {
+    backdrop-filter: blur(16px);
+} */

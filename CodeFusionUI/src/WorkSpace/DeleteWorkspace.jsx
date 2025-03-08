@@ -6,7 +6,7 @@ import "./RenameWorkspace.css"
 import { UserContext } from "../LogInPage/UserProvider"
 import { deleteWorkspace, updateWorkspace } from "../Redux/editorSlice"
 import { useSelector } from "react-redux"
-import { deleteFileOrFolder } from "../utils/Fetch"
+import { deleteFileOrFolder, deleteWorkspaceDB } from "../utils/Fetch"
 import { usePopup } from "../PopupIndication/PopUpContext"
 
 const DeleteWorkspace = ({ onClose, currentWorkspace }) => {
@@ -24,23 +24,10 @@ const DeleteWorkspace = ({ onClose, currentWorkspace }) => {
     setError("")
 
     try {
-      // console.log({
-      //   workspaceName: currentWorkspace,
-      //   newWsName: newName,
-      //   email: user.email,
-      // });
 
-      const response = await fetch(`${import.meta.env.VITE_SERVLET_URL}/deleteWs?wsName=${encodeURI(currentWorkspace)}&email=${encodeURI(user.email)}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        }
-      })
-      console.log(response);
-
-      if (response.status === 200) {
+      if (deleteWorkspaceDB(currentWorkspace, user.email)) {
         showPopup("Workspace Deleted Successfully", 'success', 3000);
-        
+
         const fileUrl = `/codefusion/${user.username}/${currentWorkspace}`;
         deleteFileOrFolder({ 'url': fileUrl, 'type': 'folder' })
           .then(res => {
